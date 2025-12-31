@@ -119,6 +119,7 @@ rec {
 
     makeWrapperArgs = [
       "--suffix PATH : ${lib.makeBinPath [ xdg-utils ]}"
+      "\${qtWrapperArgs[@]}"
     ];
 
     postInstall = ''
@@ -132,12 +133,6 @@ rec {
       install -D media/logo/logo.svg $out/share/icons/hicolor/scalable/apps/activitywatch.svg
       install -D media/logo/logo.png $out/share/icons/hicolor/512x512/apps/activitywatch.png
       install -D media/logo/logo-128.png $out/share/icons/hicolor/128x128/apps/activitywatch.png
-    '';
-
-    preFixup = ''
-      makeWrapperArgs+=(
-        "''${qtWrapperArgs[@]}"
-      )
     '';
 
     pythonImportsCheck = [ "aw_qt" ];
