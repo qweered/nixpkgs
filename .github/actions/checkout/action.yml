@@ -99,16 +99,13 @@ runs:
               break
           }
 
-          // Create all worktrees in parallel.
-          await Promise.all(
-            commits
-              .filter(({ path }) => Boolean(path))
-              .map(async ({ sha, path }) => {
-                await run('git', 'worktree', 'add', join('nixpkgs', path), sha, '--no-checkout')
-                await run('git', '-C', join('nixpkgs', path), 'sparse-checkout', 'disable')
-                await run('git', '-C', join('nixpkgs', path), 'checkout', '--progress')
-              })
-          )
+          // Create worktrees sequentially to avoid git lock conflicts.
+          // Parallel worktree creation can fail with "failed to read .git/worktrees/.../commondir".
+          for (const { sha, path } of commits.filter(({ path }) => Boolean(path))) {
+            await run('git', 'worktree', 'add', join('nixpkgs', path), sha, '--no-checkout')
+            await run('git', '-C', join('nixpkgs', path), 'sparse-checkout', 'disable')
+            await run('git', '-C', join('nixpkgs', path), 'checkout', '--progress')
+          }
 
           // Apply pin bump to untrusted worktree
           if (pin_bump_sha) {
