@@ -321,9 +321,27 @@ module.exports = async ({ github, context, core, dry }) => {
         expectedHash: artifact.digest,
       })
 
-      const evalLabels = JSON.parse(
+      const changedPaths = JSON.parse(
         await readFile(`${pull_number}/changed-paths.json`, 'utf-8'),
-      ).labels
+      )
+      const evalLabels = changedPaths.labels
+
+      // Fetch all PR commits to check their messages for package patterns
+      const prCommits = await github.paginate(github.rest.pulls.listCommits, {
+        ...context.repo,
+        pull_number,
+        per_page: 100,
+      })
+      const commitMessages = prCommits.map((c) => c.commit.message)
+
+      // Label new package PRs: "packagename: init at X.Y.Z"
+      const newPackagePattern = /: init at\b/
+      const hasNewPackages = changedPaths.attrdiff?.added?.length > 0
+      const commitsIndicateNewPackage = commitMessages.some((msg) =>
+        newPackagePattern.test(msg),
+      )
+      evalLabels['8.has: package (new)'] =
+        hasNewPackages && commitsIndicateNewPackage
 
       // TODO: Get "changed packages" information from list of changed by-name files
       // in addition to just the Eval results, to make this work for these packages
