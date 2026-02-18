@@ -3,70 +3,107 @@
   rustPlatform,
   fetchFromGitHub,
   pkg-config,
+  cmake,
+  protobuf,
+  alsa-lib,
+  at-spi2-core,
   dbus,
   ffmpeg,
+  libxcb,
   oniguruma,
+  onnxruntime,
   openssl,
   sqlite,
   stdenv,
-  alsa-lib,
-  libxcb,
+  tesseract,
+  libx11,
+  libxext,
+  libxfixes,
+  libxi,
+  libxrandr,
+  libxtst,
 }:
 rustPlatform.buildRustPackage rec {
-  pname = "screen-pipe";
-  version = "0.1.48";
+  pname = "screenpipe";
+  version = "0.3.135";
 
   src = fetchFromGitHub {
-    owner = "louis030195";
-    repo = "screen-pipe";
-    rev = "v${version}";
-    hash = "sha256-rWKRCqWFuPO84C52mMrrS4euD6XdJU8kqZsAz28+vWE=";
+    owner = "screenpipe";
+    repo = "screenpipe";
+    tag = "v${version}";
+    hash = "sha256-Wom62zlx9HRoqt6uUbGfCl+Y8aKm1cG1tBTDDDf8BqY=";
   };
 
   cargoLock = {
     lockFile = ./Cargo.lock;
     outputHashes = {
-      "cpal-0.15.3" = "sha256-eKn3tS5QuqbMTwnRAEybvbPZOiKiid7ghGztAmrs9fw=";
-      "rusty-tesseract-1.1.10" = "sha256-XT74zGn+DetEBUujHm4Soe2iorQcIoUeZbscTv+64hw=";
+      "accessibility-0.2.0" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "candle-core-0.8.3" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "cidre-0.14.0" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "cpal-0.15.3" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "ffmpeg-sidecar-2.0.5" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "hf-hub-0.3.2" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "knf-rs-0.2.4" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "rusty-tesseract-1.1.10" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "sck-rs-0.1.0" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "vad-rs-0.2.0" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+      "whisper-rs-0.15.1" = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
     };
   };
 
-  postPatch = ''
-    ln -s ${./Cargo.lock} Cargo.lock
-  '';
-
   nativeBuildInputs = [
+    cmake
     pkg-config
+    protobuf
     rustPlatform.bindgenHook
   ];
 
-  buildInputs = [
-    dbus
-    ffmpeg
-    oniguruma
-    openssl
-    sqlite
-  ]
-  ++ lib.optionals stdenv.hostPlatform.isLinux [
-    alsa-lib
-    libxcb
-  ];
+  buildInputs =
+    [
+      ffmpeg
+      oniguruma
+      onnxruntime
+      openssl
+      sqlite
+    ]
+    ++ lib.optionals stdenv.hostPlatform.isLinux [
+      alsa-lib
+      at-spi2-core
+      dbus
+      libxcb
+      tesseract
+      libx11
+      libxext
+      libxfixes
+      libxi
+      libxrandr
+      libxtst
+    ];
 
-  buildFeatures = lib.optional stdenv.hostPlatform.isDarwin "metal";
+  cargoBuildFlags = [
+    "-p"
+    "screenpipe-server"
+  ];
 
   env = {
     RUSTONIG_SYSTEM_LIBONIG = true;
+    ORT_STRATEGY = "system";
+    ORT_LIB_LOCATION = "${onnxruntime}/lib";
+    CMAKE_POLICY_VERSION_MINIMUM = "3.5";
+    NIX_CFLAGS_COMPILE = "-Wno-error=implicit-function-declaration";
+    NIX_CXXFLAGS_COMPILE = "-fpermissive";
   };
 
-  doCheck = false; # Tests fail to build
+  RUSTFLAGS = lib.optionalString stdenv.hostPlatform.isLinux "-C link-arg=-Wl,--allow-multiple-definition";
+
+  doCheck = false;
 
   meta = {
-    # Marked broken 2025-11-28 because it has failed on Hydra for at least one year.
-    broken = true;
-    description = "Personalized AI powered by what you've seen, said, or heard";
-    homepage = "https://github.com/louis030195/screen-pipe";
+    description = "24/7 screen and audio capture with AI-powered search";
+    homepage = "https://github.com/screenpipe/screenpipe";
     license = lib.licenses.mit;
     maintainers = with lib.maintainers; [ dit7ya ];
-    mainProgram = "screen-pipe";
+    mainProgram = "screenpipe";
+    platforms = lib.platforms.linux;
   };
 }
