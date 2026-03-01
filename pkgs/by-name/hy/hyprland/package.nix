@@ -6,8 +6,6 @@
   pkg-config,
   makeWrapper,
   cmake,
-  meson,
-  ninja,
   aquamarine,
   binutils,
   cairo,
@@ -31,7 +29,7 @@
   pango,
   pciutils,
   pkgconf,
-  python3,
+  udis86,
   re2,
   systemd,
   tomlplusplus,
@@ -53,7 +51,6 @@ let
   inherit (builtins)
     foldl'
     ;
-  inherit (lib.asserts) assertMsg;
   inherit (lib.attrsets) mapAttrsToList;
   inherit (lib.lists)
     concatLists
@@ -129,8 +126,7 @@ customStdenv.mkDerivation (finalAttrs: {
     cmake
     pkg-config
     wayland-scanner
-    # for udis86
-    python3
+    udis86
   ];
 
   outputs = [
@@ -179,6 +175,7 @@ customStdenv.mkDerivation (finalAttrs: {
 
   dontStrip = debug;
   strictDeps = true;
+  __structuredAttrs = true;
 
   cmakeFlags = mapAttrsToList cmakeBool {
     "BUILT_WITH_NIX" = true;

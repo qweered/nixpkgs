@@ -27,7 +27,6 @@
   yaml-cpp,
   nlohmann_json,
   openssl,
-  llvmPackages,
   gtest,
   ctestCheckHook,
   mpiCheckPhaseHook,
@@ -35,6 +34,7 @@
   mpiSupport ? true,
   pythonSupport ? false,
   withExamples ? false,
+  doCheck ? false,
 }:
 let
   adios2Packages = {
@@ -197,7 +197,7 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   # Tests are time-consuming and moved to passthru.tests.withCheck.
-  doCheck = false;
+  inherit doCheck;
   dontUseNinjaCheck = true;
 
   enableParallelChecking = false;
@@ -220,7 +220,7 @@ stdenv.mkDerivation (finalAttrs: {
     };
   }
   // lib.optionalAttrs stdenv.hostPlatform.isLinux {
-    withCheck = finalAttrs.finalPackage.overrideAttrs {
+    withCheck = finalAttrs.finalPackage.override {
       doCheck = true;
     };
   };
