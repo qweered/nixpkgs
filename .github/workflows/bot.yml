@@ -30,6 +30,7 @@ concurrency:
 # This is used as fallback without app only.
 # This happens when testing in forks without setting up that app.
 permissions:
+  checks: write # creating/updating the merge-bot eligibility check run
   issues: write # managing issue labels and comments
   pull-requests: write # managing pull request labels and comments
 
@@ -63,6 +64,7 @@ jobs:
           app-id: ${{ vars.NIXPKGS_CI_APP_ID }}
           private-key: ${{ secrets.NIXPKGS_CI_APP_PRIVATE_KEY }}
           permission-administration: read
+          permission-checks: write
           permission-contents: write
           permission-issues: write
           permission-members: read

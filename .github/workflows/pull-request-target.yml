@@ -95,6 +95,7 @@ jobs:
     needs: [prepare, eval]
     uses: ./.github/workflows/bot.yml
     permissions:
+      checks: write
       issues: write
       pull-requests: write
     secrets:
