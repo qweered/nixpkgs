@@ -89,6 +89,83 @@ function runChecklist({
   }
 }
 
+function renderChecklist(checklist) {
+  return Object.entries(checklist).flatMap(([msg, res]) =>
+    typeof res === 'boolean'
+      ? `- :${res ? 'white_check_mark' : 'x'}: ${msg}`
+      : [
+          `- :${Object.values(res).some(Boolean) ? 'white_check_mark' : 'x'}: ${msg}`,
+          ...Object.entries(res).map(
+            ([msg, res]) =>
+              `  - ${res ? ':white_check_mark:' : ':white_large_square:'} ${msg}`,
+          ),
+        ],
+  )
+}
+
+const ELIGIBILITY_CHECK_NAME = 'merge-bot eligibility'
+const ELIGIBILITY_DETAILS_URL =
+  'https://github.com/NixOS/nixpkgs/blob/master/ci/README.md#nixpkgs-merge-bot'
+
+async function upsertEligibilityCheck({
+  github,
+  context,
+  core,
+  dry,
+  pull_request,
+  result,
+  checklist,
+  eligibleUsers,
+}) {
+  const summary = [
+    'Requirements to merge this PR with `@NixOS/nixpkgs-merge-bot merge`:',
+    ...renderChecklist(checklist),
+  ]
+  if (eligibleUsers.length > 0) {
+    summary.push(
+      '',
+      '#### Maintainers eligible to merge',
+      ...eligibleUsers.map((login) => `- @${login}`),
+    )
+  }
+
+  const params = {
+    ...context.repo,
+    name: ELIGIBILITY_CHECK_NAME,
+    head_sha: pull_request.head.sha,
+    status: 'completed',
+    conclusion: result ? 'success' : 'neutral',
+    details_url: ELIGIBILITY_DETAILS_URL,
+    output: {
+      title: result
+        ? 'PR is eligible to be merged by the merge-bot'
+        : 'PR is not (yet) eligible for the merge-bot',
+      summary: summary.join('\n'),
+    },
+  }
+
+  if (dry) {
+    core.info(
+      `Eligibility check (dry) on ${pull_request.head.sha}:\n${JSON.stringify(params, null, 2)}`,
+    )
+    return
+  }
+
+  const existing = (
+    await github.rest.checks.listForRef({
+      ...context.repo,
+      ref: pull_request.head.sha,
+      check_name: ELIGIBILITY_CHECK_NAME,
+    })
+  ).data.check_runs[0]
+
+  if (existing) {
+    await github.rest.checks.update({ ...params, check_run_id: existing.id })
+  } else {
+    await github.rest.checks.create(params)
+  }
+}
+
 // The merge command must be on a separate line and not within codeblocks or html comments.
 // Codeblocks can have any number of ` larger than 3 to open/close. We only look at code
 // blocks that are not indented, because the later regex wouldn't match those anyway.
@@ -280,17 +357,7 @@ async function handleMerge({
       `@${comment.user.login} wants to merge this PR.`,
       '',
       'Requirements to merge this PR with `@NixOS/nixpkgs-merge-bot merge`:',
-      ...Object.entries(checklist).flatMap(([msg, res]) =>
-        typeof res === 'boolean'
-          ? `- :${res ? 'white_check_mark' : 'x'}: ${msg}`
-          : [
-              `- :${Object.values(res).some(Boolean) ? 'white_check_mark' : 'x'}: ${msg}`,
-              ...Object.entries(res).map(
-                ([msg, res]) =>
-                  `  - ${res ? ':white_check_mark:' : ':white_large_square:'} ${msg}`,
-              ),
-            ],
-      ),
+      ...renderChecklist(checklist),
       '',
     ]
 
@@ -333,13 +400,28 @@ async function handleMerge({
     if (result) break
   }
 
-  const { result } = runChecklist({
+  const { result, eligible, checklist } = runChecklist({
     committers,
     events,
     files,
     pull_request,
     log,
     maintainers,
+  })
+
+  const eligibleUsers = await Promise.all(
+    Array.from(eligible, async (id) => (await getUser(id)).login),
+  )
+
+  await upsertEligibilityCheck({
+    github,
+    context,
+    core,
+    dry,
+    pull_request,
+    result,
+    checklist,
+    eligibleUsers,
   })
 
   // Returns a boolean, which indicates whether the PR is merge-bot eligible in principle.
