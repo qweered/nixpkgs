@@ -10,7 +10,7 @@ To run any of the scripts locally:
 
 ## Check commits
 
-Run `./run commits OWNER REPO PR`, where OWNER is your username or "NixOS", REPO is the name of your fork or "nixpkgs" and PR is the number of the pull request to check.
+Run `./run commits OWNER REPO PR`, where OWNER is your username or "NixOS", REPO is the name of your fork or "nixpkgs", and PR is the number of the pull request to check.
 
 ## Labeler
 
