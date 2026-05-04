@@ -104,7 +104,7 @@ let
       inherit lib;
       inherit (self) config;
       inherit (self) runtimeShell stdenv stdenvNoCC;
-      inherit (self.pkgsBuildHost) jq shellcheck-minimal lndir;
+      inherit (self.pkgsBuildHost) jq shellcheck-minimal lndir rusholve;
     };
 
   stdenvBootstappingAndPlatforms =

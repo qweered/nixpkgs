@@ -7,6 +7,7 @@
   lndir,
   runtimeShell,
   shellcheck-minimal,
+  rusholve,
 }:
 
 let
@@ -324,6 +325,119 @@ rec {
         else
           checkPhase;
     };
+
+  /*
+    Wrap one or more shell scripts from a source tree, rewriting every
+    command reference to its absolute `/nix/store/...` path at build
+    time using `rusholve` (Rust port of `resholve`). Resolved scripts
+    do not need `PATH` set at runtime.
+
+    `installScripts` is a **required** attrset mapping source paths
+    (relative to the unpacked source tree) to output paths (relative
+    to `$out`) — same direction as `install SRC DEST` and `cp SRC DEST`.
+    All destinations are installed first, then resolved together in a
+    single rusholve invocation so cross-script `source` references
+    rewrite correctly.
+
+    `strict = false` (default) uses rusholve's auto (NixOS) profile —
+    skips dynamic command words, harvests sourced declarations, and
+    prefers `/run/wrappers/bin`. `strict = true` passes `--strict`,
+    requiring every command reference to be spelled out (resholve-style
+    discipline; useful for vetting that a script has no dynamic refs).
+
+    Defaults `__structuredAttrs = true` (override to opt out). Accepts
+    a `finalAttrs:` lambda for fixed-point recursion à la `mkDerivation`,
+    so `passthru.foo = "${finalAttrs.version}-bar"` and friends work.
+
+    Example (single script):
+
+      writeResolvedShellApplication {
+        pname = "my-tool";
+        version = "1.0";
+        src = fetchFromGitHub { ... };
+        installScripts."src/my-tool.sh" = "bin/my-tool";
+        buildInputs = [ jq curl ];
+      }
+
+    Example (multi-script with sourced library):
+
+      writeResolvedShellApplication {
+        pname = "mons";
+        version = "...";
+        src = ...;
+        installScripts = {
+          "mons.sh"    = "bin/mons";
+          "liblist.sh" = "lib/libshlist/liblist.sh";
+        };
+        buildInputs = [ coreutils gawk gnugrep gnused xrandr ];
+      }
+  */
+  writeResolvedShellApplication = lib.extendMkDerivation {
+    constructDrv = stdenvNoCC.mkDerivation;
+
+    excludeDrvArgNames = [
+      "installScripts"
+      "interpreter"
+      "strict"
+      "rusholveFlags"
+    ];
+
+    extendDrvArgs =
+      finalAttrs:
+      {
+        installScripts,
+        interpreter ? null,
+        strict ? false,
+        rusholveFlags ? [ ],
+        __structuredAttrs ? true,
+        ...
+      }@args:
+      let
+        buildInputs = args.buildInputs or [ ];
+        strictFlag = lib.optionalString strict "--strict";
+        inputsFlag = lib.optionalString (buildInputs != [ ]) "--inputs ${
+          lib.escapeShellArg (lib.makeBinPath buildInputs)
+        }";
+        interpreterFlag = lib.optionalString (interpreter != null) "--interpreter ${
+          lib.escapeShellArg interpreter
+        }";
+        userFlags = lib.escapeShellArgs rusholveFlags;
+
+        # e.name = src (under unpacked tree), e.value = dest (under $out)
+        scriptList = lib.attrsToList installScripts;
+        # `$out` is a bash variable that nix doesn't substitute; we
+        # quote with `"…"` (not `lib.escapeShellArg`) so bash expands
+        # it. The static suffix is escaped via `lib.escapeShellArg` to
+        # preserve any spaces/specials in `e.value`.
+        installLines = lib.concatMapStringsSep "\n          " (
+          e: ''install -Dm755 ${lib.escapeShellArg e.name} "$out/"${lib.escapeShellArg e.value}''
+        ) scriptList;
+        resolvePaths = lib.concatMapStringsSep " " (
+          e: ''"$out/"${lib.escapeShellArg e.value}''
+        ) scriptList;
+      in
+      assert lib.assertMsg (scriptList != [ ]) "writeResolvedShellApplication: `installScripts` must contain at least one entry";
+      {
+        inherit __structuredAttrs;
+        pos = builtins.unsafeGetAttrPos "pname" args;
+
+        nativeBuildInputs = (args.nativeBuildInputs or [ ]) ++ [ rusholve ];
+        disallowedReferences = (args.disallowedReferences or [ ]) ++ [ rusholve ];
+
+        dontBuild = true;
+        dontConfigure = true;
+
+        installPhase = ''
+          runHook preInstall
+
+          ${installLines}
+          ${lib.getExe rusholve} ${strictFlag} ${interpreterFlag} ${inputsFlag} ${userFlags} \
+            resolve --in-place ${resolvePaths}
+
+          runHook postInstall
+        '';
+      };
+  };
 
   # Create a C binary
   # TODO: add to writers? pkgs/build-support/writers
