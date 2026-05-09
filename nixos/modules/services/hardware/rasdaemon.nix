@@ -128,7 +128,7 @@ in
         "aer-inject"
       ];
 
-    boot.kernelPatches = lib.optionals (cfg.testing) [
+    boot.kernel.patches = lib.optionals (cfg.testing) [
       {
         name = "rasdaemon-tests";
         patch = null;

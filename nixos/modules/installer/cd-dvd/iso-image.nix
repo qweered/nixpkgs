@@ -44,8 +44,8 @@ let
           cfg.isoImage.appendToMenuLabel
           (lib.optionalString (cfg.isoImage.configurationName != null) (" " + cfg.isoImage.configurationName))
         ];
-        params = "init=${cfg.system.build.toplevel}/init ${toString cfg.boot.kernelParams} ${toString params}";
-        image = "/boot/${cfg.boot.kernelPackages.kernel + "/" + cfg.system.boot.loader.kernelFile}";
+        params = "init=${cfg.system.build.toplevel}/init ${toString cfg.boot.kernel.params} ${toString params}";
+        image = "/boot/${cfg.boot.kernel.packages.kernel + "/" + cfg.system.boot.loader.kernelFile}";
         initrd = "/boot/${cfg.system.build.initialRamdisk + "/" + cfg.system.boot.loader.initrdFile}";
         class = "installer";
       };
@@ -155,8 +155,8 @@ let
         MENU LABEL ${cfg.isoImage.prependToMenuLabel}${cfg.system.nixos.distroName} ${cfg.system.nixos.label}${cfg.isoImage.appendToMenuLabel}${
           lib.optionalString (cfg.isoImage.configurationName != null) (" " + cfg.isoImage.configurationName)
         }
-        LINUX /boot/${cfg.boot.kernelPackages.kernel + "/" + cfg.system.boot.loader.kernelFile}
-        APPEND init=${cfg.system.build.toplevel}/init ${toString cfg.boot.kernelParams} ${toString params}
+        LINUX /boot/${cfg.boot.kernel.packages.kernel + "/" + cfg.system.boot.loader.kernelFile}
+        APPEND init=${cfg.system.build.toplevel}/init ${toString cfg.boot.kernel.params} ${toString params}
         INITRD /boot/${cfg.system.build.initialRamdisk + "/" + cfg.system.boot.loader.initrdFile}
       ''}
 
@@ -809,7 +809,7 @@ in
       options = [
         "loop"
       ]
-      ++ lib.optional (config.boot.kernelPackages.kernel.kernelAtLeast "6.2") "threads=multi";
+      ++ lib.optional (config.boot.kernel.packages.kernel.kernelAtLeast "6.2") "threads=multi";
       neededForBoot = true;
     };
 
@@ -886,7 +886,7 @@ in
     # UUID of the USB stick.  It would be nicer to write
     # `root=/dev/disk/by-label/...' here, but UNetbootin doesn't
     # recognise that.
-    boot.kernelParams = lib.optionals (!config.boot.initrd.systemd.enable) [
+    boot.kernel.params = lib.optionals (!config.boot.initrd.systemd.enable) [
       "boot.shell_on_fail"
       "root=LABEL=${config.isoImage.volumeID}"
     ];
@@ -958,8 +958,8 @@ in
           cfg:
           lib.optionals cfg.isoImage.showConfiguration [
             {
-              source = cfg.boot.kernelPackages.kernel + "/" + cfg.system.boot.loader.kernelFile;
-              target = "/boot/" + cfg.boot.kernelPackages.kernel + "/" + cfg.system.boot.loader.kernelFile;
+              source = cfg.boot.kernel.packages.kernel + "/" + cfg.system.boot.loader.kernelFile;
+              target = "/boot/" + cfg.boot.kernel.packages.kernel + "/" + cfg.system.boot.loader.kernelFile;
             }
             {
               source = cfg.system.build.initialRamdisk + "/" + cfg.system.boot.loader.initrdFile;

@@ -121,7 +121,7 @@ in
     (mkIf cfg.boot.vdo.enable {
       assertions = [
         {
-          assertion = lib.versionAtLeast config.boot.kernelPackages.kernel.version "6.9";
+          assertion = lib.versionAtLeast config.boot.kernel.packages.kernel.version "6.9";
           message = "boot.vdo.enable requires at least kernel version 6.9";
         }
       ];

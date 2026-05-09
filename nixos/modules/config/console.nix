@@ -229,7 +229,7 @@ in
         }
 
         (lib.mkIf (cfg.colors != [ ]) {
-          boot.kernelParams = [
+          boot.kernel.params = [
             "vt.default_red=${makeColor 0 cfg.colors}"
             "vt.default_grn=${makeColor 1 cfg.colors}"
             "vt.default_blu=${makeColor 2 cfg.colors}"

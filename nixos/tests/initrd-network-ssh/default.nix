@@ -13,7 +13,7 @@ import ../make-test-python.nix (
       server =
         { config, ... }:
         {
-          boot.kernelParams = [
+          boot.kernel.params = [
             "ip=${config.networking.primaryIPAddress}:::255.255.255.0::eth1:none"
           ];
           boot.initrd.systemd.enable = false;

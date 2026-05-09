@@ -169,7 +169,7 @@ in
     };
 
     services.udev.packages = [
-      config.boot.kernelPackages.nxp-pn5xx
+      config.boot.kernel.packages.nxp-pn5xx
     ];
 
     boot.blacklistedKernelModules = [
@@ -178,10 +178,10 @@ in
     ];
 
     boot.extraModulePackages = [
-      config.boot.kernelPackages.nxp-pn5xx
+      config.boot.kernel.packages.nxp-pn5xx
     ];
 
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "nxp-pn5xx"
     ];
 

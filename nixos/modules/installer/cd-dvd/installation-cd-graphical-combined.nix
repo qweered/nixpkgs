@@ -27,7 +27,7 @@
           ./latest-kernel.nix
         ];
         isoImage.showConfiguration = true;
-        isoImage.configurationName = "GNOME (Linux ${config.boot.kernelPackages.kernel.version})";
+        isoImage.configurationName = "GNOME (Linux ${config.boot.kernel.packages.kernel.version})";
       };
 
     plasma.configuration =
@@ -46,7 +46,7 @@
           ./latest-kernel.nix
         ];
         isoImage.showConfiguration = true;
-        isoImage.configurationName = "Plasma (Linux ${config.boot.kernelPackages.kernel.version})";
+        isoImage.configurationName = "Plasma (Linux ${config.boot.kernel.packages.kernel.version})";
       };
   };
 }

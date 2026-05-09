@@ -13,7 +13,7 @@ in
   options.programs.sedutil.enable = lib.mkEnableOption "sedutil, to manage self encrypting drives that conform to the Trusted Computing Group OPAL 2.0 SSC specification";
 
   config = lib.mkIf cfg.enable {
-    boot.kernelParams = [
+    boot.kernel.params = [
       "libata.allow_tpm=1"
     ];
 

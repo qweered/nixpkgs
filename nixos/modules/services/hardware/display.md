@@ -13,7 +13,7 @@ Example situations it can help you with:
 
 In case of very wrong monitor controller and/or video driver combination you can
 [force the display to be enabled](https://mjmwired.net/kernel/Documentation/fb/modedb.txt#41)
-and skip some driver-side checks by adding `video=<OUTPUT>:e` to `boot.kernelParams`.
+and skip some driver-side checks by adding `video=<OUTPUT>:e` to `boot.kernel.params`.
 This is exactly the case with [`amdgpu` drivers](https://gitlab.freedesktop.org/drm/amd/-/issues/615#note_1987392)
 
 ```nix
@@ -25,7 +25,7 @@ This is exactly the case with [`amdgpu` drivers](https://gitlab.freedesktop.org/
 
   /*
     equals
-    boot.kernelParams = [ "video=DP-1:e" "video=VGA-2:d" ];
+    boot.kernel.params = [ "video=DP-1:e" "video=VGA-2:d" ];
   */
 }
 ```
@@ -58,7 +58,7 @@ There are 2 options significantly easing preparation of EDID files:
 ## Assigning EDID files to displays {#module-hardware-display-edid-assign}
 
 To assign available custom EDID binaries to your monitor (video output) use `hardware.display.outputs."<NAME>".edid` option.
-Under the hood it adds `drm.edid_firmware` entry to `boot.kernelParams` NixOS option for each configured output:
+Under the hood it adds `drm.edid_firmware` entry to `boot.kernel.params` NixOS option for each configured output:
 
 ```nix
 {
@@ -66,7 +66,7 @@ Under the hood it adds `drm.edid_firmware` entry to `boot.kernelParams` NixOS op
   hardware.display.outputs."VGA-2".edid = "custom2.bin";
   /*
     equals:
-    boot.kernelParams = [ "drm.edid_firmware=VGA-1:edid/custom1.bin,VGA-2:edid/custom2.bin" ];
+    boot.kernel.params = [ "drm.edid_firmware=VGA-1:edid/custom1.bin,VGA-2:edid/custom2.bin" ];
   */
 }
 ```

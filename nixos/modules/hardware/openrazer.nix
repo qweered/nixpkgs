@@ -134,8 +134,8 @@ in
 
       packages = {
         kernel = lib.mkPackageOption pkgs "openrazer kernel" { } // {
-          default = config.boot.kernelPackages.openrazer;
-          defaultText = lib.literalExpression "config.boot.kernelPackages.openrazer";
+          default = config.boot.kernel.packages.openrazer;
+          defaultText = lib.literalExpression "config.boot.kernel.packages.openrazer";
         };
         daemon = lib.mkPackageOption pkgs [ "python3Packages" "openrazer-daemon" ] { };
       };
@@ -151,7 +151,7 @@ in
 
   config = lib.mkIf cfg.enable {
     boot.extraModulePackages = [ cfg.packages.kernel ];
-    boot.kernelModules = drivers;
+    boot.kernel.modules = drivers;
 
     # Makes the man pages available so you can successfully run
     # > systemctl --user help openrazer-daemon

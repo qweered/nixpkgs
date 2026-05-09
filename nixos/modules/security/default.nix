@@ -25,12 +25,12 @@ in
     (lib.mkIf (lib.lists.length cfg.lsm > 0) {
       assertions = [
         {
-          assertion = builtins.length (lib.filter (lib.hasPrefix "security=") config.boot.kernelParams) == 0;
-          message = "security parameter in boot.kernelParams cannot be used when security.lsm is used";
+          assertion = builtins.length (lib.filter (lib.hasPrefix "security=") config.boot.kernel.params) == 0;
+          message = "security parameter in boot.kernel.params cannot be used when security.lsm is used";
         }
       ];
 
-      boot.kernelParams = [
+      boot.kernel.params = [
         "lsm=${lib.concatStringsSep "," cfg.lsm}"
       ];
     })

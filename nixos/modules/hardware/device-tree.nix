@@ -132,8 +132,8 @@ in
       };
 
       kernelPackage = lib.mkOption {
-        default = config.boot.kernelPackages.kernel;
-        defaultText = lib.literalExpression "config.boot.kernelPackages.kernel";
+        default = config.boot.kernel.packages.kernel;
+        defaultText = lib.literalExpression "config.boot.kernel.packages.kernel";
         example = lib.literalExpression "pkgs.linux_latest";
         type = lib.types.path;
         description = ''

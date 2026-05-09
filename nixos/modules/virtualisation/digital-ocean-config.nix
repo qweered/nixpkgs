@@ -46,13 +46,13 @@ with lib;
         };
         boot = {
           growPartition = true;
-          kernelParams = [
+          kernel.params = [
             "console=ttyS0"
             "panic=1"
             "boot.panic_on_fail"
           ];
           initrd.kernelModules = [ "virtio_scsi" ];
-          kernelModules = [
+          kernel.modules = [
             "virtio_pci"
             "virtio_net"
           ];

@@ -70,7 +70,7 @@ let
         boot.initrd.secrets."/etc/secret" = "/etc/nixos/secret";
 
         ${optionalString clevisTest ''
-          boot.kernelParams = [ "console=tty0" "ip=192.168.1.1:::255.255.255.0::eth1:none" ];
+          boot.kernel.params = [ "console=tty0" "ip=192.168.1.1:::255.255.255.0::eth1:none" ];
           boot.initrd = {
             availableKernelModules = [ "tpm_tis" ];
             clevis = { enable = true; useTang = true; };
@@ -1545,7 +1545,7 @@ in
     };
 
     extraConfig = ''
-      boot.kernelParams = lib.mkAfter [ "console=tty0" ];
+      boot.kernel.params = lib.mkAfter [ "console=tty0" ];
     '';
 
     enableOCR = true;

@@ -34,7 +34,7 @@ let
           # Make /dev/console point to serial console for proper capture
           # test-instrumentation.nix adds console=tty0, so we need to add console=ttyS0 AFTER it
           # The last console= parameter takes precedence for /dev/console
-          boot.kernelParams = mkAfter [ "console=ttyS0" ];
+          boot.kernel.params = mkAfter [ "console=ttyS0" ];
 
           # Configure VLAN networking to match test framework setup
           networking.interfaces.eth0 = {

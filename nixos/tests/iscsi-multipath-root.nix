@@ -147,7 +147,7 @@ in
         boot.initrd.network.enable = true;
         boot.loader.grub.enable = false;
 
-        boot.kernelParams = lib.mkOverride 5 [
+        boot.kernel.params = lib.mkOverride 5 [
           "boot.shell_on_fail"
           "console=tty1"
           "ip=192.168.1.1:::255.255.255.0::ens9:none"

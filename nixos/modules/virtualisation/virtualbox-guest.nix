@@ -7,7 +7,7 @@
 }:
 let
   cfg = config.virtualisation.virtualbox.guest;
-  kernel = config.boot.kernelPackages;
+  kernel = config.boot.kernel.packages;
 
   mkVirtualBoxUserService = serviceArgs: verbose: {
     description = "VirtualBox Guest User Services ${serviceArgs}";

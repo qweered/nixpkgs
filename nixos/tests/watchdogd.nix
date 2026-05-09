@@ -9,7 +9,7 @@
       virtualisation.qemu.options = [
         "-device i6300esb" # virtual watchdog timer
       ];
-      boot.kernelModules = [ "i6300esb" ];
+      boot.kernel.modules = [ "i6300esb" ];
       services.watchdogd.enable = true;
       services.watchdogd.settings = {
         supervisor.enabled = true;

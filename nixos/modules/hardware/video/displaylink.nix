@@ -8,7 +8,7 @@ let
 
   enabled = lib.elem "displaylink" config.services.xserver.videoDrivers;
 
-  evdi = config.boot.kernelPackages.evdi;
+  evdi = config.boot.kernel.packages.evdi;
 
   displaylink = pkgs.displaylink.override {
     inherit evdi;
@@ -21,7 +21,7 @@ in
   config = lib.mkIf enabled {
 
     boot.extraModulePackages = [ evdi ];
-    boot.kernelModules = [ "evdi" ];
+    boot.kernel.modules = [ "evdi" ];
 
     services.xserver.externallyConfiguredDrivers = [ "displaylink" ];
 

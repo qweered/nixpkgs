@@ -6,7 +6,7 @@
     { pkgs, lib, ... }:
     lib.mkMerge [
       {
-        boot.kernelPackages = pkgs.linuxPackages;
+        boot.kernel.packages = pkgs.linuxPackages;
         environment.etc.plainFile.text = ''
           Hello World
         '';

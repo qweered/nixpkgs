@@ -323,7 +323,7 @@ cfgtail = """  # Some programs need SUID wrappers, can be configured further or 
 """
 
 cfglatestkernel = """  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernel.packages = pkgs.linuxPackages_latest;
 
 """
 def env_is_set(name):

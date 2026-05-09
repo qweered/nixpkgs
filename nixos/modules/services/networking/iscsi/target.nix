@@ -36,7 +36,7 @@ in
 
     environment.systemPackages = with pkgs; [ targetcli-fb ];
 
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "configfs"
       "target_core_mod"
       "iscsi_target_mod"

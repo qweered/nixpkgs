@@ -8,9 +8,9 @@
       { config, pkgs, ... }:
       {
         boot = {
-          kernelModules = [ "drbd" ];
-          extraModulePackages = with config.boot.kernelPackages; [ drbd ];
-          kernelPackages = pkgs.linuxPackages;
+          kernel.modules = [ "drbd" ];
+          extraModulePackages = with config.boot.kernel.packages; [ drbd ];
+          kernel.packages = pkgs.linuxPackages;
         };
       };
   };

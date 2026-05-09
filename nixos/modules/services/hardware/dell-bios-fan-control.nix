@@ -16,7 +16,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [ "i8k" ];
+    boot.kernel.modules = [ "i8k" ];
     environment.systemPackages = [ cfg.package ];
     # see ref in aur: https://aur.archlinux.org/cgit/aur.git/tree/dell-bios-fan-control.service?h=dell-bios-fan-control-git
     systemd.services.dell-bios-fan-control = {

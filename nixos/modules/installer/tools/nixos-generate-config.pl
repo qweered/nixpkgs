@@ -623,7 +623,7 @@ my $hwConfig = <<EOF;
 
   boot.initrd.availableKernelModules = [$initrdAvailableKernelModules ];
   boot.initrd.kernelModules = [$initrdKernelModules ];
-  boot.kernelModules = [$kernelModules ];
+  boot.kernel.modules = [$kernelModules ];
   boot.extraModulePackages = [$modulePackages ];
 $fsAndSwap
 ${\join "", (map { "  $_\n" } (uniq @attrs))}}
@@ -709,7 +709,7 @@ EOF
             $bootLoaderConfig .= <<EOF;
 
   # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernel.packages = pkgs.linuxPackages_latest;
 EOF
         }
 

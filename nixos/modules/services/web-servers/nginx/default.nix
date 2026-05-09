@@ -1692,7 +1692,7 @@ in
       nginx.gid = config.ids.gids.nginx;
     };
 
-    boot.kernelModules = optional (versionAtLeast config.boot.kernelPackages.kernel.version "4.17") "tls";
+    boot.kernel.modules = optional (versionAtLeast config.boot.kernel.packages.kernel.version "4.17") "tls";
 
     # do not delete the default temp directories created upon nginx startup
     systemd.tmpfiles.rules = [

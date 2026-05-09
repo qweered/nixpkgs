@@ -125,7 +125,7 @@ in
         message = "`hardware.graphics.enable32Bit` is only supported on an x86_64 system.";
       }
       {
-        assertion = cfg.enable32Bit -> (config.boot.kernelPackages.kernel.features.ia32Emulation or false);
+        assertion = cfg.enable32Bit -> (config.boot.kernel.packages.kernel.features.ia32Emulation or false);
         message = "`hardware.graphics.enable32Bit` requires a kernel that supports 32-bit emulation";
       }
     ];

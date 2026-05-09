@@ -1413,7 +1413,7 @@ let
       {
         name = "WlanInterface";
         nodes.machine = {
-          boot.kernelModules = [ "mac80211_hwsim" ];
+          boot.kernel.modules = [ "mac80211_hwsim" ];
           networking.wlanInterfaces = {
             wlan0 = {
               device = "wlan0";

@@ -74,7 +74,7 @@ in
     environment.systemPackages = [ pkgs.orangefs ];
 
     boot.supportedFilesystems = [ "pvfs2" ];
-    boot.kernelModules = [ "orangefs" ];
+    boot.kernel.modules = [ "orangefs" ];
 
     systemd.services.orangefs-client = {
       requires = [ "network-online.target" ];

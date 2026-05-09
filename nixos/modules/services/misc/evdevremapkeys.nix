@@ -23,7 +23,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [ "uinput" ];
+    boot.kernel.modules = [ "uinput" ];
     services.udev.extraRules = ''
       KERNEL=="uinput", MODE="0660", GROUP="input"
     '';

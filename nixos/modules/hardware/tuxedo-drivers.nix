@@ -6,7 +6,7 @@
 }:
 let
   cfg = config.hardware.tuxedo-drivers;
-  tuxedo-drivers = config.boot.kernelPackages.tuxedo-drivers;
+  tuxedo-drivers = config.boot.kernel.packages.tuxedo-drivers;
   udevRule =
     attr: val:
     let
@@ -90,7 +90,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [ "tuxedo_keyboard" ];
+    boot.kernel.modules = [ "tuxedo_keyboard" ];
     boot.extraModulePackages = [ tuxedo-drivers ];
     services.udev.packages = [
       tuxedo-drivers

@@ -58,7 +58,7 @@ in
 
     # Module is upstream as of 6.10,
     # but still needs various out-of-tree i2c and the `intel-ipu6-psys` kernel driver
-    boot.extraModulePackages = with config.boot.kernelPackages; [ ipu6-drivers ];
+    boot.extraModulePackages = with config.boot.kernel.packages; [ ipu6-drivers ];
 
     hardware.firmware = with pkgs; [
       ipu6-camera-bins
@@ -117,7 +117,7 @@ in
     systemd.services.v4l2-relayd-ipu6 = {
       preStart = mkForce ''
         mkdir -p "$(dirname "$V4L2_DEVICE_FILE")"
-        ${config.boot.kernelPackages.v4l2loopback.bin}/bin/v4l2loopback-ctl \
+        ${config.boot.kernel.packages.v4l2loopback.bin}/bin/v4l2loopback-ctl \
           add --name "Intel MIPI Camera" --exclusive-caps=1 ${toString cfg.videoDeviceNumber} || [ $? -eq 17 ]
         echo /dev/video${toString cfg.videoDeviceNumber} > "$V4L2_DEVICE_FILE"
       '';

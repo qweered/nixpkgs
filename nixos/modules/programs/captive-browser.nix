@@ -21,7 +21,7 @@ let
     types
     ;
 
-  requiresSetcapWrapper = config.boot.kernelPackages.kernelOlder "5.7" && cfg.bindInterface;
+  requiresSetcapWrapper = config.boot.kernel.packages.kernelOlder "5.7" && cfg.bindInterface;
 
   browserDefault =
     chromium:

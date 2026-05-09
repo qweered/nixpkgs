@@ -46,7 +46,7 @@ in
 
   config = lib.mkMerge [
     {
-      boot.kernelParams =
+      boot.kernel.params =
         lib.optionals cfg.legacySupport.enable [
           "amdgpu.si_support=1"
           "amdgpu.cik_support=1"

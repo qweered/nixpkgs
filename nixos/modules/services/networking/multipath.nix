@@ -608,7 +608,7 @@ in
     systemd.packages = [ cfg.package ];
 
     environment.systemPackages = [ cfg.package ];
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "dm-multipath"
       "dm-service-time"
     ];

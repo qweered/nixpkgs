@@ -17,7 +17,7 @@ let
     extensionPack = if cfg.enableExtensionPack then pkgs.virtualboxExtpack else null;
   };
 
-  kernelModules = config.boot.kernelPackages.virtualbox.override {
+  kernelModules = config.boot.kernel.packages.virtualbox.override {
     inherit virtualbox;
   };
 
@@ -158,18 +158,18 @@ in
         ];
       })
       (lib.mkIf (!cfg.enableKvm) {
-        boot.kernelModules = [
+        boot.kernel.modules = [
           "vboxdrv"
           "vboxnetadp"
           "vboxnetflt"
         ];
         boot.extraModulePackages = [ kernelModules ];
         # See https://github.com/VirtualBox/virtualbox/issues/188
-        boot.kernelParams =
+        boot.kernel.params =
           lib.mkIf
             (
-              lib.versionAtLeast config.boot.kernelPackages.kernel.version "6.12"
-              && lib.versionOlder config.boot.kernelPackages.kernel.version "6.16"
+              lib.versionAtLeast config.boot.kernel.packages.kernel.version "6.12"
+              && lib.versionOlder config.boot.kernel.packages.kernel.version "6.16"
             )
             [
               "kvm.enable_virt_at_load=0"

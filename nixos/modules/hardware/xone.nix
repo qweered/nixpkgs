@@ -18,7 +18,7 @@ in
         "xpad"
         "mt76x2u"
       ];
-      extraModulePackages = with config.boot.kernelPackages; [ xone ];
+      extraModulePackages = with config.boot.kernel.packages; [ xone ];
     };
     hardware.firmware = [ pkgs.xone-dongle-firmware ];
     hardware.xpad-noone.enable = lib.mkDefault true;

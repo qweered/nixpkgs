@@ -10,7 +10,7 @@ let
   commonConfig =
     { pkgs, ... }:
     {
-      boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+      boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
       networking.nftables.enable = nftables;
       # Make sure iptables doesn't work with nftables enabled
       boot.blacklistedKernelModules = lib.mkIf nftables [ "nft_compat" ];

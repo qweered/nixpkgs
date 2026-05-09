@@ -70,7 +70,7 @@
         };
 
         # Use batman_adv module from nixpkgs
-        boot.extraModulePackages = [ config.boot.kernelPackages.batman_adv ];
+        boot.extraModulePackages = [ config.boot.kernel.packages.batman_adv ];
 
         environment.systemPackages = [
           pkgs.batctl

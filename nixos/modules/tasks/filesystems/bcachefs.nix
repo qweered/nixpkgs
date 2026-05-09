@@ -189,7 +189,7 @@ in
     modulePackage = lib.mkOption {
       type = lib.types.package;
       # See NOTE in linux-kernels.nix
-      default = config.boot.kernelPackages.callPackage cfg.package.kernelModule { };
+      default = config.boot.kernel.packages.callPackage cfg.package.kernelModule { };
       internal = true;
     };
   };
@@ -227,7 +227,7 @@ in
           {
             assertion =
               let
-                kernel = config.boot.kernelPackages.kernel;
+                kernel = config.boot.kernel.packages.kernel;
               in
               (
                 kernel.kernelAtLeast "6.7"
@@ -261,7 +261,7 @@ in
           "bcachefs"
           "sha256"
         ]
-        ++ lib.optionals (config.boot.kernelPackages.kernel.kernelOlder "6.15") [
+        ++ lib.optionals (config.boot.kernel.packages.kernel.kernelOlder "6.15") [
           # chacha20 and poly1305 are required only for decryption attempts
           # kernel 6.15 uses kernel api libraries for poly1305/chacha20: 4bf4b5046de0ef7f9dc50f3a9ef8a6dcda178a6d
           # kernel 6.16 removes poly1305: ceef731b0e22df80a13d67773ae9afd55a971f9e
@@ -291,7 +291,7 @@ in
       (lib.mkIf (cfgScrub.enable) {
         assertions = [
           {
-            assertion = lib.versionAtLeast config.boot.kernelPackages.kernel.version "6.14";
+            assertion = lib.versionAtLeast config.boot.kernel.packages.kernel.version "6.14";
             message = "Bcachefs scrubbing is supported from kernel version 6.14 or later.";
           }
           {

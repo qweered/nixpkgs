@@ -6,7 +6,7 @@
 }:
 let
   inherit (lib) mkEnableOption mkIf;
-  inherit (config.boot.kernelPackages) tt-kmd;
+  inherit (config.boot.kernel.packages) tt-kmd;
 
   cfg = config.hardware.tenstorrent;
 in
@@ -16,7 +16,7 @@ in
   config = mkIf cfg.enable {
     boot = {
       extraModulePackages = [ tt-kmd ];
-      kernelModules = [ "tenstorrent" ];
+      kernel.modules = [ "tenstorrent" ];
     };
 
     services.udev.packages = [

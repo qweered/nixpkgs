@@ -94,7 +94,7 @@ in
 
     assertions = [
       {
-        assertion = lib.versionAtLeast config.boot.kernelPackages.kernel.version "6.12";
+        assertion = lib.versionAtLeast config.boot.kernel.packages.kernel.version "6.12";
         message = "SCX is only supported on kernel version >= 6.12.";
       }
     ];

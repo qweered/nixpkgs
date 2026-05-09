@@ -20,7 +20,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [ "tun" ];
+    boot.kernel.modules = [ "tun" ];
 
     environment.systemPackages = with pkgs; [
       ivpn

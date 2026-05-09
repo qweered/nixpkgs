@@ -331,7 +331,7 @@ in
       # vm.max_map_count is set higher in nixos/modules/config/sysctl.nix
     };
 
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "br_netfilter"
       "veth"
       "xt_comment"

@@ -32,11 +32,11 @@ in
 
   config = lib.mkIf cfg.enable {
     boot = {
-      kernelModules = [
+      kernel.modules = [
         "v4l2loopback"
         "snd-aloop"
       ];
-      extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
+      extraModulePackages = [ config.boot.kernel.packages.v4l2loopback ];
       extraModprobeConfig = ''
         options v4l2loopback exclusive_caps=1 card_label="v4l2loopback Virtual Camera"
       '';

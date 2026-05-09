@@ -33,8 +33,8 @@ in
         };
         package = lib.mkOption {
           type = lib.types.package;
-          default = config.boot.kernelPackages.netatop;
-          defaultText = lib.literalExpression "config.boot.kernelPackages.netatop";
+          default = config.boot.kernel.packages.netatop;
+          defaultText = lib.literalExpression "config.boot.kernel.packages.netatop";
           description = ''
             Which package to use for netatop.
           '';

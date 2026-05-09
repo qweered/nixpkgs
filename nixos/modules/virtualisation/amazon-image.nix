@@ -55,16 +55,16 @@ in
     boot.zfs.devNodes = mkIf cfg.zfs.enable "/dev/";
 
     boot.extraModulePackages = [
-      config.boot.kernelPackages.ena
+      config.boot.kernel.packages.ena
     ];
     boot.initrd.availableKernelModules = [ "nvme" ];
-    boot.kernelParams =
+    boot.kernel.params =
       let
         # Amazon recommends setting this to the highest possible value for a good EBS
         # experience, which prior to 4.15 was 255.
         # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html#timeout-nvme-ebs-volumes
         nvmeTimeout =
-          if lib.versionAtLeast config.boot.kernelPackages.kernel.version "4.15" then "4294967295" else "255";
+          if lib.versionAtLeast config.boot.kernel.packages.kernel.version "4.15" then "4294967295" else "255";
       in
       [
         "console=ttyS0,115200n8"

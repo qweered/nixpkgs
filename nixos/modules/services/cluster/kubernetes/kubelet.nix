@@ -390,7 +390,7 @@ in
         pkgs.cni-plugin-flannel
       ];
 
-      boot.kernelModules = [
+      boot.kernel.modules = [
         "br_netfilter"
         "overlay"
       ];

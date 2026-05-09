@@ -7,7 +7,7 @@
 
 let
   cfg = config.programs.corefreq;
-  kernelPackages = config.boot.kernelPackages;
+  kernelPackages = config.boot.kernel.packages;
 in
 {
   options = {
@@ -17,7 +17,7 @@ in
       package = lib.mkOption {
         type = lib.types.package;
         default = kernelPackages.corefreq;
-        defaultText = lib.literalExpression "config.boot.kernelPackages.corefreq";
+        defaultText = lib.literalExpression "config.boot.kernel.packages.corefreq";
         description = ''
           The corefreq package to use.
         '';
@@ -28,7 +28,7 @@ in
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ cfg.package ];
     boot.extraModulePackages = [ cfg.package ];
-    boot.kernelModules = [ "corefreqk" ];
+    boot.kernel.modules = [ "corefreqk" ];
 
     # Create a systemd service for the corefreq daemon
     systemd.services.corefreq = {

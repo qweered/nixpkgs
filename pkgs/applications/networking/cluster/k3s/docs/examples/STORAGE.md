@@ -84,7 +84,7 @@ services.rpcbind.enable = true;
 In order to support Rook/Ceph, the following NixOS kernelModule configuration is required:
 
 ```
-  boot.kernelModules = [ "rbd" ];
+  boot.kernel.modules = [ "rbd" ];
 ```
 
 ## ZFS ContainerD Support

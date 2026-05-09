@@ -154,7 +154,7 @@ in
             ${cfg.vpnclient.down}
           '';
         };
-        boot.kernelModules = [ "tun" ];
+        boot.kernel.modules = [ "tun" ];
       })
 
     ]

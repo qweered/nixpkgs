@@ -52,7 +52,7 @@ in
     environment.systemPackages = [ cfg.package ];
     services.udev.packages = [ cfg.package ];
 
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "i2c-dev"
     ]
     ++ lib.optionals (cfg.motherboard == "amd") [ "i2c-piix4" ]

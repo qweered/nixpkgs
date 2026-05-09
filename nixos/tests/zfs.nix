@@ -43,7 +43,7 @@ let
           boot.loader.timeout = 0;
           boot.loader.efi.canTouchEfiVariables = true;
           networking.hostId = "deadbeef";
-          boot.kernelPackages = kernelPackages;
+          boot.kernel.packages = kernelPackages;
           boot.zfs.package = zfsPackage;
           boot.supportedFilesystems = [ "zfs" ];
           boot.initrd.systemd.enable = enableSystemdStage1;

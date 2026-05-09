@@ -5,7 +5,7 @@
   nodes = {
     machine = {
       # Configure the machine to print some distinctive messages to console
-      boot.kernelParams = [ "console=ttyS0,115200n8" ];
+      boot.kernel.params = [ "console=ttyS0,115200n8" ];
 
       # TODO: add a system service that logs to /dev/console, and test that
       #       blocked on https://github.com/NixOS/nixpkgs/issues/442382

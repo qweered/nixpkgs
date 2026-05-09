@@ -127,7 +127,7 @@ lib.makeOverridable (
       if args ? extraStructuredConfig then
         throw ''
           Passing `extraStructuredConfig` to the Linux kernel (e.g.
-          via `boot.kernelPatches` in NixOS) is not supported anymore. Use
+          via `boot.kernel.patches` in NixOS) is not supported anymore. Use
           `structuredExtraConfig` instead.
         ''
       else
@@ -346,11 +346,11 @@ lib.makeOverridable (
                   (nixos (
                     { config, pkgs, ... }:
                     {
-                      boot.kernelPatches = [
-                        (builtins.seq config.boot.kernelPackages.kernel.version { patch = pkgs.emptyFile; })
+                      boot.kernel.patches = [
+                        (builtins.seq config.boot.kernel.packages.kernel.version { patch = pkgs.emptyFile; })
                       ];
                     }
-                  )).config.boot.kernelPackages.kernel.outPath
+                  )).config.boot.kernel.packages.kernel.outPath
                   emptyFile;
               versionDoesNotDependOnPatchesEtc =
                 builtins.seq

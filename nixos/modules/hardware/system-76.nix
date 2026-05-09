@@ -20,7 +20,7 @@ let
   cfg = config.hardware.system76;
   opt = options.hardware.system76;
 
-  kpkgs = config.boot.kernelPackages;
+  kpkgs = config.boot.kernel.packages;
   modules = [
     "system76"
     "system76-io"
@@ -30,7 +30,7 @@ let
   moduleConfig = mkIf cfg.kernel-modules.enable {
     boot.extraModulePackages = modulePackages;
 
-    boot.kernelModules = modules;
+    boot.kernel.modules = modules;
 
     services.udev.packages = modulePackages;
   };

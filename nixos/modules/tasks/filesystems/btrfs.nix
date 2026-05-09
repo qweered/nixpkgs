@@ -88,7 +88,7 @@ in
       boot.initrd.availableKernelModules = [
         "crc32c"
       ]
-      ++ optionals (config.boot.kernelPackages.kernel.kernelAtLeast "5.5") [
+      ++ optionals (config.boot.kernel.packages.kernel.kernelAtLeast "5.5") [
         # The canonical names of these modules are not very stable, so use the algorithm names that the btrfs module expects.
         # See: https://github.com/torvalds/linux/blob/v6.19-rc1/fs/btrfs/super.c#L2705-L2708
         "xxhash64"

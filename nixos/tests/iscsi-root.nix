@@ -125,7 +125,7 @@ in
       }:
       {
         boot.loader.grub.enable = false;
-        boot.kernelParams = lib.mkOverride 5 [
+        boot.kernel.params = lib.mkOverride 5 [
           "boot.shell_on_fail"
           "console=tty1"
           "ip=${config.networking.primaryIPAddress}:::255.255.255.0::eth1:none"

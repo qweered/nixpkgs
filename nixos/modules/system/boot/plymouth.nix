@@ -181,7 +181,7 @@ in
 
   config = mkIf cfg.enable {
 
-    boot.kernelParams = [ "splash" ];
+    boot.kernel.params = [ "splash" ];
 
     # To be discoverable by systemd.
     environment.systemPackages = [ cfg.package ];

@@ -18,7 +18,7 @@ let
 
   udev = config.systemd.package;
 
-  kernel-name = config.boot.kernelPackages.kernel.name or "kernel";
+  kernel-name = config.boot.kernel.packages.kernel.name or "kernel";
 
   # Determine the set of modules that we need to mount the root FS.
   modulesClosure = pkgs.makeModulesClosure {
@@ -480,7 +480,7 @@ in
         Device for manual resume attempt during boot. This should be used primarily
         if you want to resume from file. If left empty, the swap partitions are used.
         Specify here the device where the file resides.
-        You should also use {var}`boot.kernelParams` to specify
+        You should also use {var}`boot.kernel.params` to specify
         `«resume_offset»`.
       '';
     };
@@ -625,7 +625,7 @@ in
 
     boot.initrd.compressor = mkOption {
       default = (
-        if lib.versionAtLeast config.boot.kernelPackages.kernel.version "5.9" then "zstd" else "gzip"
+        if lib.versionAtLeast config.boot.kernel.packages.kernel.version "5.9" then "zstd" else "gzip"
       );
       defaultText = literalMD "`zstd` if the kernel supports it (5.9+), `gzip` if not";
       type = types.either types.str (types.functionTo types.str);
@@ -683,7 +683,7 @@ in
         configuration options:
 
         - `boot.consoleLogLevel = 0;`
-        - `boot.kernelParams = [ "quiet" "udev.log_level=3" ];`
+        - `boot.kernel.params = [ "quiet" "udev.log_level=3" ];`
       '';
     };
 

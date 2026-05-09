@@ -10,7 +10,7 @@ with lib;
 let
   cfg = config.virtualisation.kvmgt;
 
-  kernelPackages = config.boot.kernelPackages;
+  kernelPackages = config.boot.kernel.packages;
 
   vgpuOptions = {
     uuid = mkOption {
@@ -54,8 +54,8 @@ in
       message = "KVMGT is not properly supported for kernels older than 4.16";
     };
 
-    boot.kernelModules = [ "kvmgt" ];
-    boot.kernelParams = [ "i915.enable_gvt=1" ];
+    boot.kernel.modules = [ "kvmgt" ];
+    boot.kernel.params = [ "i915.enable_gvt=1" ];
 
     services.udev.extraRules = ''
       SUBSYSTEM=="vfio", OWNER="root", GROUP="kvm"

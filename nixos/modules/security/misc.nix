@@ -127,21 +127,21 @@
 
     (lib.mkIf config.security.protectKernelImage {
       # Disable hibernation (allows replacing the running kernel)
-      boot.kernelParams = [ "nohibernate" ];
+      boot.kernel.params = [ "nohibernate" ];
       # Prevent replacing the running kernel image w/o reboot
       boot.kernel.sysctl."kernel.kexec_load_disabled" = lib.mkDefault true;
     })
 
     (lib.mkIf (!config.security.allowSimultaneousMultithreading) {
-      boot.kernelParams = [ "nosmt" ];
+      boot.kernel.params = [ "nosmt" ];
     })
 
     (lib.mkIf config.security.forcePageTableIsolation {
-      boot.kernelParams = [ "pti=on" ];
+      boot.kernel.params = [ "pti=on" ];
     })
 
     (lib.mkIf (config.security.virtualisation.flushL1DataCache != null) {
-      boot.kernelParams = [
+      boot.kernel.params = [
         "kvm-intel.vmentry_l1d_flush=${config.security.virtualisation.flushL1DataCache}"
       ];
     })

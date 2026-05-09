@@ -5,7 +5,7 @@
   meta.maintainers = with lib.maintainers; [ gkleen ];
 
   nodes.qemuGuest = {
-    boot.kernelModules = [ "ptp_kvm" ];
+    boot.kernel.modules = [ "ptp_kvm" ];
 
     services.chrony = {
       enable = true;

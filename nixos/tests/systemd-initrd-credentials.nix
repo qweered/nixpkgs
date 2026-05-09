@@ -15,7 +15,7 @@
       "qemu_fw_cfg"
     ];
 
-    boot.kernelParams = [ "systemd.set_credential=cred-cmdline:secret-cmdline" ];
+    boot.kernel.params = [ "systemd.set_credential=cred-cmdline:secret-cmdline" ];
 
     boot.initrd.systemd.enable = true;
   };

@@ -23,7 +23,7 @@
       };
       boot.loader.systemd-boot.enable = true;
 
-      boot.kernelParams = lib.mkOverride 5 [ "console=tty1" ];
+      boot.kernel.params = lib.mkOverride 5 [ "console=tty1" ];
 
       environment.systemPackages = with pkgs; [ cryptsetup ];
 

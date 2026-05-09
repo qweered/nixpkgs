@@ -14,7 +14,7 @@
   };
 
   config = lib.mkIf config.services.expressvpn.enable {
-    boot.kernelModules = [ "tun" ];
+    boot.kernel.modules = [ "tun" ];
 
     systemd.services.expressvpn = {
       description = "ExpressVPN Daemon";

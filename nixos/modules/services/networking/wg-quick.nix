@@ -9,7 +9,7 @@ with lib;
 let
   cfg = config.networking.wg-quick;
 
-  kernel = config.boot.kernelPackages;
+  kernel = config.boot.kernel.packages;
 
   # interface options
 

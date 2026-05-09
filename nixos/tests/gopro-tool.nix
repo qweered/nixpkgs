@@ -29,10 +29,10 @@ in
       ];
 
       # Load kernel module for testing
-      boot.extraModulePackages = with config.boot.kernelPackages; [ v4l2loopback ];
+      boot.extraModulePackages = with config.boot.kernel.packages; [ v4l2loopback ];
 
       # Enable module loading
-      boot.kernelModules = [ "v4l2loopback" ];
+      boot.kernel.modules = [ "v4l2loopback" ];
     };
 
   testScript = testScript;

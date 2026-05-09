@@ -32,7 +32,7 @@ in
           `vmware-vmx` will cause kcompactd0 due to
           `Transparent Hugepages` feature in kernel.
           Apply `[ "transparent_hugepage=never" ]` in
-          option {option}`boot.kernelParams` to disable them.
+          option {option}`boot.kernel.params` to disable them.
           :::
 
           ::: {.note}
@@ -62,9 +62,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.extraModulePackages = [ config.boot.kernelPackages.vmware ];
+    boot.extraModulePackages = [ config.boot.kernel.packages.vmware ];
     boot.extraModprobeConfig = "alias char-major-10-229 fuse";
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "vmw_pvscsi"
       "vmw_vmci"
       "vmmon"

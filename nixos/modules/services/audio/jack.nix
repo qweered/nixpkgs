@@ -142,8 +142,8 @@ in
     })
 
     (lib.mkIf loopback {
-      boot.kernelModules = [ "snd-aloop" ];
-      boot.kernelParams = [ "snd-aloop.index=${toString cfg.loopback.index}" ];
+      boot.kernel.modules = [ "snd-aloop" ];
+      boot.kernel.params = [ "snd-aloop.index=${toString cfg.loopback.index}" ];
       environment.etc."alsa/conf.d/99-jack-loopback.conf".text = cfg.loopback.config;
     })
 

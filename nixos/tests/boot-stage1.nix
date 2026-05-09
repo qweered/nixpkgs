@@ -22,8 +22,8 @@
             pkgs.runCommandCC name
               rec {
                 inherit source;
-                kdev = config.boot.kernelPackages.kernel.dev;
-                kver = config.boot.kernelPackages.kernel.modDirVersion;
+                kdev = config.boot.kernel.packages.kernel.dev;
+                kver = config.boot.kernel.packages.kernel.modDirVersion;
                 ksrc = "${kdev}/lib/modules/${kver}/build";
                 hardeningDisable = [ "pic" ];
                 nativeBuildInputs = kdev.moduleBuildDependencies;

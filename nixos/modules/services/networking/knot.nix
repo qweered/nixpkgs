@@ -347,7 +347,7 @@ in
               "CAP_SYS_ADMIN"
               "CAP_IPC_LOCK"
             ]
-            ++ lib.optionals (lib.versionOlder config.boot.kernelPackages.kernel.version "5.11") [
+            ++ lib.optionals (lib.versionOlder config.boot.kernel.packages.kernel.version "5.11") [
               "CAP_SYS_RESOURCE"
             ];
         in

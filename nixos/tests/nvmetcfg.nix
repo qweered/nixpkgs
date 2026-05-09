@@ -10,7 +10,7 @@
     server =
       { pkgs, ... }:
       {
-        boot.kernelModules = [ "nvmet" ];
+        boot.kernel.modules = [ "nvmet" ];
         environment.systemPackages = [ pkgs.nvmetcfg ];
         networking.firewall.allowedTCPPorts = [ 4420 ];
         virtualisation.emptyDiskImages = [ 512 ];
@@ -18,7 +18,7 @@
     client =
       { pkgs, ... }:
       {
-        boot.kernelModules = [ "nvme-fabrics" ];
+        boot.kernel.modules = [ "nvme-fabrics" ];
         environment.systemPackages = [ pkgs.nvme-cli ];
       };
   };

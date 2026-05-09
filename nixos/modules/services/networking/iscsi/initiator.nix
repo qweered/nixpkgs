@@ -85,6 +85,6 @@ in
     };
 
     environment.systemPackages = [ cfg.package ];
-    boot.kernelModules = [ "iscsi_tcp" ];
+    boot.kernel.modules = [ "iscsi_tcp" ];
   };
 }

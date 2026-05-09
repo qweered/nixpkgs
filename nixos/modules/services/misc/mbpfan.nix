@@ -89,7 +89,7 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "coretemp"
       "applesmc"
     ];

@@ -110,8 +110,8 @@ in
       environment.etc."howdy/config.ini".source = settingsType.generate "howdy-config.ini" cfg.settings;
       assertions = [
         {
-          assertion = !(builtins.elem "v4l2loopback" config.boot.kernelModules);
-          message = "Adding 'v4l2loopback' to `boot.kernelModules` causes Howdy to no longer work. Consider adding 'v4l2loopback' to `boot.extraModulePackages` instead.";
+          assertion = !(builtins.elem "v4l2loopback" config.boot.kernel.modules);
+          message = "Adding 'v4l2loopback' to `boot.kernel.modules` causes Howdy to no longer work. Consider adding 'v4l2loopback' to `boot.extraModulePackages` instead.";
         }
       ];
     })

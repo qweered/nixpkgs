@@ -11,7 +11,7 @@
         enable = true;
         extraArguments = "-s 127.0.0.1 -d slimproto=info";
       };
-      boot.kernelModules = [ "snd-dummy" ];
+      boot.kernel.modules = [ "snd-dummy" ];
     };
 
   testScript = # python

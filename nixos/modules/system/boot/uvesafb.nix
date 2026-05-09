@@ -28,10 +28,10 @@ in
         type = types.package;
         description = "Which v86d package to use with uvesafb";
         defaultText = ''
-          config.boot.kernelPackages.v86d.overrideAttrs (old: {
+          config.boot.kernel.packages.v86d.overrideAttrs (old: {
                     hardeningDisable = [ "all" ];
                   })'';
-        default = config.boot.kernelPackages.v86d.overrideAttrs (old: {
+        default = config.boot.kernel.packages.v86d.overrideAttrs (old: {
           hardeningDisable = [ "all" ];
         });
       };
@@ -43,7 +43,7 @@ in
       extraFiles."/usr/v86d".source = cfg.v86d.package;
     };
 
-    boot.kernelParams = [
+    boot.kernel.params = [
       "video=uvesafb:mode:${cfg.gfx-mode},mtrr:3,ywrap"
       ''uvesafb.v86d="${cfg.v86d.package}/bin/v86d"''
     ];

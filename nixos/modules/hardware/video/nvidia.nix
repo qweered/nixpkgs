@@ -10,7 +10,7 @@ let
 
   cfg = config.hardware.nvidia;
 
-  inherit (config.boot.kernelPackages) nvidiaPackages;
+  inherit (config.boot.kernel.packages) nvidiaPackages;
 
   useOpenModules = cfg.open == true;
 
@@ -342,15 +342,15 @@ in
       package = lib.mkOption {
         type = lib.types.package;
         default = nvidiaPackages.${cfg.branch};
-        defaultText = lib.literalExpression "config.boot.kernelPackages.nvidiaPackages.\${config.hardware.nvidia.branch}";
-        example = lib.literalExpression "config.boot.kernelPackages.nvidiaPackages.legacy_470";
+        defaultText = lib.literalExpression "config.boot.kernel.packages.nvidiaPackages.\${config.hardware.nvidia.branch}";
+        example = lib.literalExpression "config.boot.kernel.packages.nvidiaPackages.legacy_470";
         description = ''
           The NVIDIA driver package to use.
 
           Prefer using {option}`hardware.nvidia.branch` when possible.
 
           If you set this option, it is recommended to pick a package from
-          `config.boot.kernelPackages.nvidiaPackages` so the driver build matches
+          `config.boot.kernel.packages.nvidiaPackages` so the driver build matches
           your configured kernel.
 
           For custom versions, you can use `nvidiaPackages.mkDriver`; see
@@ -435,7 +435,7 @@ in
               "nvidiafb"
             ];
 
-            # Don't add `nvidia-uvm` to `kernelModules`, because we want
+            # Don't add `nvidia-uvm` to `kernel.modules`, because we want
             # `nvidia-uvm` be loaded only after the GPU device is available, i.e. after `udev` rules
             # for `nvidia` kernel module are applied.
             # This matters on Azure GPU instances: https://github.com/NixOS/nixpkgs/pull/267335
@@ -452,7 +452,7 @@ in
             # Previously nvidia-uvm was explicitly loaded only when xserver was enabled:
             # https://github.com/NixOS/nixpkgs/pull/334340/commits/4548c392862115359e50860bcf658cfa8715bde9
             # We are now loading the module eagerly for all users of the open driver (including headless).
-            kernelModules = lib.optionals useOpenModules [ "nvidia_uvm" ];
+            kernel.modules = lib.optionals useOpenModules [ "nvidia_uvm" ];
           };
           systemd.tmpfiles.rules = lib.mkIf config.virtualisation.docker.enableNvidia [
             "L+ /run/nvidia-docker/bin - - - - ${nvidia_x11.bin}/origBin"
@@ -817,14 +817,14 @@ in
           boot = {
             extraModulePackages = if useOpenModules then [ nvidia_x11.open ] else [ nvidia_x11.mod ];
             # nvidia-uvm is required by CUDA applications.
-            kernelModules = lib.optionals config.services.xserver.enable [
+            kernel.modules = lib.optionals config.services.xserver.enable [
               "nvidia"
               "nvidia_modeset"
               "nvidia_drm"
             ];
 
-            kernelParams = lib.optional (
-              config.boot.kernelPackages.kernel.kernelAtLeast "6.2" && !ibtSupport
+            kernel.params = lib.optional (
+              config.boot.kernel.packages.kernel.kernelAtLeast "6.2" && !ibtSupport
             ) "ibt=off";
 
             extraModprobeConfig =
@@ -835,7 +835,7 @@ in
               lib.concatMapAttrsStringSep "\n" genModprobeLine cfg.moduleParams;
           };
           services.udev.extraRules = lib.optionalString cfg.powerManagement.finegrained (
-            lib.optionalString (lib.versionOlder config.boot.kernelPackages.kernel.version "5.5") ''
+            lib.optionalString (lib.versionOlder config.boot.kernel.packages.kernel.version "5.5") ''
               # Remove NVIDIA USB xHCI Host Controller devices, if present
               ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{class}=="0x0c0330", ATTR{remove}="1"
 

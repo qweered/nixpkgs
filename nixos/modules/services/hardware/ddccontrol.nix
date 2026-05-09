@@ -35,11 +35,11 @@ in
   ###### implementation
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "ddcci_backlight"
     ];
     boot.extraModulePackages = [
-      config.boot.kernelPackages.ddcci-driver
+      config.boot.kernel.packages.ddcci-driver
     ];
     # Load the i2c-dev module
     hardware.i2c = {

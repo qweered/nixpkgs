@@ -74,7 +74,7 @@ If the k3s.service/k3s server does not start and gives you the error FATA[0000] 
 
 To fix the problem, you can add these things to your configuration.nix.
 ```
-  boot.kernelParams = [
+  boot.kernel.params = [
     "cgroup_enable=cpuset" "cgroup_memory=1" "cgroup_enable=memory"
   ];
 ```

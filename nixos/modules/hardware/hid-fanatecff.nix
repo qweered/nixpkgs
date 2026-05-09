@@ -2,7 +2,7 @@
 
 let
   cfg = config.hardware.hid-fanatecff;
-  inherit (config.boot.kernelPackages) hid-fanatecff;
+  inherit (config.boot.kernel.packages) hid-fanatecff;
   inherit (lib) maintainers mkEnableOption mkIf;
 in
 {

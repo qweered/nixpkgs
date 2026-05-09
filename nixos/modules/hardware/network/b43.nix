@@ -5,7 +5,7 @@
   ...
 }:
 let
-  kernelVersion = config.boot.kernelPackages.kernel.version;
+  kernelVersion = config.boot.kernel.packages.kernel.version;
 in
 
 {

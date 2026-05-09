@@ -54,7 +54,7 @@ in
   config = lib.mkIf config.hardware.facter.enable {
 
     # KVM support
-    boot.kernelModules =
+    boot.kernel.modules =
       let
         hasCPUFeature =
           feature:

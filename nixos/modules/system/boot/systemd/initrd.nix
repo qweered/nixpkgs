@@ -107,7 +107,7 @@ let
     inherit (cfg) packages package;
   };
 
-  kernel-name = config.boot.kernelPackages.kernel.name or "kernel";
+  kernel-name = config.boot.kernel.packages.kernel.name or "kernel";
 
   initrdBinEnv = pkgs.buildEnv {
     name = "initrd-bin-env";
@@ -492,7 +492,7 @@ in
     ]
     ++ lib.optional cfg.package.withEfi "efivarfs";
 
-    boot.kernelParams =
+    boot.kernel.params =
       lib.optional (config.boot.initrd.systemd.root != null) "root=${config.boot.initrd.systemd.root}"
 
       ++ lib.optional (config.boot.resumeDevice != "") "resume=${config.boot.resumeDevice}"

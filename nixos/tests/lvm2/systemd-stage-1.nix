@@ -100,7 +100,7 @@ import ../make-test-python.nix (
             emergencyAccess = true;
           };
           initrd.services.lvm.enable = true;
-          kernelPackages = lib.mkIf (kernelPackages != null) kernelPackages;
+          kernel.packages = lib.mkIf (kernelPackages != null) kernelPackages;
         };
 
         specialisation.boot-lvm.configuration.virtualisation = {

@@ -117,7 +117,7 @@ let
             ../modules/installer/netboot/netboot.nix
             ../modules/testing/test-instrumentation.nix
             {
-              boot.kernelParams = [
+              boot.kernel.params = [
                 "serial"
                 "live.nixos.passwordHash=$6$jnwR50SkbLYEq/Vp$wmggwioAkfmwuYqd5hIfatZWS/bO6hewzNIwIrWcgdh7k/fhUzZT29Vil3ioMo94sdji/nipbzwEpxecLZw0d0" # "password"
               ];

@@ -104,7 +104,7 @@ in
       "vmxnet3"
       "vsock"
     ]
-    ++ lib.optionals (lib.versionOlder config.boot.kernelPackages.kernel.version "7.0") [
+    ++ lib.optionals (lib.versionOlder config.boot.kernel.packages.kernel.version "7.0") [
       "pata_qdi"
       "pata_winbond"
     ]

@@ -13,7 +13,7 @@
     peer1 =
       { lib, pkgs, ... }:
       {
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.firewall.allowedUDPPorts = [ 12345 ];
         networking.wireguard.interfaces.wg0 = {
           ips = [ "10.10.10.1/24" ];
@@ -27,7 +27,7 @@
     peer2 =
       { lib, pkgs, ... }:
       {
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.firewall.allowedUDPPorts = [ 12345 ];
         networking.wireguard.interfaces.wg0 = {
           ips = [ "10.10.10.2/24" ];

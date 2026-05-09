@@ -102,7 +102,7 @@ in
 
   config = mkMerge [
     (mkIf cfg.module.enable {
-      boot.kernelModules = [
+      boot.kernel.modules = [
         "mac80211_hwsim"
       ];
       boot.extraModprobeConfig = ''
@@ -156,7 +156,7 @@ in
         };
     })
     (mkIf cfg.server.enable {
-      boot.kernelModules = mkIf cfg.server.vsock.enable [
+      boot.kernel.modules = mkIf cfg.server.vsock.enable [
         "vhost_vsock"
       ];
       networking.firewall.allowedTCPPorts = mkIf cfg.server.openFirewall (

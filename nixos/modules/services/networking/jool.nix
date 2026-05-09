@@ -8,7 +8,7 @@
 let
   cfg = config.networking.jool;
 
-  jool = config.boot.kernelPackages.jool;
+  jool = config.boot.kernel.packages.jool;
   jool-cli = pkgs.jool-cli;
 
   hardening = {

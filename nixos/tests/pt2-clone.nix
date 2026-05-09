@@ -12,7 +12,7 @@
         ./common/x11.nix
       ];
 
-      boot.kernelModules = [ "snd-dummy" ];
+      boot.kernel.modules = [ "snd-dummy" ];
       services.pulseaudio = {
         enable = true;
         systemWide = true;

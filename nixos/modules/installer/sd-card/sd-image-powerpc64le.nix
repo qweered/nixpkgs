@@ -26,7 +26,7 @@
   };
 
   boot.consoleLogLevel = lib.mkDefault 7;
-  boot.kernelParams = [ "console=hvc0" ];
+  boot.kernel.params = [ "console=hvc0" ];
 
   sdImage = {
     populateFirmwareCommands = "";

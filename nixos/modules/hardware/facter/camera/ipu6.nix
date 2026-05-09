@@ -104,7 +104,7 @@ in
 
   config.warnings =
     let
-      isKernel6_16OrLater = lib.versionAtLeast config.boot.kernelPackages.kernel.version "6.16";
+      isKernel6_16OrLater = lib.versionAtLeast config.boot.kernel.packages.kernel.version "6.16";
       inherit (detected.camera) ipu6;
     in
     lib.optional (isKernel6_16OrLater && ipu6.enable) ''

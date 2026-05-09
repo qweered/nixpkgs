@@ -7,7 +7,7 @@
 let
   cfg = config.hardware.bumblebee;
 
-  kernel = config.boot.kernelPackages;
+  kernel = config.boot.kernel.packages;
 
   useNvidia = cfg.driver == "nvidia";
 
@@ -91,7 +91,7 @@ in
       "nvidia"
       "nouveau"
     ];
-    boot.kernelModules = lib.optional useBbswitch "bbswitch";
+    boot.kernel.modules = lib.optional useBbswitch "bbswitch";
     boot.extraModulePackages =
       lib.optional useBbswitch kernel.bbswitch
       ++ lib.optional useNvidia (

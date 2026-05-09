@@ -7,7 +7,7 @@
 
 let
   cfg = config.hardware.decklink;
-  kernelPackages = config.boot.kernelPackages;
+  kernelPackages = config.boot.kernel.packages;
 in
 {
   options.hardware.decklink.enable = lib.mkEnableOption "hardware support for the Blackmagic Design Decklink audio/video interfaces";
@@ -15,7 +15,7 @@ in
   config = lib.mkIf cfg.enable {
     # snd_blackmagic-io can cause issues with pipewire,
     # so we do not enable it by default
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "blackmagic"
       "blackmagic-io"
     ];

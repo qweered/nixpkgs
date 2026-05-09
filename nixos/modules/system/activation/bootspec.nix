@@ -25,10 +25,10 @@ let
             cfg.extensions
             // {
               "org.nixos.bootspec.v1" = {
-                system = config.boot.kernelPackages.stdenv.hostPlatform.system;
-                kernel = "${config.boot.kernelPackages.kernel}/${config.system.boot.loader.kernelFile}";
-                kernelParams = config.boot.kernelParams;
-                label = "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (Linux ${config.boot.kernelPackages.kernel.modDirVersion})";
+                system = config.boot.kernel.packages.stdenv.hostPlatform.system;
+                kernel = "${config.boot.kernel.packages.kernel}/${config.system.boot.loader.kernelFile}";
+                kernelParams = config.boot.kernel.params;
+                label = "${config.system.nixos.distroName} ${config.system.nixos.codeName} ${config.system.nixos.label} (Linux ${config.boot.kernel.packages.kernel.modDirVersion})";
               }
               // lib.optionalAttrs config.boot.initrd.enable {
                 initrd = "${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}";

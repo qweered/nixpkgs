@@ -28,7 +28,7 @@ in
       extraConfig =
         { lib, pkgs, ... }:
         {
-          boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+          boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
           networking.firewall.allowedUDPPorts = [ 23542 ];
           networking.wireguard.interfaces.wg0 = {
             type = "amneziawg";
@@ -60,7 +60,7 @@ in
       extraConfig =
         { lib, pkgs, ... }:
         {
-          boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+          boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
           networking.wireguard.interfaces.wg0 = {
             type = "amneziawg";
             ips = [

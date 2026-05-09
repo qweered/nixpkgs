@@ -159,7 +159,7 @@ Lists
 
     ```nix
     {
-      boot.kernelModules = [ "fuse" "kvm-intel" "coretemp" ];
+      boot.kernel.modules = [ "fuse" "kvm-intel" "coretemp" ];
     }
     ```
 

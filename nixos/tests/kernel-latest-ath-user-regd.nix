@@ -8,7 +8,7 @@
   nodes.machine =
     { pkgs, ... }:
     {
-      boot.kernelPackages = pkgs.linuxPackages_latest;
+      boot.kernel.packages = pkgs.linuxPackages_latest;
       networking.wireless.athUserRegulatoryDomain = true;
     };
 

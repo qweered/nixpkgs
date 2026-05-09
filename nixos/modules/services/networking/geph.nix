@@ -27,7 +27,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [ "tun" ];
+    boot.kernel.modules = [ "tun" ];
     networking.firewall.checkReversePath = "loose";
 
     systemd.services.geph = {

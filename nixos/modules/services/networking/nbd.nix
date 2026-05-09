@@ -145,7 +145,7 @@ in
       }
     ];
 
-    boot.kernelModules = [ "nbd" ];
+    boot.kernel.modules = [ "nbd" ];
 
     systemd.services.nbd-server = {
       wants = [ "network-online.target" ];

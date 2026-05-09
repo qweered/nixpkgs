@@ -4,7 +4,7 @@
   nodes.scaphandre =
     { pkgs, ... }:
     {
-      boot.kernelModules = [ "intel_rapl_common" ];
+      boot.kernel.modules = [ "intel_rapl_common" ];
 
       environment.systemPackages = [ pkgs.scaphandre ];
     };

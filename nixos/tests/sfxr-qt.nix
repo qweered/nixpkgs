@@ -13,7 +13,7 @@
       ];
 
       services.xserver.enable = true;
-      boot.kernelModules = [ "snd-dummy" ];
+      boot.kernel.modules = [ "snd-dummy" ];
       services.pulseaudio = {
         enable = true;
         systemWide = true;

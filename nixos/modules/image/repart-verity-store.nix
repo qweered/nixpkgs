@@ -146,7 +146,7 @@ in
       uki =
         let
           inherit (config.system.boot.loader) ukiFile;
-          cmdline = "init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}";
+          cmdline = "init=${config.system.build.toplevel}/init ${toString config.boot.kernel.params}";
         in
         # override the default UKI
         lib.mkOverride 99 (

@@ -93,9 +93,9 @@ in
       }
     ];
 
-    boot = {
-      kernelModules = [ "msr" ];
-      kernelParams = lib.attrsets.mapAttrsToList msrKernelParam (
+    boot.kernel = {
+      modules = [ "msr" ];
+      params = lib.attrsets.mapAttrsToList msrKernelParam (
         lib.attrsets.filterAttrs (_: value: value != null) cfg.settings
       );
     };

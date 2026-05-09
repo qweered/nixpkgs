@@ -60,7 +60,7 @@ let
       '';
     in
     {
-      boot.kernelParams = [
+      boot.kernel.params = [
         "console=tty0"
         "console=ttyS0"
         "ignore_loglevel"
@@ -168,7 +168,7 @@ let
 
           cat > /mnt/grub/grub.cfg <<GRUB
           set root=hd0,1
-          linux /linux ${concatStringsSep " " cfg.boot.kernelParams}
+          linux /linux ${concatStringsSep " " cfg.boot.kernel.params}
           initrd /initrd
           boot
           GRUB

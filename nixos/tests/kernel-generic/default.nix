@@ -62,11 +62,11 @@ let
             #   })
             # ]
 
-            boot.kernelPackages = linuxPackages;
+            boot.kernel.packages = linuxPackages;
 
-            boot.extraModulePackages = [ config.boot.kernelPackages.hello-world ];
+            boot.extraModulePackages = [ config.boot.kernel.packages.hello-world ];
 
-            boot.kernelModules = [ "hello" ];
+            boot.kernel.modules = [ "hello" ];
           };
 
         testScript = ''

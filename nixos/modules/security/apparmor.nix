@@ -197,7 +197,7 @@ in
           sed '1,/\[qualifiers\]/d' $footer >> $out
         '';
 
-    boot.kernelParams = [ "apparmor=1" ];
+    boot.kernel.params = [ "apparmor=1" ];
     security.lsm = [ "apparmor" ];
 
     systemd.services.apparmor = {

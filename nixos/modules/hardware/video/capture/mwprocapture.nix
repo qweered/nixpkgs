@@ -3,7 +3,7 @@ let
 
   cfg = config.hardware.mwProCapture;
 
-  kernelPackages = config.boot.kernelPackages;
+  kernelPackages = config.boot.kernel.packages;
 
 in
 
@@ -13,7 +13,7 @@ in
 
   config = lib.mkIf cfg.enable {
 
-    boot.kernelModules = [ "ProCapture" ];
+    boot.kernel.modules = [ "ProCapture" ];
 
     environment.systemPackages = [ kernelPackages.mwprocapture ];
 

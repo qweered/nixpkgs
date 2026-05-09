@@ -11,7 +11,7 @@
   systemd.services."autovt@".enable = false;
 
   # Since we can't manually respond to a panic, just reboot.
-  boot.kernelParams = [
+  boot.kernel.params = [
     "panic=1"
     "boot.panic_on_fail"
     "vga=0x317"

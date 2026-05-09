@@ -13,7 +13,7 @@
     };
 
     boot.growPartition = true;
-    boot.kernelParams = [ "console=tty0" ];
+    boot.kernel.params = [ "console=tty0" ];
     boot.loader.grub.device = "/dev/vda";
     boot.loader.timeout = 0;
 

@@ -70,7 +70,7 @@ in
       "sysctl.d/55-nixos-aslr-entropy.conf".source =
         pkgs.runCommand "55-nixos-aslr-entropy.conf"
           {
-            inherit (config.boot.kernelPackages.kernel) configfile;
+            inherit (config.boot.kernel.packages.kernel) configfile;
           }
           (
             ''

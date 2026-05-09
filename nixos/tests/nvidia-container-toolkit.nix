@@ -109,7 +109,7 @@ in
         inherit nvidia-container-toolkit;
         nvidia = {
           open = true;
-          package = config.boot.kernelPackages.nvidiaPackages.stable.open;
+          package = config.boot.kernel.packages.nvidiaPackages.stable.open;
         };
         graphics.enable = lib.mkDefault true;
       };

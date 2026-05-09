@@ -11,7 +11,7 @@
     {
       imports = [ "${modulesPath}/profiles/perlless.nix" ];
 
-      boot.kernelPackages = pkgs.linuxPackages_latest;
+      boot.kernel.packages = pkgs.linuxPackages_latest;
 
       virtualisation.mountHostNixStore = false;
       virtualisation.useNixStoreImage = true;

@@ -281,7 +281,7 @@ in
       };
     };
 
-    boot.kernelModules = lib.mkIf cfg.softwareWatchdog [ "softdog" ];
+    boot.kernel.modules = lib.mkIf cfg.softwareWatchdog [ "softdog" ];
 
     services.udev.extraRules = lib.mkIf cfg.softwareWatchdog ''
       KERNEL=="watchdog", OWNER="${cfg.user}", GROUP="${cfg.group}", MODE="0600"

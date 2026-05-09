@@ -147,12 +147,12 @@ in
               type = lib.types.nullOr lib.types.path;
               default =
                 if cfg.settings.ProcMonitorMethod == "ebpf" then
-                  "${config.boot.kernelPackages.opensnitch-ebpf}/etc/opensnitchd"
+                  "${config.boot.kernel.packages.opensnitch-ebpf}/etc/opensnitchd"
                 else
                   null;
               defaultText = lib.literalExpression ''
                 if cfg.settings.ProcMonitorMethod == "ebpf" then
-                  "\\$\\{config.boot.kernelPackages.opensnitch-ebpf\\}/etc/opensnitchd"
+                  "\\$\\{config.boot.kernel.packages.opensnitch-ebpf\\}/etc/opensnitchd"
                 else null;
               '';
               description = ''

@@ -237,7 +237,7 @@ in
           Xen Command Line parameters passed to Domain 0 at boot time.
 
           ::: {.note}
-          Note: these are different from {option}`boot.kernelParams`. See
+          Note: these are different from {option}`boot.kernel.params`. See
           the [Xen documentation](https://xenbits.xenproject.org/docs/unstable/misc/xen-command-line.html) for more information.
           :::
         '';
@@ -727,7 +727,7 @@ in
       ) "dom0_max_vcpus=${toString cfg.dom0Resources.maxVCPUs}";
 
     boot = {
-      kernelModules = [
+      kernel.modules = [
         "xen-evtchn"
         "xen-gntdev"
         "xen-gntalloc"

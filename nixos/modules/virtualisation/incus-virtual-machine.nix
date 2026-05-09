@@ -46,7 +46,7 @@ in
     # image building needs to know what device to install bootloader on
     boot.loader.grub.device = "/dev/vda";
 
-    boot.kernelParams = [
+    boot.kernel.params = [
       "console=tty1"
       "console=${serialDevice}"
     ];

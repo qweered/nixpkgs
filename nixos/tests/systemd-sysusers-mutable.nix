@@ -21,7 +21,7 @@ in
       # Prerequisites
       system.etc.overlay.enable = true;
       boot.initrd.systemd.enable = true;
-      boot.kernelPackages = pkgs.linuxPackages_latest;
+      boot.kernel.packages = pkgs.linuxPackages_latest;
 
       # Override the empty root password set by the test instrumentation
       users.users.root.hashedPasswordFile = lib.mkForce null;

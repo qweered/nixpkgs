@@ -332,7 +332,7 @@ with lib;
 
       boot = {
         growPartition = true;
-        kernelParams = [ "console=ttyS0" ];
+        kernel.params = [ "console=ttyS0" ];
         loader.grub = {
           device = lib.mkDefault (
             if (hasNoFsPartition || supportBios) then

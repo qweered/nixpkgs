@@ -5,7 +5,7 @@
   nodes.machine =
     { pkgs, ... }:
     {
-      boot.kernelParams = lib.mkAfter [
+      boot.kernel.params = lib.mkAfter [
         "rd.systemd.unit=rescue.target"
         "loglevel=3"
         "udev.log_level=3"

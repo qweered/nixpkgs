@@ -19,7 +19,7 @@ in
           1
           2
         ];
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.firewall.allowedUDPPorts = [ 23542 ];
         networking.useDHCP = false;
         networking.wireguard.useNetworkd = useNetworkd;
@@ -50,7 +50,7 @@ in
           1
           2
         ];
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.useDHCP = false;
         networking.wireguard.useNetworkd = useNetworkd;
         networking.wireguard.interfaces.wg0 = {

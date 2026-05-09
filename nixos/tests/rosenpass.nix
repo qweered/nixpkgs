@@ -29,7 +29,7 @@ in
         {
           imports = [ "${modulesPath}/services/networking/rosenpass.nix" ];
 
-          boot.kernelModules = [ "wireguard" ];
+          boot.kernel.modules = [ "wireguard" ];
 
           services.rosenpass = {
             enable = true;

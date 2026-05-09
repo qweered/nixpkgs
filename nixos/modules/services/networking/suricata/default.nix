@@ -182,7 +182,7 @@ in
         }
       ];
 
-      boot.kernelModules = mkIf (cfg.settings.af-packet != null) [ "af_packet" ];
+      boot.kernel.modules = mkIf (cfg.settings.af-packet != null) [ "af_packet" ];
 
       users = {
         groups.${cfg.settings.run-as.group} = { };

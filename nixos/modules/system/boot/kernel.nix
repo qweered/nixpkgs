@@ -9,9 +9,8 @@ with lib;
 
 let
 
-  inherit (config.boot) kernelPatches;
-  inherit (config.boot.kernel) features randstructSeed;
-  inherit (config.boot.kernelPackages) kernel;
+  inherit (config.boot.kernel) features patches randstructSeed;
+  inherit (config.boot.kernel.packages) kernel;
 
   modulesTypeDesc = ''
     This can either be a list of modules, or an attrset. In an
@@ -22,7 +21,7 @@ let
   '';
 
   kernelModulesConf = pkgs.writeText "nixos.conf" ''
-    ${concatStringsSep "\n" config.boot.kernelModules}
+    ${concatStringsSep "\n" config.boot.kernel.modules}
   '';
 
   # A list of attrnames is coerced into an attrset of bools by
@@ -34,6 +33,13 @@ let
 in
 
 {
+
+  imports = [
+    (mkRenamedOptionModule [ "boot" "kernelPackages" ] [ "boot" "kernel" "packages" ])
+    (mkRenamedOptionModule [ "boot" "kernelPatches" ] [ "boot" "kernel" "patches" ])
+    (mkRenamedOptionModule [ "boot" "kernelParams" ] [ "boot" "kernel" "params" ])
+    (mkRenamedOptionModule [ "boot" "kernelModules" ] [ "boot" "kernel" "modules" ])
+  ];
 
   ###### interface
 
@@ -57,7 +63,7 @@ in
       '';
     };
 
-    boot.kernelPackages = mkOption {
+    boot.kernel.packages = mkOption {
       default = pkgs.linuxPackages;
       type = types.raw;
       apply =
@@ -66,7 +72,7 @@ in
           self: super: {
             kernel = super.kernel.override (originalArgs: {
               inherit randstructSeed;
-              kernelPatches = (originalArgs.kernelPatches or [ ]) ++ kernelPatches;
+              kernelPatches = (originalArgs.kernelPatches or [ ]) ++ patches;
               features = lib.recursiveUpdate super.kernel.features features;
             });
           }
@@ -94,7 +100,7 @@ in
       '';
     };
 
-    boot.kernelPatches = mkOption {
+    boot.kernel.patches = mkOption {
       type = types.listOf types.attrs;
       default = [ ];
       example = literalExpression ''
@@ -160,7 +166,7 @@ in
       '';
     };
 
-    boot.kernelParams = mkOption {
+    boot.kernel.params = mkOption {
       type = types.listOf (
         types.strMatching ''([^"[:space:]]|"[^"]*")+''
         // {
@@ -188,7 +194,7 @@ in
         (Deprecated) This option, if set, activates the VESA 800x600 video
         mode on boot and disables kernel modesetting. It is equivalent to
         specifying `[ "vga=0x317" "nomodeset" ]` in the
-        {option}`boot.kernelParams` option. This option is
+        {option}`boot.kernel.params` option. This option is
         deprecated as of 2020: Xorg now works better with modesetting, and
         you might want a different VESA vga setting, anyway.
       '';
@@ -197,11 +203,11 @@ in
     boot.extraModulePackages = mkOption {
       type = types.listOf types.package;
       default = [ ];
-      example = literalExpression "[ config.boot.kernelPackages.nvidia_x11 ]";
+      example = literalExpression "[ config.boot.kernel.packages.nvidia_x11 ]";
       description = "A list of additional packages supplying kernel modules.";
     };
 
-    boot.kernelModules = mkOption {
+    boot.kernel.modules = mkOption {
       type = attrNamesToTrue;
       default = { };
       description = ''
@@ -294,7 +300,7 @@ in
       # Convert the list of path to only one path.
       apply =
         let
-          kernel-name = config.boot.kernelPackages.kernel.name or "kernel";
+          kernel-name = config.boot.kernel.packages.kernel.name or "kernel";
         in
         modules: (pkgs.aggregateModules modules).override { name = kernel-name + "-modules"; };
     };
@@ -391,10 +397,10 @@ in
 
       # Not required for, e.g., containers as they don't have their own kernel or initrd.
       # They boot directly into stage 2.
-      system.systemBuilderArgs.kernelParams = config.boot.kernelParams;
+      system.systemBuilderArgs.kernelParams = config.boot.kernel.params;
       system.systemBuilderCommands =
         let
-          kernelPath = "${config.boot.kernelPackages.kernel}/" + "${config.system.boot.loader.kernelFile}";
+          kernelPath = "${config.boot.kernel.packages.kernel}/" + "${config.system.boot.loader.kernelFile}";
           initrdPath = "${config.system.build.initialRamdisk}/" + "${config.system.boot.loader.initrdFile}";
         in
         ''
@@ -425,7 +431,7 @@ in
 
       # Implement consoleLogLevel both in early boot and using sysctl
       # (so you don't need to reboot to have changes take effect).
-      boot.kernelParams = [
+      boot.kernel.params = [
         "loglevel=${toString config.boot.consoleLogLevel}"
       ]
       ++ optionals config.boot.vesa [
@@ -435,7 +441,7 @@ in
 
       boot.kernel.sysctl."kernel.printk" = mkDefault config.boot.consoleLogLevel;
 
-      boot.kernelModules = [
+      boot.kernel.modules = [
         "loop"
         "atkbd"
       ];
@@ -451,7 +457,7 @@ in
         restartTriggers = [ kernelModulesConf ];
         serviceConfig = {
           # Ignore failed module loads.  Typically some of the
-          # modules in ‘boot.kernelModules’ are "nice to have but
+          # modules in ‘boot.kernel.modules’ are "nice to have but
           # not required" (e.g. acpi-cpufreq), so we don't want to
           # barf on those.
           SuccessExitStatus = "0 1";
@@ -504,11 +510,11 @@ in
 
       # nixpkgs kernels are assumed to have all required features
       assertions =
-        if config.boot.kernelPackages.kernel ? features then
+        if config.boot.kernel.packages.kernel ? features then
           [ ]
         else
           let
-            cfg = config.boot.kernelPackages.kernel.config;
+            cfg = config.boot.kernel.packages.kernel.config;
           in
           map (attrs: {
             assertion = attrs.assertion cfg;

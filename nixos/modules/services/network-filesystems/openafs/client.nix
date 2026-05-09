@@ -191,8 +191,8 @@ in
 
       packages = {
         module = mkOption {
-          default = config.boot.kernelPackages.openafs;
-          defaultText = literalExpression "config.boot.kernelPackages.openafs";
+          default = config.boot.kernel.packages.openafs;
+          defaultText = literalExpression "config.boot.kernel.packages.openafs";
           type = types.package;
           description = "OpenAFS kernel module package. MUST match the userland package!";
         };

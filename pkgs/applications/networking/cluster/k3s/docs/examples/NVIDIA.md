@@ -7,7 +7,7 @@
 ```
 hardware.nvidia = {
   open = true;
-  package = config.boot.kernelPackages.nvidiaPackages.stable; # change to match your kernel
+  package = config.boot.kernel.packages.nvidiaPackages.stable; # change to match your kernel
   nvidiaSettings = true;
 };
 

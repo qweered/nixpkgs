@@ -194,7 +194,7 @@ in
       };
     };
 
-    boot.kernelModules = [ "br_netfilter" ];
+    boot.kernel.modules = [ "br_netfilter" ];
 
     services.etcd.enable = lib.mkDefault (
       cfg.storageBackend == "etcd" && cfg.etcd.endpoints == [ "http://127.0.0.1:2379" ]

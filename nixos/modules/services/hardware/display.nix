@@ -184,7 +184,7 @@ in
         lib.optional (cfg.edid.modelines != null) cfg.edid.modelines
         ++ lib.optional (cfg.edid.linuxhw != null) cfg.edid.linuxhw;
 
-      boot.kernelParams =
+      boot.kernel.params =
         # forcing video modes
         lib.trivial.pipe cfg.outputs [
           (lib.attrsets.filterAttrs (_: spec: spec.mode != null))

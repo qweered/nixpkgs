@@ -13,7 +13,7 @@ let
   luks = config.boot.initrd.luks;
   clevis = config.boot.initrd.clevis;
   systemd = config.boot.initrd.systemd;
-  kernelPackages = config.boot.kernelPackages;
+  kernelPackages = config.boot.kernel.packages;
   defaultPrio = (mkOptionDefault { }).priority;
 
   commonFunctions = ''

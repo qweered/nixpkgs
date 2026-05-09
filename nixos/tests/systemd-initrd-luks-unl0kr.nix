@@ -37,7 +37,7 @@ in
       };
       boot.loader.systemd-boot.enable = true;
 
-      boot.kernelParams = [
+      boot.kernel.params = [
         "rd.systemd.debug_shell"
       ];
 

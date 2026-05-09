@@ -15,7 +15,7 @@
   nodes.machine =
     { pkgs, lib, ... }:
     {
-      boot.kernelPackages = lib.mkIf latestKernel pkgs.linuxPackages_latest;
+      boot.kernel.packages = lib.mkIf latestKernel pkgs.linuxPackages_latest;
     };
 
   testScript = ''

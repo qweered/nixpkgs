@@ -236,7 +236,7 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     {
-      boot.kernelModules = [
+      boot.kernel.modules = [
         "bridge"
         "veth"
         "br_netfilter"

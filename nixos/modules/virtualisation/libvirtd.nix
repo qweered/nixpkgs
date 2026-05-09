@@ -429,7 +429,7 @@ in
       etc.ethertypes.source = "${pkgs.iptables}/etc/ethertypes";
     };
 
-    boot.kernelModules = [ "tun" ];
+    boot.kernel.modules = [ "tun" ];
 
     users = lib.mkMerge [
       {

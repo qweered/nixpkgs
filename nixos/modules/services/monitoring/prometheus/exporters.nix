@@ -533,9 +533,9 @@ in
             '';
           }
           {
-            assertion = cfg.scaphandre.enable -> (builtins.elem "intel_rapl_common" config.boot.kernelModules);
+            assertion = cfg.scaphandre.enable -> (builtins.elem "intel_rapl_common" config.boot.kernel.modules);
             message = ''
-              Scaphandre needs 'intel_rapl_common' kernel module to be enabled. Please add it in 'boot.kernelModules'.
+              Scaphandre needs 'intel_rapl_common' kernel module to be enabled. Please add it in 'boot.kernel.modules'.
             '';
           }
           {

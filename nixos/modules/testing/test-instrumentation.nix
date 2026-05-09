@@ -212,7 +212,7 @@ in
       "vm.panic_on_oom" = lib.mkDefault 2;
     };
 
-    boot.kernelParams = [
+    boot.kernel.params = [
       "console=${qemu-common.qemuSerialDevice}"
       "console=tty0"
       # Panic if an error occurs in stage 1 (rather than waiting for

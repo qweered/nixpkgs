@@ -17,6 +17,6 @@ in
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = with pkgs; [ nbd ];
-    boot.kernelModules = [ "nbd" ];
+    boot.kernel.modules = [ "nbd" ];
   };
 }

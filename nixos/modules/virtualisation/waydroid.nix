@@ -33,7 +33,7 @@ in
 
   config = lib.mkIf cfg.enable {
     assertions = lib.singleton {
-      assertion = lib.versionAtLeast (lib.getVersion config.boot.kernelPackages.kernel) "4.18";
+      assertion = lib.versionAtLeast (lib.getVersion config.boot.kernel.packages.kernel) "4.18";
       message = "Waydroid needs user namespace support to work properly";
     };
 
@@ -48,7 +48,7 @@ in
       as reading the kernel config is not always possible and on kernels where it's
       already on it will be no-op
     */
-    boot.kernelParams = [ "psi=1" ];
+    boot.kernel.params = [ "psi=1" ];
 
     environment.etc."gbinder.d/waydroid.conf".source = waydroidGbinderConf;
 

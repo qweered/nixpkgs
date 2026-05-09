@@ -13,7 +13,7 @@ let
   cfg = config.networking.wireguard;
   opt = options.networking.wireguard;
 
-  kernel = config.boot.kernelPackages;
+  kernel = config.boot.kernel.packages;
 
   # interface options
 
@@ -729,7 +729,7 @@ in
       boot.extraModulePackages =
         optional (usingWg && (versionOlder kernel.kernel.version "5.6")) kernel.wireguard
         ++ optional usingAwg kernel.amneziawg;
-      boot.kernelModules = optional usingWg "wireguard" ++ optional usingAwg "amneziawg";
+      boot.kernel.modules = optional usingWg "wireguard" ++ optional usingAwg "amneziawg";
       environment.systemPackages =
         optional usingWg pkgs.wireguard-tools ++ optional usingAwg pkgs.amneziawg-tools;
 

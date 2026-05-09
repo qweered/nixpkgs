@@ -414,7 +414,7 @@ in
 
       environment.etc."asound.conf".text = cfg.config;
 
-      boot.kernelModules =
+      boot.kernel.modules =
         [ ]
         ++ lib.optionals cfg.enableOSSEmulation [
           "snd_pcm_oss"

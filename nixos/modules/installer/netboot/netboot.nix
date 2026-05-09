@@ -55,7 +55,7 @@ with lib;
       options = [
         "loop"
       ]
-      ++ lib.optional (config.boot.kernelPackages.kernel.kernelAtLeast "6.2") "threads=multi";
+      ++ lib.optional (config.boot.kernel.packages.kernel.kernelAtLeast "6.2") "threads=multi";
       neededForBoot = true;
     };
 
@@ -111,7 +111,7 @@ with lib;
       #!ipxe
       # Use the cmdline variable to allow the user to specify custom kernel params
       # when chainloading this script from other iPXE scripts like netboot.xyz
-      kernel ${pkgs.stdenv.hostPlatform.linux-kernel.target} init=${config.system.build.toplevel}/init initrd=initrd ${toString config.boot.kernelParams} ''${cmdline}
+      kernel ${pkgs.stdenv.hostPlatform.linux-kernel.target} init=${config.system.build.toplevel}/init initrd=initrd ${toString config.boot.kernel.params} ''${cmdline}
       initrd initrd
       boot
     '';
@@ -127,7 +127,7 @@ with lib;
       SCRIPT_DIR=$( cd -- "$( dirname -- "''${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
       kexec --load ''${SCRIPT_DIR}/bzImage \
         --initrd=''${SCRIPT_DIR}/initrd.gz \
-        --command-line "init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}"
+        --command-line "init=${config.system.build.toplevel}/init ${toString config.boot.kernel.params}"
       kexec -e
     '';
 

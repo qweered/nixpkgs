@@ -326,7 +326,7 @@ in
       }
       {
         assertion =
-          cfg.autoLoadConntrackHelpers -> lib.versionOlder config.boot.kernelPackages.kernel.version "6";
+          cfg.autoLoadConntrackHelpers -> lib.versionOlder config.boot.kernel.packages.kernel.version "6";
         message = "conntrack helper autoloading has been removed from kernel 6.0 and newer";
       }
     ];
@@ -335,7 +335,7 @@ in
 
     environment.systemPackages = [ cfg.package ] ++ cfg.extraPackages;
 
-    boot.kernelModules =
+    boot.kernel.modules =
       (lib.optional cfg.autoLoadConntrackHelpers "nf_conntrack")
       ++ map (x: "nf_conntrack_${x}") cfg.connectionTrackingModules;
     boot.extraModprobeConfig = lib.optionalString cfg.autoLoadConntrackHelpers ''

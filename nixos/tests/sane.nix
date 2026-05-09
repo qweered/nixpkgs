@@ -41,8 +41,8 @@ in
         extraModprobeConfig = ''
           options v4l2loopback devices=1 max_buffers=2 exclusive_caps=1 card_label=VirtualCam
         '';
-        kernelModules = [ "v4l2loopback" ];
-        extraModulePackages = [ config.boot.kernelPackages.v4l2loopback ];
+        kernel.modules = [ "v4l2loopback" ];
+        extraModulePackages = [ config.boot.kernel.packages.v4l2loopback ];
       };
       systemd.services.fake-webcam = {
         wantedBy = [ "multi-user.target" ];

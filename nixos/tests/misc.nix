@@ -64,7 +64,7 @@ in
         wheelNeedsPassword = false;
       };
       boot.kernel.sysctl."vm.swappiness" = 1;
-      boot.kernelParams = [ "vsyscall=emulate" ];
+      boot.kernel.params = [ "vsyscall=emulate" ];
       system.extraDependencies = [ foo ];
     };
 

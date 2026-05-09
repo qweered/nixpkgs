@@ -115,7 +115,7 @@ in
         }
       ];
 
-    boot.kernelModules = [ "i2c_dev" ];
+    boot.kernel.modules = [ "i2c_dev" ];
     environment.systemPackages = with pkgs; [
       clight
       clightd

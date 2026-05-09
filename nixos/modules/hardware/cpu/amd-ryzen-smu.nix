@@ -6,7 +6,7 @@
 let
   inherit (lib) mkEnableOption mkIf;
   cfg = config.hardware.cpu.amd.ryzen-smu;
-  ryzen-smu = config.boot.kernelPackages.ryzen-smu;
+  ryzen-smu = config.boot.kernel.packages.ryzen-smu;
 in
 {
   options.hardware.cpu.amd.ryzen-smu = {
@@ -18,7 +18,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    boot.kernelModules = [ "ryzen-smu" ];
+    boot.kernel.modules = [ "ryzen-smu" ];
     boot.extraModulePackages = [ ryzen-smu ];
     environment.systemPackages = [ ryzen-smu ];
   };

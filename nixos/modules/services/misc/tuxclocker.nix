@@ -58,7 +58,7 @@ in
       ];
 
       # MSR is used for some features
-      boot.kernelModules = [ "msr" ];
+      boot.kernel.modules = [ "msr" ];
 
       # https://download.nvidia.com/XFree86/Linux-x86_64/430.14/README/xconfigoptions.html#Coolbits
       services.xserver.config =

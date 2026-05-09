@@ -52,7 +52,7 @@ let
     ;
 
   inherit (config.boot) kernelPackages;
-  inherit (config.boot.kernelPackages) kernel;
+  inherit (config.boot.kernel.packages) kernel;
 
   cfg = config.services.netbird;
 

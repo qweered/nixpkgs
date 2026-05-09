@@ -56,7 +56,7 @@ let
         netcat
       ];
 
-      boot.kernelModules = [ "xfs" ];
+      boot.kernel.modules = [ "xfs" ];
 
       services.ceph = cephConfig;
     };

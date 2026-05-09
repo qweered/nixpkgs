@@ -24,7 +24,7 @@ import ../make-test-python.nix (
           activation/thin_pool_autoextend_percent = 10
           activation/thin_pool_autoextend_threshold = 80
         '';
-        boot = lib.mkIf (kernelPackages != null) { inherit kernelPackages; };
+        boot = lib.mkIf (kernelPackages != null) { kernel.packages = kernelPackages; };
       };
 
     testScript =

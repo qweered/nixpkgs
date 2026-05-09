@@ -131,7 +131,7 @@ in
 
   config = lib.mkIf (cfg.server.enable || cfg.clients != { }) {
     environment.systemPackages = [ pkgs.iodine ];
-    boot.kernelModules = [ "tun" ];
+    boot.kernel.modules = [ "tun" ];
 
     systemd.services =
       let

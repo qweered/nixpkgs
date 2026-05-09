@@ -62,7 +62,7 @@ in
 
   config = lib.mkIf cfg.enable {
 
-    boot.kernelParams = [
+    boot.kernel.params = [
       "amd_pstate=active"
     ];
 

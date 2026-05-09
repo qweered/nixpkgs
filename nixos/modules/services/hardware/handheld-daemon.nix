@@ -55,9 +55,9 @@ in
     services.udev.packages = [ cfg.package ];
     systemd.packages = [ cfg.package ];
 
-    boot.kernelModules = mkIf cfg.adjustor.loadAcpiCallModule [ "acpi_call" ];
+    boot.kernel.modules = mkIf cfg.adjustor.loadAcpiCallModule [ "acpi_call" ];
     boot.extraModulePackages = mkIf cfg.adjustor.loadAcpiCallModule [
-      config.boot.kernelPackages.acpi_call
+      config.boot.kernel.packages.acpi_call
     ];
 
     systemd.services.handheld-daemon = {

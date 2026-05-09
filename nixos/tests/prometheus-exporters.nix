@@ -1640,7 +1640,7 @@ let
           enable = true;
         };
         metricProvider = {
-          boot.kernelModules = [ "intel_rapl_common" ];
+          boot.kernel.modules = [ "intel_rapl_common" ];
         };
         exporterTest = ''
           wait_for_unit("prometheus-scaphandre-exporter.service")

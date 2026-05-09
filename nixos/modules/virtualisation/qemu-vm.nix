@@ -930,7 +930,7 @@ in
           If you want to test netboot, consider disabling this option.
           Enable a bootloader with {option}`virtualisation.useBootLoader` if you need.
 
-          Relevant parameters such as those set in `boot.initrd` and `boot.kernelParams` are also passed to QEMU.
+          Relevant parameters such as those set in `boot.initrd` and `boot.kernel.params` are also passed to QEMU.
           Additional parameters can be supplied on invocation through the environment variable `$QEMU_KERNEL_PARAMS`.
           They are added to the `-append` option, see [QEMU User Documentation](https://www.qemu.org/docs/master/system/qemu-manpage) for details
           For example, to let QEMU use the parent terminal as the serial console, set `QEMU_KERNEL_PARAMS="console=ttyS0"`.

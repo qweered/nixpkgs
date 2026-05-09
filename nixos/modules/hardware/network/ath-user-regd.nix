@@ -5,7 +5,7 @@
   ...
 }:
 let
-  kernelVersion = config.boot.kernelPackages.kernel.version;
+  kernelVersion = config.boot.kernel.packages.kernel.version;
   linuxKernelMinVersion = "5.8";
   kernelPatch = pkgs.kernelPatches.ath_regd_optional // {
     extraConfig = ''
@@ -29,6 +29,6 @@ in
       assertion = lib.lessThan 0 (builtins.compareVersions kernelVersion linuxKernelMinVersion);
       message = "ATH_USER_REGD patch for kernels older than ${linuxKernelMinVersion} not ported yet!";
     };
-    boot.kernelPatches = [ kernelPatch ];
+    boot.kernel.patches = [ kernelPatch ];
   };
 }

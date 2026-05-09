@@ -47,7 +47,7 @@ in
     };
 
     boot.growPartition = true;
-    boot.kernelParams = [ "console=tty1" ];
+    boot.kernel.params = [ "console=tty1" ];
     boot.loader.grub.device = if (!cfg.efi) then "/dev/vda" else "nodev";
     boot.loader.grub.efiSupport = cfg.efi;
     boot.loader.grub.efiInstallAsRemovable = cfg.efi;

@@ -39,7 +39,7 @@ let
   mkServer =
     { mpd, musicService }:
     {
-      boot.kernelModules = [ "snd-dummy" ];
+      boot.kernel.modules = [ "snd-dummy" ];
       services.mpd = mpd;
       systemd.services.musicService = musicService;
     };

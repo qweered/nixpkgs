@@ -1,11 +1,11 @@
 # Linux Kernel {#sec-kernel-config}
 
 You can override the Linux kernel and associated packages using the
-option `boot.kernelPackages`. For instance, this selects the Linux 3.10
+option `boot.kernel.packages`. For instance, this selects the Linux 3.10
 kernel:
 
 ```nix
-{ boot.kernelPackages = pkgs.linuxKernel.packages.linux_3_10; }
+{ boot.kernel.packages = pkgs.linuxKernel.packages.linux_3_10; }
 ```
 
 Note that this not only replaces the kernel, but also packages that are
@@ -66,11 +66,11 @@ something as a kernel module).
 
 Kernel modules for hardware devices are generally loaded automatically
 by `udev`. You can force a module to be loaded via
-[](#opt-boot.kernelModules), e.g.
+[](#opt-boot.kernel.modules), e.g.
 
 ```nix
 {
-  boot.kernelModules = [
+  boot.kernel.modules = [
     "fuse"
     "kvm-intel"
     "coretemp"
@@ -105,7 +105,7 @@ Please refer to the Nixpkgs manual for the various ways of [building a custom ke
 To use your custom kernel package in your NixOS configuration, set
 
 ```nix
-{ boot.kernelPackages = pkgs.linuxPackagesFor yourCustomKernel; }
+{ boot.kernel.packages = pkgs.linuxPackagesFor yourCustomKernel; }
 ```
 
 ## Rust {#sec-linux-rust}
@@ -116,7 +116,7 @@ can be enabled. In a NixOS configuration, set:
 
 ```nix
 {
-  boot.kernelPatches = [
+  boot.kernel.patches = [
     {
       name = "Rust Support";
       patch = null;

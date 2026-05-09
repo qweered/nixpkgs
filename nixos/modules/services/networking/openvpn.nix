@@ -255,7 +255,7 @@ in
 
     environment.systemPackages = [ cfg.package ];
 
-    boot.kernelModules = [ "tun" ];
+    boot.kernel.modules = [ "tun" ];
 
   };
 

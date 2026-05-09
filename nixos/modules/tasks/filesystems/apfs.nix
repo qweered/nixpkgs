@@ -18,7 +18,7 @@ in
 
     system.fsPackages = [ pkgs.apfsprogs ];
 
-    boot.extraModulePackages = [ config.boot.kernelPackages.apfs ];
+    boot.extraModulePackages = [ config.boot.kernel.packages.apfs ];
 
     boot.initrd.kernelModules = mkIf inInitrd [ "apfs" ];
 

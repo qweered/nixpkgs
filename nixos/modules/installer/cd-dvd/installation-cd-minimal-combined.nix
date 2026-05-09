@@ -9,6 +9,6 @@
     { config, ... }:
     {
       imports = [ ./latest-kernel.nix ];
-      isoImage.configurationName = "(Linux ${config.boot.kernelPackages.kernel.version})";
+      isoImage.configurationName = "(Linux ${config.boot.kernel.packages.kernel.version})";
     };
 }

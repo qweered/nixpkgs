@@ -42,7 +42,7 @@ in
 
     services.udev.packages = [ pkgs.drbd ];
 
-    boot.kernelModules = [ "drbd" ];
+    boot.kernel.modules = [ "drbd" ];
 
     boot.extraModprobeConfig = ''
       options drbd usermode_helper=/run/current-system/sw/bin/drbdadm

@@ -38,7 +38,7 @@ let
 
     echo -n "systemd ${toString config.systemd.package.interfaceVersion}" > $out/init-interface-version
     echo -n "$nixosLabel" > $out/nixos-version
-    echo -n "${config.boot.kernelPackages.stdenv.hostPlatform.system}" > $out/system
+    echo -n "${config.boot.kernel.packages.stdenv.hostPlatform.system}" > $out/system
 
     ${config.system.systemBuilderCommands}
 

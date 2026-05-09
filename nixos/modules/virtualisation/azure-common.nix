@@ -36,7 +36,7 @@ in
 
     # Ensure kernel outputs to ttyS0 (Azure Serial Console),
     # and reboot machine upon fatal boot issues
-    boot.kernelParams = [
+    boot.kernel.params = [
       "console=ttyS0"
       "earlyprintk=ttyS0"
       "rootdelay=300"

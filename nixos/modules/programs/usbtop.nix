@@ -18,7 +18,7 @@ in
       usbtop
     ];
 
-    boot.kernelModules = [
+    boot.kernel.modules = [
       "usbmon"
     ];
   };

@@ -16,7 +16,7 @@ let
   cfg = config.boot.zswap;
 
   # Get the current configured kernel version string
-  kernelVersion = config.boot.kernelPackages.kernel.version;
+  kernelVersion = config.boot.kernel.packages.kernel.version;
 
   # Check if kernel supports zsmalloc as zswap backend (>= 6.3)
   zsmallocSupported = versionAtLeast kernelVersion "6.3";
@@ -112,7 +112,7 @@ in
 
   config = mkIf cfg.enable {
     # 1. Core configuration: kernel parameters for early boot
-    boot.kernelParams = [
+    boot.kernel.params = [
       "zswap.enabled=1"
       "zswap.compressor=${cfg.compressor}"
       "zswap.zpool=${cfg.zpool}"

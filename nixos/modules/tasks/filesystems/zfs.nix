@@ -19,7 +19,7 @@ let
   cfgTrim = config.services.zfs.trim;
   cfgZED = config.services.zfs.zed;
 
-  selectModulePackage = package: config.boot.kernelPackages.${package.kernelModuleAttribute};
+  selectModulePackage = package: config.boot.kernel.packages.${package.kernelModuleAttribute};
   clevisDatasets = lib.attrNames (
     lib.filterAttrs (
       device: _:
@@ -710,12 +710,12 @@ in
           "`boot.zfs.forceImportRoot` is using the default value of `true`. It is highly recommended to set it to `false`, the new default from 26.11 on, to reduce the risk of data loss. Alternatively, you can silence this warning by explicitly setting it to `true`.";
 
       boot = {
-        kernelModules = [ "zfs" ];
+        kernel.modules = [ "zfs" ];
         # https://github.com/openzfs/zfs/issues/260#issuecomment-982142240
         # https://github.com/openzfs/zfs/issues/12842
         # https://github.com/openzfs/zfs/issues/14118#issuecomment-1301576647
         # https://github.com/NixOS/nixpkgs/issues/106093
-        kernelParams = lib.optionals (!config.boot.zfs.unsafeAllowHibernation) [ "nohibernate" ];
+        kernel.params = lib.optionals (!config.boot.zfs.unsafeAllowHibernation) [ "nohibernate" ];
 
         extraModulePackages = [
           cfgZfs.modulePackage

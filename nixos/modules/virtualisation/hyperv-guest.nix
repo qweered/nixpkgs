@@ -38,12 +38,12 @@ in
 
       initrd.availableKernelModules = [ "hyperv_keyboard" ];
 
-      kernelParams = [
+      kernel.params = [
         "elevator=noop"
       ];
     };
 
-    environment.systemPackages = [ config.boot.kernelPackages.hyperv-daemons.bin ];
+    environment.systemPackages = [ config.boot.kernel.packages.hyperv-daemons.bin ];
 
     # enable hotadding cpu/memory
     services.udev.packages = lib.singleton (
@@ -61,7 +61,7 @@ in
     );
 
     systemd = {
-      packages = [ config.boot.kernelPackages.hyperv-daemons.lib ];
+      packages = [ config.boot.kernel.packages.hyperv-daemons.lib ];
 
       targets.hyperv-daemons = {
         wantedBy = [ "multi-user.target" ];

@@ -12,7 +12,7 @@ in
   imports = [ ../profiles/qemu-guest.nix ];
 
   # Taken from /proc/cmdline of Ubuntu 20.04.2 LTS on OCI
-  boot.kernelParams = [
+  boot.kernel.params = [
     "nvme.shutdown_timeout=10"
     "nvme_core.shutdown_timeout=10"
     "libiscsi.debug_libiscsi_eh=1"

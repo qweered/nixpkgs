@@ -44,7 +44,7 @@ let
 
       nodes.machine = {
         # add a virtual wlan interface
-        boot.kernelModules = [ "mac80211_hwsim" ];
+        boot.kernel.modules = [ "mac80211_hwsim" ];
 
         # wireless access point
         services.hostapd = {
@@ -156,7 +156,7 @@ in
 
     nodes.machine = {
       # add a virtual wlan interface
-      boot.kernelModules = [ "mac80211_hwsim" ];
+      boot.kernel.modules = [ "mac80211_hwsim" ];
 
       # wireless client
       networking.wireless = {
@@ -271,7 +271,7 @@ in
 
     nodes.machine = {
       # add a virtual wlan interface
-      boot.kernelModules = [ "mac80211_hwsim" ];
+      boot.kernel.modules = [ "mac80211_hwsim" ];
 
       users.users.alice = {
         isNormalUser = true;

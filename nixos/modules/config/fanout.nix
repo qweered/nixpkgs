@@ -28,9 +28,9 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.extraModulePackages = [ config.boot.kernelPackages.fanout.out ];
+    boot.extraModulePackages = [ config.boot.kernel.packages.fanout.out ];
 
-    boot.kernelModules = [ "fanout" ];
+    boot.kernel.modules = [ "fanout" ];
 
     boot.extraModprobeConfig = ''
       options fanout buffersize=${toString cfg.bufferSize}

@@ -38,7 +38,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.kernelModules = [ "dummy" ];
+    boot.kernel.modules = [ "dummy" ];
 
     networking.interfaces.dummy0.ipv4.addresses = [
       {

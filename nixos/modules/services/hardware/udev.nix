@@ -322,9 +322,9 @@ in
         "none"
       ];
       default =
-        if config.boot.kernelPackages.kernelAtLeast "5.19" then
+        if config.boot.kernel.packages.kernelAtLeast "5.19" then
           "zstd"
-        else if config.boot.kernelPackages.kernelAtLeast "5.3" then
+        else if config.boot.kernel.packages.kernelAtLeast "5.3" then
           "xz"
         else
           "none";
@@ -407,7 +407,7 @@ in
     assertions = [
       {
         assertion =
-          config.hardware.firmwareCompression == "zstd" -> config.boot.kernelPackages.kernelAtLeast "5.19";
+          config.hardware.firmwareCompression == "zstd" -> config.boot.kernel.packages.kernelAtLeast "5.19";
         message = ''
           The firmware compression method is set to zstd, but the kernel version is too old.
           The kernel version must be at least 5.19 to use zstd compression.
@@ -415,7 +415,7 @@ in
       }
       {
         assertion =
-          config.hardware.firmwareCompression == "xz" -> config.boot.kernelPackages.kernelAtLeast "5.3";
+          config.hardware.firmwareCompression == "xz" -> config.boot.kernel.packages.kernelAtLeast "5.3";
         message = ''
           The firmware compression method is set to xz, but the kernel version is too old.
           The kernel version must be at least 5.3 to use xz compression.
@@ -438,7 +438,7 @@ in
       udev
     ];
 
-    boot.kernelParams = lib.mkIf (!config.networking.usePredictableInterfaceNames) [ "net.ifnames=0" ];
+    boot.kernel.params = lib.mkIf (!config.networking.usePredictableInterfaceNames) [ "net.ifnames=0" ];
 
     boot.initrd.extraUdevRulesCommands =
       lib.mkIf (!config.boot.initrd.systemd.enable && config.boot.initrd.services.udev.rules != "")

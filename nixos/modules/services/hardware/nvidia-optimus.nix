@@ -1,7 +1,7 @@
 { config, lib, ... }:
 
 let
-  kernel = config.boot.kernelPackages;
+  kernel = config.boot.kernel.packages;
 in
 
 {
@@ -32,7 +32,7 @@ in
       "nvidia-uvm"
       "nvidia-modeset"
     ];
-    boot.kernelModules = [ "bbswitch" ];
+    boot.kernel.modules = [ "bbswitch" ];
     boot.extraModulePackages = [ kernel.bbswitch ];
 
     systemd.services.bbswitch = {

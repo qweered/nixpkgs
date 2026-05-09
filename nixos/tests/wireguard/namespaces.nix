@@ -26,7 +26,7 @@ in
     peer0 =
       { lib, pkgs, ... }:
       lib.attrsets.recursiveUpdate node {
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.wireguard.interfaces.wg0 = {
           preSetup = ''
             ip netns add ${socketNamespace}
@@ -39,7 +39,7 @@ in
     peer1 =
       { lib, pkgs, ... }:
       lib.attrsets.recursiveUpdate node {
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.wireguard.interfaces.wg0 = {
           preSetup = ''
             ip netns add ${interfaceNamespace}
@@ -53,7 +53,7 @@ in
     peer2 =
       { lib, pkgs, ... }:
       lib.attrsets.recursiveUpdate node {
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.wireguard.interfaces.wg0 = {
           preSetup = ''
             ip netns add ${socketNamespace}
@@ -67,7 +67,7 @@ in
     peer3 =
       { lib, pkgs, ... }:
       lib.attrsets.recursiveUpdate node {
-        boot.kernelPackages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
+        boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
         networking.wireguard.interfaces.wg0 = {
           preSetup = ''
             ip netns add ${socketNamespace}

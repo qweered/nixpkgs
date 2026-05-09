@@ -85,7 +85,7 @@ in
   };
 
   config = lib.mkIf (cfg.enable == "lock" || cfg.enable) {
-    boot.kernelParams = [
+    boot.kernel.params = [
       # A lot of audit events happen before the systemd service starts. Thus
       # enable it via the kernel commandline to have the audit subsystem ready
       # as soon as the kernel starts.
