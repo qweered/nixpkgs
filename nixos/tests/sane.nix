@@ -38,7 +38,7 @@ in
     {
       boot = {
         # create /dev/video0 as a fake webcam whose content is filled by ffmpeg
-        extraModprobeConfig = ''
+        modprobeConfig.extra = ''
           options v4l2loopback devices=1 max_buffers=2 exclusive_caps=1 card_label=VirtualCam
         '';
         kernel.modules = [ "v4l2loopback" ];

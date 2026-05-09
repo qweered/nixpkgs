@@ -32,7 +32,7 @@ in
 
     boot.kernel.modules = [ "fanout" ];
 
-    boot.extraModprobeConfig = ''
+    boot.modprobeConfig.extra = ''
       options fanout buffersize=${toString cfg.bufferSize}
     '';
 

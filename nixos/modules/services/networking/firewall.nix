@@ -338,7 +338,7 @@ in
     boot.kernel.modules =
       (lib.optional cfg.autoLoadConntrackHelpers "nf_conntrack")
       ++ map (x: "nf_conntrack_${x}") cfg.connectionTrackingModules;
-    boot.extraModprobeConfig = lib.optionalString cfg.autoLoadConntrackHelpers ''
+    boot.modprobeConfig.extra = lib.optionalString cfg.autoLoadConntrackHelpers ''
       options nf_conntrack nf_conntrack_helper=1
     '';
   };

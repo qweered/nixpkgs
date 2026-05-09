@@ -423,7 +423,7 @@ in
         ++ lib.optionals cfg.enableRecorder [ "snd_aloop" ];
 
       # Assign names to the sound cards
-      boot.extraModprobeConfig = lib.concatStringsSep "\n" cardsConfig;
+      boot.modprobeConfig.extra = lib.concatStringsSep "\n" cardsConfig;
 
       # Provide alsamixer, aplay, arecord, etc.
       environment.systemPackages = [ pkgs.alsa-utils ];

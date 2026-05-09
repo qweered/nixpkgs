@@ -105,7 +105,7 @@ in
       boot.kernel.modules = [
         "mac80211_hwsim"
       ];
-      boot.extraModprobeConfig = ''
+      boot.modprobeConfig.extra = ''
         # We'll add more radios using vwifi-add-interfaces in the systemd unit.
         options mac80211_hwsim radios=0
       '';

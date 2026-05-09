@@ -749,7 +749,7 @@ in
       # Increase the number of loopback devices from the default (8),
       # which is way too small because every VM virtual disk requires a
       # loopback device.
-      extraModprobeConfig = ''
+      modprobeConfig.extra = ''
         options loop max_loop=64
       '';
 

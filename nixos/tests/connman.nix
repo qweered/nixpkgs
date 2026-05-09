@@ -48,7 +48,7 @@
 
       # add a virtual wlan interface
       boot.kernel.modules = [ "mac80211_hwsim" ];
-      boot.extraModprobeConfig = ''
+      boot.modprobeConfig.extra = ''
         options mac80211_hwsim radios=1
       '';
 

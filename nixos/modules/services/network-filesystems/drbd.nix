@@ -44,7 +44,7 @@ in
 
     boot.kernel.modules = [ "drbd" ];
 
-    boot.extraModprobeConfig = ''
+    boot.modprobeConfig.extra = ''
       options drbd usermode_helper=/run/current-system/sw/bin/drbdadm
     '';
 

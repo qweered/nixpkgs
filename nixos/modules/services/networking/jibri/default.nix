@@ -437,7 +437,7 @@ in
     ];
 
     boot = {
-      extraModprobeConfig = ''
+      modprobeConfig.extra = ''
         options snd-aloop enable=1,1,1,1,1,1,1,1
       '';
       kernel.modules = [ "snd-aloop" ];

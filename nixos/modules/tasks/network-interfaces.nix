@@ -1774,7 +1774,7 @@ in
       ++ optional hasBonds "bonding"
       ++ optional hasFous "fou";
 
-    boot.extraModprobeConfig =
+    boot.modprobeConfig.extra =
       # This setting is intentional as it prevents default bond devices
       # from being created.
       optionalString hasBonds "options bonding max_bonds=0";

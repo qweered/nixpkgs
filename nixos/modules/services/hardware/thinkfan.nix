@@ -300,7 +300,7 @@ in
       thinkfan-sleep.wantedBy = [ "sleep.target" ];
     };
 
-    boot.extraModprobeConfig = "options thinkpad_acpi experimental=1 fan_control=1";
+    boot.modprobeConfig.extra = "options thinkpad_acpi experimental=1 fan_control=1";
 
   };
 }

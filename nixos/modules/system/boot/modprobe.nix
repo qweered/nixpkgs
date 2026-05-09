@@ -24,6 +24,10 @@ in
       [ "boot" "blacklistedKernelModules" ]
       [ "boot" "kernel" "blacklistedModules" ]
     )
+    (mkRenamedOptionModule
+      [ "boot" "extraModprobeConfig" ]
+      [ "boot" "modprobeConfig" "extra" ]
+    )
   ];
 
   ###### interface
@@ -57,7 +61,7 @@ in
       apply = mods: lib.attrNames (lib.filterAttrs (_: v: v) mods);
     };
 
-    boot.extraModprobeConfig = mkOption {
+    boot.modprobeConfig.extra = mkOption {
       default = "";
       example = ''
         options parport_pc io=0x378 irq=7 dma=1
@@ -87,7 +91,7 @@ in
       ${flip concatMapStrings config.boot.kernel.blacklistedModules (name: ''
         blacklist ${name}
       '')}
-      ${config.boot.extraModprobeConfig}
+      ${config.boot.modprobeConfig.extra}
     '';
     environment.etc."modprobe.d/debian.conf".source = pkgs.kmod-debian-aliases;
 

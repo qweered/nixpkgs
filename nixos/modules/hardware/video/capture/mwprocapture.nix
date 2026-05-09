@@ -19,7 +19,7 @@ in
 
     boot.kernel.extraModulePackages = [ kernelPackages.mwprocapture ];
 
-    boot.extraModprobeConfig = ''
+    boot.modprobeConfig.extra = ''
       # Set the png picture to be displayed when no input signal is detected.
       options ProCapture nosignal_file=${kernelPackages.mwprocapture}/res/NoSignal.png
 

@@ -151,7 +151,7 @@ in
   config = lib.mkMerge [
     (lib.mkIf (cfg.enable || initrdCfg.enable) {
       # sane defaults to not let IfState work against the kernel
-      boot.extraModprobeConfig = ''
+      boot.modprobeConfig.extra = ''
         options bonding max_bonds=0
         options dummy numdummies=0
         options ifb numifbs=0

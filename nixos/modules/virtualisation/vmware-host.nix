@@ -63,7 +63,7 @@ in
 
   config = lib.mkIf cfg.enable {
     boot.kernel.extraModulePackages = [ config.boot.kernel.packages.vmware ];
-    boot.extraModprobeConfig = "alias char-major-10-229 fuse";
+    boot.modprobeConfig.extra = "alias char-major-10-229 fuse";
     boot.kernel.modules = [
       "vmw_pvscsi"
       "vmw_vmci"

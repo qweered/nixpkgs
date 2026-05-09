@@ -442,7 +442,7 @@ in
             #
             # Instead, we use `softdep` to lazily load `nvidia-uvm` kernel module
             # after `nvidia` kernel module is loaded and `udev` rules are applied.
-            extraModprobeConfig = ''
+            modprobeConfig.extra = ''
               softdep nvidia post: nvidia-uvm
             '';
 
@@ -827,7 +827,7 @@ in
               config.boot.kernel.packages.kernel.kernelAtLeast "6.2" && !ibtSupport
             ) "ibt=off";
 
-            extraModprobeConfig =
+            modprobeConfig.extra =
               let
                 mergeParams = lib.concatMapAttrsStringSep " " (k: v: "${k}=${toString v}");
                 genModprobeLine = module: params: "options ${module} ${mergeParams params}";

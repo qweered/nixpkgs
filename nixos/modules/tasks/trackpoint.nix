@@ -237,7 +237,7 @@
       })
 
       (lib.mkIf cfg.fakeButtons {
-        boot.extraModprobeConfig = "options psmouse proto=bare";
+        boot.modprobeConfig.extra = "options psmouse proto=bare";
       })
     ];
 }

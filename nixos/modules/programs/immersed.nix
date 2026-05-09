@@ -37,7 +37,7 @@ in
         "snd-aloop"
       ];
       kernel.extraModulePackages = [ config.boot.kernel.packages.v4l2loopback ];
-      extraModprobeConfig = ''
+      modprobeConfig.extra = ''
         options v4l2loopback exclusive_caps=1 card_label="v4l2loopback Virtual Camera"
       '';
     };

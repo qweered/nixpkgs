@@ -49,7 +49,7 @@ with lib;
         }
       ];
 
-      boot.extraModprobeConfig = ''
+      boot.modprobeConfig.extra = ''
         options kvm_amd sev=1
       '';
 
