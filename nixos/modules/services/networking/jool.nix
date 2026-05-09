@@ -277,7 +277,7 @@ in
 
   config = lib.mkIf cfg.enable {
     # Install kernel module and cli tools
-    boot.extraModulePackages = [ jool ];
+    boot.kernel.extraModulePackages = [ jool ];
     environment.systemPackages = [ jool-cli ];
 
     # Install services for each instance

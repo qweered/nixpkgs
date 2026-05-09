@@ -33,7 +33,7 @@ in
       "nvidia-modeset"
     ];
     boot.kernel.modules = [ "bbswitch" ];
-    boot.extraModulePackages = [ kernel.bbswitch ];
+    boot.kernel.extraModulePackages = [ kernel.bbswitch ];
 
     systemd.services.bbswitch = {
       description = "Disable NVIDIA Card";

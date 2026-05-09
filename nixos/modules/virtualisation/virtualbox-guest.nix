@@ -117,7 +117,7 @@ in
 
         environment.systemPackages = [ kernel.virtualboxGuestAdditions ];
 
-        boot.extraModulePackages = lib.mkIf cfg.use3rdPartyModules [ kernel.virtualboxGuestAdditions ];
+        boot.kernel.extraModulePackages = lib.mkIf cfg.use3rdPartyModules [ kernel.virtualboxGuestAdditions ];
 
         systemd.services.virtualbox = {
           description = "VirtualBox Guest Services";

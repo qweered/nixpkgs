@@ -27,7 +27,7 @@ in
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ cfg.package ];
-    boot.extraModulePackages = [ cfg.package ];
+    boot.kernel.extraModulePackages = [ cfg.package ];
     boot.kernel.modules = [ "corefreqk" ];
 
     # Create a systemd service for the corefreq daemon

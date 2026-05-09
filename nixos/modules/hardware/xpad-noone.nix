@@ -15,7 +15,7 @@ in
   config = lib.mkIf cfg.enable {
     boot = {
       kernel.blacklistedModules = [ "xpad" ];
-      extraModulePackages = with config.boot.kernel.packages; [ xpad-noone ];
+      kernel.extraModulePackages = with config.boot.kernel.packages; [ xpad-noone ];
     };
   };
 

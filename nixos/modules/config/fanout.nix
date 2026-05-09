@@ -28,7 +28,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.extraModulePackages = [ config.boot.kernel.packages.fanout.out ];
+    boot.kernel.extraModulePackages = [ config.boot.kernel.packages.fanout.out ];
 
     boot.kernel.modules = [ "fanout" ];
 

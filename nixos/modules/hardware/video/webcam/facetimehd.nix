@@ -34,7 +34,7 @@ in
 
     boot.kernel.blacklistedModules = [ "bdc_pci" ];
 
-    boot.extraModulePackages = [ kernelPackages.facetimehd ];
+    boot.kernel.extraModulePackages = [ kernelPackages.facetimehd ];
 
     hardware.firmware = [
       pkgs.facetimehd-firmware

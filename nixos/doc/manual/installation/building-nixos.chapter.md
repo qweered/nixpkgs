@@ -52,7 +52,7 @@ file at `modules/installer/cd-dvd/installation-cd-graphical-gnome-macbook.nix`:
     "kvm-intel"
     "wl"
   ];
-  boot.extraModulePackages = [ config.boot.kernel.packages.broadcom_sta ];
+  boot.kernel.extraModulePackages = [ config.boot.kernel.packages.broadcom_sta ];
 }
 ```
 

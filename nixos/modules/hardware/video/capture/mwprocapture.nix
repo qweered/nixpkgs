@@ -17,7 +17,7 @@ in
 
     environment.systemPackages = [ kernelPackages.mwprocapture ];
 
-    boot.extraModulePackages = [ kernelPackages.mwprocapture ];
+    boot.kernel.extraModulePackages = [ kernelPackages.mwprocapture ];
 
     boot.extraModprobeConfig = ''
       # Set the png picture to be displayed when no input signal is detected.

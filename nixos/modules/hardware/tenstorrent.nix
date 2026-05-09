@@ -15,7 +15,7 @@ in
 
   config = mkIf cfg.enable {
     boot = {
-      extraModulePackages = [ tt-kmd ];
+      kernel.extraModulePackages = [ tt-kmd ];
       kernel.modules = [ "tenstorrent" ];
     };
 

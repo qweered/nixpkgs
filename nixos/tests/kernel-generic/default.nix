@@ -64,7 +64,7 @@ let
 
             boot.kernel.packages = linuxPackages;
 
-            boot.extraModulePackages = [ config.boot.kernel.packages.hello-world ];
+            boot.kernel.extraModulePackages = [ config.boot.kernel.packages.hello-world ];
 
             boot.kernel.modules = [ "hello" ];
           };

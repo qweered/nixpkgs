@@ -815,7 +815,7 @@ in
           );
 
           boot = {
-            extraModulePackages = if useOpenModules then [ nvidia_x11.open ] else [ nvidia_x11.mod ];
+            kernel.extraModulePackages = if useOpenModules then [ nvidia_x11.open ] else [ nvidia_x11.mod ];
             # nvidia-uvm is required by CUDA applications.
             kernel.modules = lib.optionals config.services.xserver.enable [
               "nvidia"
@@ -858,7 +858,7 @@ in
         })
         # Data Center
         (lib.mkIf (cfg.datacenter.enable) {
-          boot.extraModulePackages = if useOpenModules then [ nvidia_x11.open ] else [ nvidia_x11.mod ];
+          boot.kernel.extraModulePackages = if useOpenModules then [ nvidia_x11.open ] else [ nvidia_x11.mod ];
 
           systemd = {
             tmpfiles.rules =

@@ -163,7 +163,7 @@ in
           "vboxnetadp"
           "vboxnetflt"
         ];
-        boot.extraModulePackages = [ kernelModules ];
+        boot.kernel.extraModulePackages = [ kernelModules ];
         # See https://github.com/VirtualBox/virtualbox/issues/188
         boot.kernel.params =
           lib.mkIf

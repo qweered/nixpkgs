@@ -56,7 +56,7 @@ in
     systemd.packages = [ cfg.package ];
 
     boot.kernel.modules = mkIf cfg.adjustor.loadAcpiCallModule [ "acpi_call" ];
-    boot.extraModulePackages = mkIf cfg.adjustor.loadAcpiCallModule [
+    boot.kernel.extraModulePackages = mkIf cfg.adjustor.loadAcpiCallModule [
       config.boot.kernel.packages.acpi_call
     ];
 

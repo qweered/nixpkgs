@@ -115,7 +115,7 @@ in
         atop
         (lib.mkIf cfg.netatop.enable cfg.netatop.package)
       ];
-      boot.extraModulePackages = [ (lib.mkIf cfg.netatop.enable cfg.netatop.package) ];
+      boot.kernel.extraModulePackages = [ (lib.mkIf cfg.netatop.enable cfg.netatop.package) ];
       systemd =
         let
           mkSystemd = type: name: restartTriggers: {

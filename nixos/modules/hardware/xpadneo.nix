@@ -121,7 +121,7 @@ in
         (lib.mkIf (lib.versionOlder config.boot.kernel.packages.kernel.version "5.12") "options bluetooth disable_ertm=1")
         modprobeConfig
       ];
-      extraModulePackages = with config.boot.kernel.packages; [ xpadneo ];
+      kernel.extraModulePackages = with config.boot.kernel.packages; [ xpadneo ];
       kernel.modules = [ "hid_xpadneo" ];
     };
 

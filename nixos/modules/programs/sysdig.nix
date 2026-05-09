@@ -13,6 +13,6 @@ in
 
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ pkgs.sysdig ];
-    boot.extraModulePackages = [ config.boot.kernel.packages.sysdig ];
+    boot.kernel.extraModulePackages = [ config.boot.kernel.packages.sysdig ];
   };
 }

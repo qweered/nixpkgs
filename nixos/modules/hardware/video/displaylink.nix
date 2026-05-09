@@ -20,7 +20,7 @@ in
 
   config = lib.mkIf enabled {
 
-    boot.extraModulePackages = [ evdi ];
+    boot.kernel.extraModulePackages = [ evdi ];
     boot.kernel.modules = [ "evdi" ];
 
     services.xserver.externallyConfiguredDrivers = [ "displaylink" ];

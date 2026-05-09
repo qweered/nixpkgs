@@ -91,7 +91,7 @@ in
 
   config = lib.mkIf cfg.enable {
     boot.kernel.modules = [ "tuxedo_keyboard" ];
-    boot.extraModulePackages = [ tuxedo-drivers ];
+    boot.kernel.extraModulePackages = [ tuxedo-drivers ];
     services.udev.packages = [
       tuxedo-drivers
     ]

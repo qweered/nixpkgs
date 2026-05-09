@@ -177,7 +177,7 @@ in
       "nxp_nci"
     ];
 
-    boot.extraModulePackages = [
+    boot.kernel.extraModulePackages = [
       config.boot.kernel.packages.nxp-pn5xx
     ];
 

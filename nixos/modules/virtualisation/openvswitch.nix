@@ -62,7 +62,7 @@ in
         "openvswitch"
       ];
 
-      boot.extraModulePackages = [ cfg.package ];
+      boot.kernel.extraModulePackages = [ cfg.package ];
 
       systemd.services.ovsdb = {
         description = "Open_vSwitch Database Server";

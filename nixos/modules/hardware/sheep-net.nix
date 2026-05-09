@@ -14,7 +14,7 @@ in
       default = false;
       description = ''
         Enables sheep_net udev rules, ensures 'sheep_net' group exists, and adds
-        sheep-net to boot.kernel.modules and boot.extraModulePackages
+        sheep-net to boot.kernel.modules and boot.kernel.extraModulePackages
       '';
     };
   };
@@ -25,7 +25,7 @@ in
     boot.kernel.modules = [
       "sheep_net"
     ];
-    boot.extraModulePackages = [
+    boot.kernel.extraModulePackages = [
       config.boot.kernel.packages.sheep-net
     ];
     users.groups.sheep_net = { };

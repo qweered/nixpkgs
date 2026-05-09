@@ -47,7 +47,7 @@ in
   config = lib.mkIf cfg.enable {
 
     boot = {
-      extraModulePackages = [ config.boot.kernel.packages.vhba ];
+      kernel.extraModulePackages = [ config.boot.kernel.packages.vhba ];
       kernel.modules = [ "vhba" ];
     };
 

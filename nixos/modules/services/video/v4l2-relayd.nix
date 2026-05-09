@@ -219,7 +219,7 @@ in
     {
 
       boot = mkIf ((length enabledInstances) > 0) {
-        extraModulePackages = [ kernelPackages.v4l2loopback ];
+        kernel.extraModulePackages = [ kernelPackages.v4l2loopback ];
         kernel.modules = [ "v4l2loopback" ];
         # Prevent v4l2loopback from auto-creating a device at load time. An
         # unconfigured device has a degenerate framerate range that breaks

@@ -439,7 +439,7 @@ in
   ###### implementation
 
   config = mkIf (cfg.interfaces != { }) {
-    boot.extraModulePackages =
+    boot.kernel.extraModulePackages =
       optional (
         any (x: x.type == "wireguard") (attrValues cfg.interfaces)
         && (versionOlder kernel.kernel.version "5.6")

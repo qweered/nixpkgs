@@ -500,7 +500,7 @@ in
       };
     })
     {
-      boot.extraModulePackages = optional (
+      boot.kernel.extraModulePackages = optional (
         cfg.clients != { } && (versionOlder kernel.version "5.6")
       ) kernelPackages.wireguard;
 

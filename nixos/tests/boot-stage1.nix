@@ -15,7 +15,7 @@
     {
       boot.initrd.systemd.enable = false;
 
-      boot.extraModulePackages =
+      boot.kernel.extraModulePackages =
         let
           compileKernelModule =
             name: source:

@@ -726,7 +726,7 @@ in
           }
         ) all_peers;
 
-      boot.extraModulePackages =
+      boot.kernel.extraModulePackages =
         optional (usingWg && (versionOlder kernel.kernel.version "5.6")) kernel.wireguard
         ++ optional usingAwg kernel.amneziawg;
       boot.kernel.modules = optional usingWg "wireguard" ++ optional usingAwg "amneziawg";

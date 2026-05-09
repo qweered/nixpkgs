@@ -19,7 +19,7 @@ in
 
   config = mkIf cfg.enable {
     boot.kernel.modules = [ "ryzen-smu" ];
-    boot.extraModulePackages = [ ryzen-smu ];
+    boot.kernel.extraModulePackages = [ ryzen-smu ];
     environment.systemPackages = [ ryzen-smu ];
   };
 

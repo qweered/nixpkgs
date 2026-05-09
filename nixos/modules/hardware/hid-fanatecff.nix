@@ -11,7 +11,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    boot.extraModulePackages = [ hid-fanatecff ];
+    boot.kernel.extraModulePackages = [ hid-fanatecff ];
     services.udev.packages = [ hid-fanatecff ];
   };
 

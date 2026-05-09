@@ -52,7 +52,7 @@
         };
         networking.firewall.allowedTCPPorts = [ 8080 ];
 
-        boot.extraModulePackages = [ config.boot.kernel.packages.akvcam ];
+        boot.kernel.extraModulePackages = [ config.boot.kernel.packages.akvcam ];
         boot.kernel.modules = [ "akvcam" ];
         boot.extraModprobeConfig = ''
           options akvcam config_file=${configFile}

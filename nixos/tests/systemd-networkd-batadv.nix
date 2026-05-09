@@ -20,7 +20,7 @@
         };
 
         # Use default batman_adv module from kernel
-        boot.extraModulePackages = [ ];
+        boot.kernel.extraModulePackages = [ ];
 
         environment.systemPackages = [
           pkgs.batctl
@@ -70,7 +70,7 @@
         };
 
         # Use batman_adv module from nixpkgs
-        boot.extraModulePackages = [ config.boot.kernel.packages.batman_adv ];
+        boot.kernel.extraModulePackages = [ config.boot.kernel.packages.batman_adv ];
 
         environment.systemPackages = [
           pkgs.batctl

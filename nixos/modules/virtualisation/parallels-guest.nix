@@ -43,7 +43,7 @@ in
 
     environment.systemPackages = [ prl-tools ];
 
-    boot.extraModulePackages = [ prl-tools ];
+    boot.kernel.extraModulePackages = [ prl-tools ];
 
     services.timesyncd.enable = false;
 

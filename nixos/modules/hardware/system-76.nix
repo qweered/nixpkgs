@@ -28,7 +28,7 @@ let
   ++ (optional (versionOlder kpkgs.kernel.version "5.5") "system76-acpi");
   modulePackages = map (m: kpkgs.${m}) modules;
   moduleConfig = mkIf cfg.kernel-modules.enable {
-    boot.extraModulePackages = modulePackages;
+    boot.kernel.extraModulePackages = modulePackages;
 
     boot.kernel.modules = modules;
 

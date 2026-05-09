@@ -29,7 +29,7 @@ in
       services.udev.packages = with pkgs; [ libedgetpu ];
     })
     (mkIf cfg.pcie.enable {
-      boot.extraModulePackages = with config.boot.kernel.packages; [ gasket ];
+      boot.kernel.extraModulePackages = with config.boot.kernel.packages; [ gasket ];
       services.udev.extraRules = ''
         SUBSYSTEM=="apex",MODE="0660",GROUP="coral"
       '';

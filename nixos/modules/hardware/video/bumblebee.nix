@@ -92,7 +92,7 @@ in
       "nouveau"
     ];
     boot.kernel.modules = lib.optional useBbswitch "bbswitch";
-    boot.extraModulePackages =
+    boot.kernel.extraModulePackages =
       lib.optional useBbswitch kernel.bbswitch
       ++ lib.optional useNvidia (
         if config.hardware.nvidia.open == true then kernel.nvidia_x11.open else kernel.nvidia_x11.mod

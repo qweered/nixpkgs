@@ -54,7 +54,7 @@ in
 
     boot.zfs.devNodes = mkIf cfg.zfs.enable "/dev/";
 
-    boot.extraModulePackages = [
+    boot.kernel.extraModulePackages = [
       config.boot.kernel.packages.ena
     ];
     boot.initrd.availableKernelModules = [ "nvme" ];

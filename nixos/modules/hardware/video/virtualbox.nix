@@ -14,7 +14,7 @@ in
       }
     ];
 
-    boot.extraModulePackages = [
+    boot.kernel.extraModulePackages = [
       kernelPackages.virtualboxGuestAdditions
     ];
   };

@@ -27,7 +27,7 @@ let
           {
             boot = {
               kernel.packages = kernelPackages;
-              extraModulePackages = [ config.boot.kernel.packages.rust-out-of-tree-module ];
+              kernel.extraModulePackages = [ config.boot.kernel.packages.rust-out-of-tree-module ];
               kernel.patches = [
                 {
                   name = "Rust Support";

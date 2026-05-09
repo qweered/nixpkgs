@@ -143,7 +143,7 @@ in
           };
 
           # Fake camera
-          boot.extraModulePackages = with config.boot.kernel.packages; [ v4l2loopback ];
+          boot.kernel.extraModulePackages = with config.boot.kernel.packages; [ v4l2loopback ];
         };
 
       enableOCR = true;
@@ -223,7 +223,7 @@ in
           };
 
           # Fake camera
-          boot.extraModulePackages = with config.boot.kernel.packages; [ v4l2loopback ];
+          boot.kernel.extraModulePackages = with config.boot.kernel.packages; [ v4l2loopback ];
         };
 
       enableOCR = true;

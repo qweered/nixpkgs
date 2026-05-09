@@ -150,7 +150,7 @@ in
   ];
 
   config = lib.mkIf cfg.enable {
-    boot.extraModulePackages = [ cfg.packages.kernel ];
+    boot.kernel.extraModulePackages = [ cfg.packages.kernel ];
     boot.kernel.modules = drivers;
 
     # Makes the man pages available so you can successfully run

@@ -19,7 +19,7 @@ in
       "blackmagic"
       "blackmagic-io"
     ];
-    boot.extraModulePackages = [ kernelPackages.decklink ];
+    boot.kernel.extraModulePackages = [ kernelPackages.decklink ];
     systemd.packages = [ pkgs.blackmagic-desktop-video ];
     systemd.services.DesktopVideoHelper.wantedBy = [ "multi-user.target" ];
   };

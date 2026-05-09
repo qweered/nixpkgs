@@ -111,7 +111,7 @@ in
       assertions = [
         {
           assertion = !(builtins.elem "v4l2loopback" config.boot.kernel.modules);
-          message = "Adding 'v4l2loopback' to `boot.kernel.modules` causes Howdy to no longer work. Consider adding 'v4l2loopback' to `boot.extraModulePackages` instead.";
+          message = "Adding 'v4l2loopback' to `boot.kernel.modules` causes Howdy to no longer work. Consider adding 'v4l2loopback' to `boot.kernel.extraModulePackages` instead.";
         }
       ];
     })

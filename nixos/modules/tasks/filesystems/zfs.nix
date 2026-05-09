@@ -717,7 +717,7 @@ in
         # https://github.com/NixOS/nixpkgs/issues/106093
         kernel.params = lib.optionals (!config.boot.zfs.unsafeAllowHibernation) [ "nohibernate" ];
 
-        extraModulePackages = [
+        kernel.extraModulePackages = [
           cfgZfs.modulePackage
         ];
       };

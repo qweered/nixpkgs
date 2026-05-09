@@ -9,7 +9,7 @@
       {
         boot = {
           kernel.modules = [ "drbd" ];
-          extraModulePackages = with config.boot.kernel.packages; [ drbd ];
+          kernel.extraModulePackages = with config.boot.kernel.packages; [ drbd ];
           kernel.packages = pkgs.linuxPackages;
         };
       };

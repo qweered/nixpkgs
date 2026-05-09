@@ -39,6 +39,10 @@ in
     (mkRenamedOptionModule [ "boot" "kernelPatches" ] [ "boot" "kernel" "patches" ])
     (mkRenamedOptionModule [ "boot" "kernelParams" ] [ "boot" "kernel" "params" ])
     (mkRenamedOptionModule [ "boot" "kernelModules" ] [ "boot" "kernel" "modules" ])
+    (mkRenamedOptionModule
+      [ "boot" "extraModulePackages" ]
+      [ "boot" "kernel" "extraModulePackages" ]
+    )
   ];
 
   ###### interface
@@ -200,7 +204,7 @@ in
       '';
     };
 
-    boot.extraModulePackages = mkOption {
+    boot.kernel.extraModulePackages = mkOption {
       type = types.listOf types.package;
       default = [ ];
       example = literalExpression "[ config.boot.kernel.packages.nvidia_x11 ]";
@@ -393,7 +397,7 @@ in
     (mkIf config.boot.kernel.enable {
       system.build = { inherit kernel; };
 
-      system.modulesTree = [ (lib.getOutput "modules" kernel) ] ++ config.boot.extraModulePackages;
+      system.modulesTree = [ (lib.getOutput "modules" kernel) ] ++ config.boot.kernel.extraModulePackages;
 
       # Not required for, e.g., containers as they don't have their own kernel or initrd.
       # They boot directly into stage 2.

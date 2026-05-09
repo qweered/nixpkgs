@@ -246,7 +246,7 @@ in
         system.fsPackages = [ cfg.package ];
         services.udev.packages = [ cfg.package ];
 
-        boot.extraModulePackages = [ cfg.modulePackage ];
+        boot.kernel.extraModulePackages = [ cfg.modulePackage ];
 
         systemd = {
           packages = [ cfg.package ];
