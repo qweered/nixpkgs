@@ -682,7 +682,7 @@ in
         completely silent boot, you might also want to set the two following
         configuration options:
 
-        - `boot.consoleLogLevel = 0;`
+        - `boot.kernel.consoleLogLevel = 0;`
         - `boot.kernel.params = [ "quiet" "udev.log_level=3" ];`
       '';
     };

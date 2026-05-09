@@ -43,6 +43,7 @@ in
       [ "boot" "extraModulePackages" ]
       [ "boot" "kernel" "extraModulePackages" ]
     )
+    (mkRenamedOptionModule [ "boot" "consoleLogLevel" ] [ "boot" "kernel" "consoleLogLevel" ])
   ];
 
   ###### interface
@@ -182,7 +183,7 @@ in
       description = "Parameters added to the kernel command line.";
     };
 
-    boot.consoleLogLevel = mkOption {
+    boot.kernel.consoleLogLevel = mkOption {
       type = types.int;
       default = 4;
       description = ''
@@ -436,14 +437,14 @@ in
       # Implement consoleLogLevel both in early boot and using sysctl
       # (so you don't need to reboot to have changes take effect).
       boot.kernel.params = [
-        "loglevel=${toString config.boot.consoleLogLevel}"
+        "loglevel=${toString config.boot.kernel.consoleLogLevel}"
       ]
       ++ optionals config.boot.vesa [
         "vga=0x317"
         "nomodeset"
       ];
 
-      boot.kernel.sysctl."kernel.printk" = mkDefault config.boot.consoleLogLevel;
+      boot.kernel.sysctl."kernel.printk" = mkDefault config.boot.kernel.consoleLogLevel;
 
       boot.kernel.modules = [
         "loop"

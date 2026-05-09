@@ -24,7 +24,7 @@
     };
   };
 
-  boot.consoleLogLevel = lib.mkDefault 7;
+  boot.kernel.consoleLogLevel = lib.mkDefault 7;
   boot.kernel.params = [
     "console=tty0"
     "console=ttyS0,115200n8"

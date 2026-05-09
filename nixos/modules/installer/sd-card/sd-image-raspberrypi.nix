@@ -16,7 +16,7 @@
   boot.loader.grub.enable = false;
   boot.loader.generic-extlinux-compatible.enable = true;
 
-  boot.consoleLogLevel = lib.mkDefault 7;
+  boot.kernel.consoleLogLevel = lib.mkDefault 7;
   boot.kernel.packages = pkgs.linuxKernel.packages.linux_rpi1;
 
   sdImage = {

@@ -25,7 +25,7 @@
     };
   };
 
-  boot.consoleLogLevel = lib.mkDefault 7;
+  boot.kernel.consoleLogLevel = lib.mkDefault 7;
   boot.kernel.params = [ "console=hvc0" ];
 
   sdImage = {

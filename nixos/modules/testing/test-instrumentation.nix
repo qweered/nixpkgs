@@ -244,7 +244,7 @@ in
       DefaultDeviceTimeoutSec=300
     '';
 
-    boot.consoleLogLevel = 7;
+    boot.kernel.consoleLogLevel = 7;
 
     # Prevent tests from accessing the Internet.
     networking.defaultGateway = mkOverride 150 null;
