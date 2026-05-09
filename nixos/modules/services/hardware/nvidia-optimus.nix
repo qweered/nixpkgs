@@ -24,7 +24,7 @@ in
   ###### implementation
 
   config = lib.mkIf config.hardware.nvidiaOptimus.disable {
-    boot.blacklistedKernelModules = [
+    boot.kernel.blacklistedModules = [
       "nouveau"
       "nvidia"
       "nvidiafb"

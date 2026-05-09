@@ -58,7 +58,7 @@ stdenv.mkDerivation rec {
     longDescription = ''
       A kernel module for Realtek 8168 network cards.
       If you want to use this driver, you might need to blacklist the r8169 driver
-      by adding "r8169" to boot.blacklistedKernelModules.
+      by adding "r8169" to boot.kernel.blacklistedModules.
     '';
     license = lib.licenses.gpl2Plus;
     platforms = lib.platforms.linux;

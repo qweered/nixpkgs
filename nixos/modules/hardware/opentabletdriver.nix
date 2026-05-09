@@ -54,7 +54,7 @@ in
 
     services.udev.packages = [ cfg.package ];
 
-    boot.blacklistedKernelModules = cfg.blacklistedKernelModules;
+    boot.kernel.blacklistedModules = cfg.blacklistedKernelModules;
 
     systemd.user.services.opentabletdriver = lib.mkIf cfg.daemon.enable {
       description = "Open source, cross-platform, user-mode tablet driver";

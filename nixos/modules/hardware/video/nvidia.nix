@@ -429,7 +429,7 @@ in
             }
           ];
           boot = {
-            blacklistedKernelModules = [
+            kernel.blacklistedModules = [
               "nouveau"
               "nova_core"
               "nvidiafb"

@@ -19,6 +19,13 @@ in
 
 {
 
+  imports = [
+    (mkRenamedOptionModule
+      [ "boot" "blacklistedKernelModules" ]
+      [ "boot" "kernel" "blacklistedModules" ]
+    )
+  ];
+
   ###### interface
 
   options = {
@@ -34,7 +41,7 @@ in
         default = true;
       };
 
-    boot.blacklistedKernelModules = mkOption {
+    boot.kernel.blacklistedModules = mkOption {
       type = attrNamesToTrue;
       default = { };
       example = [
@@ -77,7 +84,7 @@ in
         };
 
     environment.etc."modprobe.d/nixos.conf".text = ''
-      ${flip concatMapStrings config.boot.blacklistedKernelModules (name: ''
+      ${flip concatMapStrings config.boot.kernel.blacklistedModules (name: ''
         blacklist ${name}
       '')}
       ${config.boot.extraModprobeConfig}

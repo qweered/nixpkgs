@@ -172,7 +172,7 @@ in
       config.boot.kernel.packages.nxp-pn5xx
     ];
 
-    boot.blacklistedKernelModules = [
+    boot.kernel.blacklistedModules = [
       "nxp_nci_i2c"
       "nxp_nci"
     ];

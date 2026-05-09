@@ -13,7 +13,7 @@ let
       boot.kernel.packages = lib.mkIf (kernelPackages != null) (kernelPackages pkgs);
       networking.nftables.enable = nftables;
       # Make sure iptables doesn't work with nftables enabled
-      boot.blacklistedKernelModules = lib.mkIf nftables [ "nft_compat" ];
+      boot.kernel.blacklistedModules = lib.mkIf nftables [ "nft_compat" ];
     };
   extraOptions = {
     Jc = 5;

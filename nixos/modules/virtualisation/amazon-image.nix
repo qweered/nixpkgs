@@ -76,7 +76,7 @@ in
     # interferes with the nvidia/nvidia-uvm modules needed for CUDA.
     # Also blacklist xen_fbfront to prevent a 30 second delay during
     # boot.
-    boot.blacklistedKernelModules = [
+    boot.kernel.blacklistedModules = [
       "nouveau"
       "xen_fbfront"
     ];

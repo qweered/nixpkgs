@@ -398,7 +398,7 @@ in
     # Cups uses libusb to talk to printers, and does not use the
     # linux kernel driver. If the driver is not in a black list, it
     # gets loaded, and then cups cannot access the printers.
-    boot.blacklistedKernelModules = [ "usblp" ];
+    boot.kernel.blacklistedModules = [ "usblp" ];
 
     # Some programs like print-manager rely on this value to get
     # printer test pages.

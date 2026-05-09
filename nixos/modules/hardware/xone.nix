@@ -14,7 +14,7 @@ in
 
   config = lib.mkIf cfg.enable {
     boot = {
-      blacklistedKernelModules = [
+      kernel.blacklistedModules = [
         "xpad"
         "mt76x2u"
       ];

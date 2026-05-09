@@ -86,7 +86,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.blacklistedKernelModules = [
+    boot.kernel.blacklistedModules = [
       "nvidia-drm"
       "nvidia"
       "nouveau"

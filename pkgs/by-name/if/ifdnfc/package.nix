@@ -45,7 +45,7 @@ stdenv.mkDerivation {
       <code>environment.systemPackages</code>
 
       To use your reader you may need to blacklist your reader kernel modules:
-      <code>boot.blacklistedKernelModules = [ "pn533" "pn533_usb" "nfc" ];</code>
+      <code>boot.kernel.blacklistedModules = [ "pn533" "pn533_usb" "nfc" ];</code>
 
       Supports the pn533 smart-card reader chip which is for example used in
       the SCM SCL3711.

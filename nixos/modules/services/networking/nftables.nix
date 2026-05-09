@@ -274,7 +274,7 @@ in
   ###### implementation
 
   config = lib.mkIf cfg.enable {
-    boot.blacklistedKernelModules = [ "ip_tables" ];
+    boot.kernel.blacklistedModules = [ "ip_tables" ];
     environment.systemPackages = [ pkgs.nftables ];
     # versionOlder for backportability, remove afterwards
     networking.nftables.flushRuleset = lib.mkDefault (

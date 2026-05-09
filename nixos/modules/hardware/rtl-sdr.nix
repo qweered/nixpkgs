@@ -23,7 +23,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    boot.blacklistedKernelModules = [
+    boot.kernel.blacklistedModules = [
       "dvb_usb_rtl28xxu"
       "e4000"
       "rtl2832"

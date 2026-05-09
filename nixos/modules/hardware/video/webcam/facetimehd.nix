@@ -32,7 +32,7 @@ in
 
     boot.kernel.modules = [ "facetimehd" ];
 
-    boot.blacklistedKernelModules = [ "bdc_pci" ];
+    boot.kernel.blacklistedModules = [ "bdc_pci" ];
 
     boot.extraModulePackages = [ kernelPackages.facetimehd ];
 

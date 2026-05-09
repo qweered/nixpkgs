@@ -1131,7 +1131,7 @@ in
     ];
 
     # actually, sbp2 driver is the one enabling the DMA attack, but this needs to be tested
-    boot.blacklistedKernelModules = optionals luks.mitigateDMAAttacks [
+    boot.kernel.blacklistedModules = optionals luks.mitigateDMAAttacks [
       "firewire_ohci"
       "firewire_core"
       "firewire_sbp2"

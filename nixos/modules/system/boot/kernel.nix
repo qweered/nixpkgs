@@ -17,7 +17,7 @@ let
     attrset, names that are set to `true` represent modules that will
     be included. Note that setting these names to `false` does not
     prevent the module from being loaded. For that, use
-    {option}`boot.blacklistedKernelModules`.
+    {option}`boot.kernel.blacklistedModules`.
   '';
 
   kernelModulesConf = pkgs.writeText "nixos.conf" ''
