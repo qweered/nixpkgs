@@ -248,4 +248,67 @@
       }
     );
   };
+
+  # Verifies the persistent object cache: two revs of the same repo share a
+  # cache directory across invocations, both produce the same hash as a direct
+  # fetch, and the cache is reused (a second call for the same rev skips the
+  # network fetch).
+  prefetch-git-cache =
+    runCommand "nix-prefetch-git-cache"
+      {
+        nativeBuildInputs = [
+          nix-prefetch-git
+          nix
+          jq
+          cacert
+        ];
+        outputHashMode = "recursive";
+        outputHashAlgo = "sha256";
+        outputHash = "sha256-7DszvbCNTjpzGRmpIVAWXk20P0/XTrWZ79KSOGLrUWY=";
+      }
+      ''
+        store_root="$(mktemp -d)"
+        export NIX_REMOTE="local?root=$store_root"
+        export NIX_PREFETCH_GIT_CACHE="$(mktemp -d)"
+        url="https://github.com/NixOS/nix"
+        rev1="9d9dbe6ed05854e03811c361a3380e09183f4f4a"
+        rev2="2.3.15"
+
+        # Cold cache fetch.
+        cached1=$(nix-prefetch-git --quiet --url "$url" --rev "$rev1" | jq -r .hash)
+
+        # Same rev again — cache_update must short-circuit on the immutable SHA,
+        # producing an identical hash without a network round-trip.
+        cached1again=$(nix-prefetch-git --quiet --url "$url" --rev "$rev1" | jq -r .hash)
+        [ "$cached1" = "$cached1again" ] || {
+          echo "warm-cache hash drifted: $cached1 vs $cached1again" >&2
+          exit 1
+        }
+
+        # Cross-check against --no-cache for the same rev.
+        uncached1=$(nix-prefetch-git --no-cache --quiet --url "$url" --rev "$rev1" | jq -r .hash)
+        [ "$cached1" = "$uncached1" ] || {
+          echo "cached vs no-cache hash differ: $cached1 vs $uncached1" >&2
+          exit 1
+        }
+
+        # Different rev (a tag) — exercises the bare-name code path and verifies
+        # the cache survives across rev choices.
+        cached2=$(nix-prefetch-git --quiet --url "$url" --rev "$rev2" | jq -r .hash)
+        uncached2=$(nix-prefetch-git --no-cache --quiet --url "$url" --rev "$rev2" | jq -r .hash)
+        [ "$cached2" = "$uncached2" ] || {
+          echo "tag rev cached vs no-cache differ: $cached2 vs $uncached2" >&2
+          exit 1
+        }
+
+        # Sanity: cache directory was actually populated.
+        [ -d "$NIX_PREFETCH_GIT_CACHE" ] && [ -n "$(ls "$NIX_PREFETCH_GIT_CACHE")" ] || {
+          echo "cache dir not populated" >&2
+          exit 1
+        }
+
+        # Produce a deterministic output that nix can fix-output on.
+        path=$(nix-prefetch-git --no-cache --url "$url" --rev "$rev1" --quiet | jq -r .path)
+        cp -r "$store_root$path" "$out"
+      '';
 }

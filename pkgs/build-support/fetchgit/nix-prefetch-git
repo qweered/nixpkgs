@@ -13,6 +13,11 @@ fetchLFS=
 builder=
 fetchTags=
 branchName=$NIX_PREFETCH_GIT_BRANCH_NAME
+noCache=
+
+# Save HOME before we override it later; cache_resolve_root() uses this
+# to locate a writable cache directory.
+origHome="${HOME:-}"
 
 # ENV params
 out=${out:-}
@@ -61,7 +66,16 @@ Options:
       --builder       Clone as fetchgit does, but url, rev, and out option are mandatory.
       --no-add-path   Do not actually add the contents of the git repo to the store.
       --root-dir dir  Directory in the repository that will be copied to the output instead of the full repository.
+      --no-cache      Do not use the persistent object cache.
       --quiet         Only print the final json summary.
+
+Environment:
+      NIX_PREFETCH_GIT_CACHE   Directory used to persist a per-URL bare clone across
+                               invocations, so repeated calls (e.g. trying multiple
+                               revs of the same repo) avoid refetching unchanged
+                               objects. Defaults to \$XDG_CACHE_HOME/nix-prefetch-git
+                               or \$HOME/.cache/nix-prefetch-git. Pass --no-cache
+                               to disable.
 "
     exit 1
 }
@@ -69,6 +83,156 @@ Options:
 # some git commands print to stdout, which would contaminate our JSON output
 clean_git(){
     git "$@" >&2
+}
+
+# === Persistent cache ===
+#
+# A per-URL bare clone kept under $cacheRoot. Each invocation incrementally
+# fetches into the cache from the upstream URL, then has the temp clone fetch
+# from the cache via a file:// URL. With a warm cache, no network traffic is
+# needed for objects already known. The temp clone's .git is fully populated
+# locally so the existing hashing/leaveDotGit paths stay self-contained.
+
+cacheRoot=
+cacheRepo=
+cacheLockFd=
+
+cache_resolve_root() {
+    # Honour explicit overrides first.
+    if [ -n "${NIX_PREFETCH_GIT_CACHE:-}" ]; then
+        cacheRoot="$NIX_PREFETCH_GIT_CACHE"
+        return 0
+    fi
+    if [ -n "${XDG_CACHE_HOME:-}" ]; then
+        cacheRoot="$XDG_CACHE_HOME/nix-prefetch-git"
+        return 0
+    fi
+    # Fall back to $HOME/.cache, but skip the wrapper's /homeless-shelter
+    # default — writes there would just fail.
+    if [ -n "$origHome" ] && [ "$origHome" != "/homeless-shelter" ] && [ -d "$origHome" ]; then
+        cacheRoot="$origHome/.cache/nix-prefetch-git"
+        return 0
+    fi
+    return 1
+}
+
+cache_lock() {
+    if ! command -v flock >/dev/null 2>&1; then
+        return 0
+    fi
+    mkdir -p "$(dirname "$cacheRepo")"
+    exec {cacheLockFd}>"$cacheRepo.lock"
+    flock "$cacheLockFd"
+    exit_handlers+=(cache_unlock)
+}
+
+cache_unlock() {
+    if [ -n "$cacheLockFd" ]; then
+        eval "exec ${cacheLockFd}>&-"
+        cacheLockFd=
+    fi
+}
+
+cache_init() {
+    # Decide whether to enable the cache. Skip in modes whose semantics differ
+    # enough that sharing object storage would be risky or pointless.
+    # --fetch-tags relies on `origin` having every tag, which a per-rev cache
+    # entry won't satisfy.
+    if [ -n "$noCache" ] || [ -n "$builder" ] || [ -n "$sparseCheckout" ] || [ -n "$fetchTags" ]; then
+        return 1
+    fi
+    cache_resolve_root || return 1
+
+    local urlHash
+    urlHash=$(printf '%s' "$url" | sha256sum | cut -c1-64)
+    cacheRepo="$cacheRoot/$urlHash.git"
+
+    cache_lock
+
+    if [ ! -e "$cacheRepo/HEAD" ]; then
+        echo "nix-prefetch-git: initializing cache at $cacheRepo" >&2
+        rm -rf "$cacheRepo"
+        clean_git init --bare -q "$cacheRepo"
+        clean_git -C "$cacheRepo" remote add origin "$url"
+    elif [ "$(git -C "$cacheRepo" config --get remote.origin.url 2>/dev/null)" != "$url" ]; then
+        # URL collisions on the sha256 are astronomically unlikely, but if we
+        # ever see a mismatch (or someone moves a repo), just rebuild rather
+        # than fetch into a wrong-origin cache.
+        echo "nix-prefetch-git: cache URL mismatch, recreating $cacheRepo" >&2
+        rm -rf "$cacheRepo"
+        clean_git init --bare -q "$cacheRepo"
+        clean_git -C "$cacheRepo" remote add origin "$url"
+    fi
+    return 0
+}
+
+cache_update() {
+    [ -n "$cacheRepo" ] || return 1
+
+    # An immutable 40-char SHA already in the cache needs no refresh. This is
+    # the path that makes a loop over revs cheap.
+    if [ -n "$rev" ] && [[ "$rev" =~ ^[0-9a-f]{40}$ ]] \
+            && git -C "$cacheRepo" cat-file -e "$rev" 2>/dev/null; then
+        return 0
+    fi
+
+    echo "nix-prefetch-git: updating cache for $url" >&2
+
+    # Match the user's depth choice so cold-cache cost is comparable to no-cache.
+    local -a fetchArgs=(--prune --force)
+    [ -z "$deepClone" ] && fetchArgs+=(--depth=1)
+    [ -n "$builder" ] && fetchArgs+=(--progress)
+
+    local rc=1
+    case "$rev" in
+        ""|HEAD)
+            # Don't try to populate via cache — we don't know what HEAD will
+            # resolve to upstream, and the temp clone's fetch handles HEAD fine.
+            return 1
+            ;;
+        refs/*)
+            clean_git -C "$cacheRepo" fetch "${fetchArgs[@]}" origin "+$rev:$rev" 2>/dev/null && rc=0
+            ;;
+        *)
+            if test -z "$(echo "$rev" | tr -d 0123456789abcdef)"; then
+                # SHA — server must allow uploadpack.allowAnySHA1InWant.
+                clean_git -C "$cacheRepo" fetch "${fetchArgs[@]}" origin "$rev" 2>/dev/null && rc=0
+            else
+                # Bare name — probably a tag, possibly a branch.
+                clean_git -C "$cacheRepo" fetch "${fetchArgs[@]}" origin \
+                        "+refs/tags/$rev:refs/tags/$rev" 2>/dev/null && rc=0 \
+                || clean_git -C "$cacheRepo" fetch "${fetchArgs[@]}" origin \
+                        "+refs/heads/$rev:refs/heads/$rev" 2>/dev/null && rc=0
+            fi
+            ;;
+    esac
+
+    if [ "$rc" -ne 0 ]; then
+        echo "nix-prefetch-git: warning: cache fetch failed; falling back to direct fetch" >&2
+        return 1
+    fi
+    return 0
+}
+
+cache_has_rev() {
+    local r="$1"
+    [ -n "$cacheRepo" ] || return 1
+    case "$r" in
+        ""|HEAD)
+            return 1
+            ;;
+        refs/*)
+            git -C "$cacheRepo" rev-parse --verify --quiet "$r" >/dev/null 2>&1
+            ;;
+        *)
+            if test -z "$(echo "$r" | tr -d 0123456789abcdef)"; then
+                git -C "$cacheRepo" cat-file -e "$r" 2>/dev/null
+            else
+                git -C "$cacheRepo" rev-parse --verify --quiet "refs/tags/$r" >/dev/null 2>&1 \
+                || git -C "$cacheRepo" rev-parse --verify --quiet "refs/heads/$r" >/dev/null 2>&1
+            fi
+            ;;
+    esac
 }
 
 argi=0
@@ -94,6 +258,7 @@ for arg; do
             --builder) builder=true;;
             --no-add-path) noAddPath=true;;
             --root-dir) argfun=set_rootDir;;
+            --no-cache) noCache=true;;
             -h|--help) usage; exit;;
             *)
                 : $((++argi))
@@ -363,16 +528,24 @@ clone_user_rev() {
         clean_git lfs install
     fi
 
+    # If the cache has the requested rev, fetch from there instead of over
+    # the network. The output JSON's `url` field still uses the original
+    # value, and the leaveDotGit path strips remote config either way.
+    local effectiveUrl="$url"
+    if cache_has_rev "$rev"; then
+        effectiveUrl="file://$cacheRepo"
+    fi
+
     # Perform the checkout.
     case "$rev" in
         HEAD|refs/*)
-            clone "$dir" "$url" "" "$rev" 1>&2;;
+            clone "$dir" "$effectiveUrl" "" "$rev" 1>&2;;
         *)
             if test -z "$(echo "$rev" | tr -d 0123456789abcdef)"; then
-                clone "$dir" "$url" "$rev" "" 1>&2
+                clone "$dir" "$effectiveUrl" "$rev" "" 1>&2
             else
                 # if revision is not hexadecimal it might be a tag
-                clone "$dir" "$url" "" "refs/tags/$rev" 1>&2
+                clone "$dir" "$effectiveUrl" "" "refs/tags/$rev" 1>&2
             fi;;
     esac
 
@@ -514,6 +687,15 @@ HOME="$tmpHomePath"
 unset XDG_CONFIG_HOME
 export GIT_CONFIG_NOSYSTEM=1
 
+# Set up the persistent cache only when we know we're going to clone. This
+# avoids a redundant network round-trip when --hash matches a path already in
+# the store. On any cache failure, drop it and fall back to upstream URL.
+ensure_cache() {
+    if cache_init; then
+        cache_update || cacheRepo=
+    fi
+}
+
 if test -n "$builder"; then
     test -n "$out" -a -n "$url" -a -n "$rev" || usage
     if test -n "$rootDir"; then
@@ -541,6 +723,7 @@ else
     # If we don't know the hash or a path with that hash doesn't exist,
     # download the file and add it to the store.
     if test -z "$finalPath"; then
+        ensure_cache
         clone_user_rev_to_tmpfile "$url" "$rev"
 
         if test -z "$rootDir"; then

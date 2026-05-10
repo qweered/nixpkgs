@@ -20,6 +20,7 @@
   mercurial,
   pijul,
   subversion,
+  util-linux,
 }:
 
 let
@@ -39,7 +40,7 @@ let
         install -vD ${src} $out/bin/$pname;
         wrapProgram $out/bin/$pname \
           --prefix PATH : ${lib.makeBinPath (deps ++ [ coreutils ])} \
-          --set HOME /homeless-shelter
+          --set-default HOME /homeless-shelter
       '';
 
       preferLocalBuild = true;
@@ -80,6 +81,7 @@ rec {
     git
     git-lfs
     gnused
+    util-linux
   ];
   nix-prefetch-hg = mkPrefetchScript "hg" ../../../build-support/fetchhg/nix-prefetch-hg [
     mercurial
