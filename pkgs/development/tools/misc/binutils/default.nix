@@ -11,6 +11,7 @@ in
   buildPackages,
   fetchurl,
   gettext,
+  libintl,
   lib,
   noSysDirs,
   perl,
@@ -153,9 +154,11 @@ stdenv.mkDerivation (finalAttrs: {
     libtool
   ];
 
+  # `libintl` resolves to `gettext` on non-glibc hosts (musl, Darwin, ...)
+  # and to `null` on glibc, where libintl lives inside libc itself.
   buildInputs = [
     zlib
-    gettext
+    libintl
   ];
 
   inherit noSysDirs;

@@ -73,6 +73,7 @@ let
         ++ [
           ../../build-support/setup-hooks/no-broken-symlinks.sh
           ../../build-support/setup-hooks/audit-tmpdir.sh
+          ../../build-support/setup-hooks/check-deps.sh
           ../../build-support/setup-hooks/compress-man-pages.sh
           ../../build-support/setup-hooks/make-symlinks-relative.sh
           ../../build-support/setup-hooks/move-docs.sh
