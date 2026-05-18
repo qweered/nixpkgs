@@ -84,8 +84,7 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   postInstall = ''
-    mkdir -p "$dev/lib"
-    mv "$out/lib/libghostty-vt.a" "$dev/lib/"
+    moveToOutput lib/libghostty-vt.a "$dev"
   '';
 
   postFixup = ''

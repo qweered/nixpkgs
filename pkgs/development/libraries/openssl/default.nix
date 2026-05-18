@@ -292,8 +292,7 @@ let
             ''
         )
         + ''
-          mkdir -p $bin
-          mv $out/bin $bin/bin
+          moveToOutput bin "$bin"
 
         ''
         +
@@ -309,8 +308,7 @@ let
             ''
         + ''
 
-          mkdir $dev
-          mv $out/include $dev/
+          moveToOutput include "$dev"
 
           # remove dependency on Perl at runtime
           rm -r $etc/etc/ssl/misc

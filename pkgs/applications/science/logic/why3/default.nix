@@ -98,8 +98,7 @@ stdenv.mkDerivation rec {
   ];
 
   postInstall = ''
-    mkdir -p $dev/lib
-    mv $out/lib/ocaml $dev/lib/
+    moveToOutput lib/ocaml "$dev"
   '';
 
   passthru.withProvers = callPackage ./with-provers.nix { };

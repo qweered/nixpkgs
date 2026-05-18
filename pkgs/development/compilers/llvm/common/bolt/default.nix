@@ -76,8 +76,7 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   postInstall = ''
-    mkdir -p $dev/lib
-    mv $out/lib/libLLVMBOLT*.a $dev/lib
+    moveToOutput "lib/libLLVMBOLT*.a" "$dev"
   '';
 
   outputs = [

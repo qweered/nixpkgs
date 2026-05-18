@@ -83,8 +83,7 @@ stdenv.mkDerivation (finalAttrs: {
     for f in "$lib/lib/"*.la $bin/bin/net-snmp-config $bin/bin/net-snmp-create-v3-user; do
       sed 's|-L${openssl.dev}|-L${lib.getLib openssl}|g' -i $f
     done
-    mkdir $dev/bin
-    mv $bin/bin/net-snmp-config $dev/bin
+    moveToOutput bin/net-snmp-config "$dev"
   '';
 
   meta = {

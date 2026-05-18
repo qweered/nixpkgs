@@ -57,8 +57,7 @@ stdenv.mkDerivation (finalAttrs: {
   env.NIX_CFLAGS_COMPILE = lib.optionalString (!x11Support) "-DX_DISPLAY_MISSING";
 
   postInstall = ''
-    mkdir -p $dev/bin
-    mv $bin/bin/caca-config $dev/bin/caca-config
+    moveToOutput bin/caca-config "$dev"
   '';
 
   meta = {

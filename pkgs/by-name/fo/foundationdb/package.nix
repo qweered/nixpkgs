@@ -141,9 +141,8 @@ stdenv.mkDerivation rec {
     rm -rf $out/etc $out/lib/foundationdb $out/lib/systemd $out/log $out/sbin $out/usr $out/var
 
     # move results into multi outputs
-    mkdir -p $dev $lib
-    mv $out/include $dev/include
-    mv $out/lib $lib/lib
+    moveToOutput include "$dev"
+    moveToOutput lib "$lib"
 
     # python bindings
     # NB: use the original setup.py.in, so we can substitute VERSION correctly

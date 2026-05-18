@@ -21,13 +21,13 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   installPhase = ''
-    mkdir -p $out/bin
-    mkdir -p $dev/include
+    mkdir -p $out/bin $out/include
     mkdir -p $out/{usr/bin,usr/include/sys}
     make install DESTDIR=$out
     mv $out/usr/bin/* $out/bin
-    mv $out/usr/include/* $dev/include/
-    rm -rf $out/usr/
+    mv $out/usr/include/* $out/include/
+    rm -rf $out/usr
+    moveToOutput include "$dev"
   '';
 
   meta = {

@@ -107,11 +107,9 @@ stdenv.mkDerivation (finalAttrs: {
       --includedir=/include \
       --lib64dir=/lib
 
-    mkdir -p $dev/lib
-    mv -v $out/include $dev
-    mv -v $out/lib/*.a $dev/lib
-    mkdir -p $lib
-    mv -v $out/lib $lib
+    moveToOutput include "$dev"
+    moveToOutput "lib/*.a" "$dev"
+    moveToOutput lib "$lib"
 
     substituteInPlace $out/bin/onload --replace-fail "/usr/libexec" "$out/libexec"
     # This tool looks for libonload.so in environment, point default to the actual library

@@ -132,10 +132,14 @@ stdenv.mkDerivation rec {
   ];
 
   postInstall = ''
+    # The upstream manual lives at `$out/manual`; relocate it to the
+    # nixpkgs-conventional `share/doc/httpd/` under $doc. moveToOutput would
+    # place it at `$doc/manual`, so do the move + rename in two steps.
+    moveToOutput manual "$doc"
     mkdir -p $doc/share/doc/httpd
-    mv $out/manual $doc/share/doc/httpd
-    mkdir -p $dev/bin
-    mv $out/bin/apxs $dev/bin/apxs
+    mv $doc/manual $doc/share/doc/httpd/
+
+    moveToOutput bin/apxs "$dev"
   '';
 
   passthru = {

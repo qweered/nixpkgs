@@ -31,8 +31,7 @@ rustPlatform.buildRustPackage {
   postInstall = ''
     cbindgen -o $dev/include/orz.h
 
-    mkdir -p $lib
-    mv $out/lib "$lib"
+    moveToOutput lib "$lib"
   '';
 
   meta = {

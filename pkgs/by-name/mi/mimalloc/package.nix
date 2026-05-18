@@ -61,8 +61,7 @@ stdenv.mkDerivation (finalAttrs: {
     in
     ''
       # first, move headers and cmake files, that's easy
-      mkdir -p $dev/lib
-      mv $out/lib/cmake $dev/lib/
+      moveToOutput lib/cmake "$dev"
 
       find $dev $out -type f
     ''

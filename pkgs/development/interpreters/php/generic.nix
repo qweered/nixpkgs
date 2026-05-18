@@ -337,12 +337,11 @@ let
           '';
 
           postFixup = ''
-            mkdir -p $dev/bin $dev/lib $dev/share/man/man1
-            mv $out/bin/phpize $out/bin/php-config $dev/bin/
-            mv $out/lib/build $dev/lib/
-            mv $out/share/man/man1/phpize.1.gz \
-               $out/share/man/man1/php-config.1.gz \
-               $dev/share/man/man1/
+            moveToOutput bin/phpize "$dev"
+            moveToOutput bin/php-config "$dev"
+            moveToOutput lib/build "$dev"
+            moveToOutput share/man/man1/phpize.1.gz "$dev"
+            moveToOutput share/man/man1/php-config.1.gz "$dev"
 
             substituteInPlace $dev/bin/phpize \
               --replace-fail "$out/lib" "$dev/lib"

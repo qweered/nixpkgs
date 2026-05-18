@@ -54,8 +54,11 @@ stdenv.mkDerivation (finalAttrs: {
   env.NIX_CFLAGS_COMPILE = "-Wno-error=implicit-int -std=gnu17";
 
   postInstall = ''
-    mkdir -p $dev/lib/pkgconfig
-    mv $out/lib/*.pc $dev/lib/pkgconfig
+    # Move .pc files into the standard lib/pkgconfig/ inside $out first,
+    # so moveToOutput can lift them into $dev with the canonical layout.
+    mkdir -p $out/lib/pkgconfig
+    mv $out/lib/*.pc $out/lib/pkgconfig/
+    moveToOutput lib/pkgconfig "$dev"
 
     moveToOutput "share/libxsmm" ''${!outputDoc}
   '';

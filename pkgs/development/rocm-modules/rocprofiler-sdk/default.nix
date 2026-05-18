@@ -197,9 +197,9 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   postInstall = ''
-    mkdir -p $dev/lib $dev/share/rocprofiler-sdk
-    mv $out/lib/cmake $dev/lib/
-    mv $out/share/rocprofiler-sdk/{samples,tests} $dev/share/rocprofiler-sdk/
+    moveToOutput lib/cmake "$dev"
+    moveToOutput share/rocprofiler-sdk/samples "$dev"
+    moveToOutput share/rocprofiler-sdk/tests "$dev"
   '';
 
   passthru.updateScript = rocmUpdateScript { inherit finalAttrs; };

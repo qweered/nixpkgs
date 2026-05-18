@@ -192,11 +192,10 @@ in
         # Put libraries for static linking in a separate output.  Note
         # that libc_nonshared.a and libpthread_nonshared.a are required
         # for dynamically-linked applications.
-        mkdir -p $static/lib
-        mv $out/lib/*.a $static/lib
-        mv $static/lib/lib*_nonshared.a $out/lib
+        moveToOutput "lib/*.a" "$static"
+        moveToOutput "lib/lib*_nonshared.a" "$out"
         # If libutil.so.1 is missing, libutil.a is required.
-        test -f $out/lib/libutil.so.1 || mv $static/lib/libutil.a $out/lib
+        test -f $out/lib/libutil.so.1 || moveToOutput lib/libutil.a "$out"
         # Some of *.a files are linker scripts where moving broke the paths.
         sed "/^GROUP/s|$out/lib/lib|$static/lib/lib|g" \
           -i "$static"/lib/*.a

@@ -164,12 +164,12 @@ stdenv.mkDerivation {
     (cd include/hcrypto; make -j $NIX_BUILD_CORES install)
     (cd lib/hcrypto; make -j $NIX_BUILD_CORES install)
 
-    mkdir -p $dev/bin
-    mv $out/bin/krb5-config $dev/bin/
+    moveToOutput bin/krb5-config "$dev"
 
     # asn1 compilers, move them to $dev
-    mv $out/libexec/heimdal/* $dev/bin
-    rmdir $out/libexec/heimdal
+    moveToOutput libexec/heimdal "$dev"
+    mv $dev/libexec/heimdal/* $dev/bin
+    rmdir $dev/libexec/heimdal $dev/libexec
 
     # compile_et is needed for cross-compiling this package and samba
     mv lib/com_err/.libs/compile_et $dev/bin

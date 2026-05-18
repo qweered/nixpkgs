@@ -41,12 +41,14 @@ stdenv.mkDerivation rec {
   # file; it uses prefix=$out; libdir=${prefix}/lib, which is wrong in
   # our case; libdir should really be set to the $lib output.
   postInstall = ''
-    mkdir -p $lib $dev/lib
-
-    mv $out/lib             $lib/lib
-    mv $out/include         $dev/include
-    mv $out/share/pkgconfig $dev/lib/pkgconfig
-    rmdir $out/share
+    moveToOutput lib "$lib"
+    moveToOutput include "$dev"
+    # libfsm installs its .pc files under share/pkgconfig but we want them
+    # under $dev/lib/pkgconfig for nixpkgs-standard layout.
+    moveToOutput share/pkgconfig "$dev"
+    mkdir -p $dev/lib
+    mv $dev/share/pkgconfig $dev/lib/pkgconfig
+    rmdir --ignore-fail-on-non-empty $dev/share
 
     for x in libfsm.pc libre.pc; do
       substituteInPlace "$dev/lib/pkgconfig/$x" \

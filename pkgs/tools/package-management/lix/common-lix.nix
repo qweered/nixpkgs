@@ -429,8 +429,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   # This needs to run after _multioutDocs moves the docs to $doc
   postFixup = lib.optionalString enableDocumentation ''
-    mkdir -p $devdoc/share/doc/nix
-    mv $doc/share/doc/nix/internal-api $devdoc/share/doc/nix
+    moveToOutput share/doc/nix/internal-api "$devdoc"
   '';
 
   doCheck = true;

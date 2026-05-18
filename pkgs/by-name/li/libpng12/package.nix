@@ -31,7 +31,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   configureFlags = [ "--enable-static" ];
 
-  postInstall = ''mv "$out/bin" "$dev/bin"'';
+  postInstall = ''moveToOutput bin "$dev"'';
 
   passthru = {
     inherit zlib;

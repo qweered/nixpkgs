@@ -37,8 +37,8 @@ stdenv.mkDerivation (finalAttrs: {
   ]
   ++ lib.optional (!static) "shared";
   postInstall = ''
-    mkdir -p $dev/lib $out/bin
-    mv $out/lib/libcdb.a $dev/lib
+    mkdir -p $out/bin
+    moveToOutput lib/libcdb.a "$dev"
     rm --recursive $out/lib
   ''
   + (

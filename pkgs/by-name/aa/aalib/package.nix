@@ -62,8 +62,7 @@ stdenv.mkDerivation (finalAttrs: {
   };
 
   postInstall = ''
-    mkdir -p $dev/bin
-    mv $bin/bin/aalib-config $dev/bin/aalib-config
+    moveToOutput bin/aalib-config "$dev"
     substituteInPlace $out/lib/libaa.la --replace-fail "${ncurses.dev}/lib" "${ncurses.out}/lib"
   '';
 

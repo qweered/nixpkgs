@@ -132,8 +132,7 @@ stdenv.mkDerivation (finalAttrs: {
   #doCheck = true; # not reliable
 
   postInstall = ''
-    mkdir -p $dev/bin
-    mv $bin/bin/autoopts-config $dev/bin
+    moveToOutput bin/autoopts-config "$dev"
 
     for f in $lib/lib/autogen/tpl-config.tlib $out/share/autogen/tpl-config.tlib; do
       sed -e "s|$dev/include|/no-such-autogen-include-path|" -i $f

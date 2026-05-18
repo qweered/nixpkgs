@@ -61,11 +61,11 @@ buildGoModule (finalAttrs: {
 
   # Usually either the agent or server is needed for a given use case, but not both
   postInstall = ''
-    mkdir -vp $agent/bin $server/bin $oidc/bin
-    mv -v $out/bin/spire-agent $agent/bin/
-    mv -v $out/bin/spire-server $server/bin/
-    mv -v $out/bin/oidc-discovery-provider $oidc/bin/
+    moveToOutput bin/spire-agent "$agent"
+    moveToOutput bin/spire-server "$server"
+    moveToOutput bin/oidc-discovery-provider "$oidc"
 
+    mkdir -p $out/bin
     ln -vs $agent/bin/spire-agent $out/bin/spire-agent
     ln -vs $server/bin/spire-server $out/bin/spire-server
     ln -vs $oidc/bin/oidc-discovery-provider $out/bin/oidc-discovery-provider

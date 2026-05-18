@@ -54,8 +54,7 @@ stdenv.mkDerivation rec {
   ];
 
   postInstall = ''
-    mkdir -p $dev/bin
-    mv $out/bin/libotf-config $dev/bin/
+    moveToOutput bin/libotf-config "$dev"
     substituteInPlace $dev/bin/libotf-config \
       --replace "pkg-config" "${pkg-config}/bin/pkg-config"
   '';

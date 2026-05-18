@@ -46,8 +46,7 @@ buildGoModule rec {
     export bin=''$${bin}
     export outputBin=bin
 
-    mkdir -p $bin/bin
-    mv $out/bin/${bin} $bin/bin
+    moveToOutput "bin/${bin}" "$bin"
 
     installShellCompletion --cmd ${bin} \
       --bash <($bin/bin/${bin} completion bash) \

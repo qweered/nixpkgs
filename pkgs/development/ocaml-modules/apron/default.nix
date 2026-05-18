@@ -52,8 +52,7 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   postInstall = ''
-    mkdir -p $dev/lib
-    mv $out/lib/ocaml $dev/lib/
+    moveToOutput lib/ocaml "$dev"
   '';
 
   meta = {

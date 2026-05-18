@@ -247,9 +247,12 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   postInstall = ''
-    mkdir -p $doc/share/doc/shogun/examples
-    mv $out/share/shogun/examples/cpp $doc/share/doc/shogun/examples
-    cp ../examples/undocumented/libshogun/*.cpp $doc/share/doc/shogun/examples/cpp
+    # Restructure under $out to the nixpkgs-conventional share/doc/<name>
+    # layout, then hand it off to $doc via moveToOutput.
+    mkdir -p $out/share/doc/shogun/examples
+    mv $out/share/shogun/examples/cpp $out/share/doc/shogun/examples/cpp
+    cp ../examples/undocumented/libshogun/*.cpp $out/share/doc/shogun/examples/cpp
+    moveToOutput share/doc/shogun "$doc"
     rm -r $out/share
   '';
 

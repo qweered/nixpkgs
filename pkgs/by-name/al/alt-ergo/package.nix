@@ -69,8 +69,11 @@ ocamlPackages.buildDunePackage {
   installPhase = ''
     runHook preInstall
     dune install --prefix $bin ${pname}
-    mkdir -p $out/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib
-    mv $bin/lib/alt-ergo $out/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib/
+    # Restructure under $bin so the ocaml site-lib layout is in place,
+    # then moveToOutput lifts the now-standard subtree into $out.
+    mkdir -p $bin/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib
+    mv $bin/lib/alt-ergo $bin/lib/ocaml/${ocamlPackages.ocaml.version}/site-lib/
+    moveToOutput "lib/ocaml/${ocamlPackages.ocaml.version}/site-lib/alt-ergo" "$out"
     runHook postInstall
   '';
 

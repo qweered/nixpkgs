@@ -116,21 +116,21 @@ stdenv.mkDerivation (finalAttrs: {
   postInstall =
     lib.optionalString (!useCmakeBuild) (
       ''
-        mkdir -p $dev $lib
-        mv $out/lib $lib/lib
-        mv $out/include $dev/include
+        moveToOutput lib "$lib"
+        moveToOutput include "$dev"
       ''
       + lib.optionalString pythonBindings ''
-        mkdir -p $python/lib
-        mv $lib/lib/python* $python/lib/
+        moveToOutput "lib/python*" "$python"
 
         # need to delete the lib folder to properly link the actual lib output
         rm -rf $python/${python3Packages.python.sitePackages}/z3/lib
       ''
       + lib.optionalString javaBindings ''
-        mkdir -p $java/share/java $java/lib
-        mv $lib/lib/com.microsoft.z3.jar $java/share/java
-        mv $lib/lib/libz3java* $java/lib
+        moveToOutput "lib/libz3java*" "$java"
+        moveToOutput "lib/com.microsoft.z3.jar" "$java"
+        # jar conventionally lives under share/java, not lib/.
+        mkdir -p $java/share/java
+        mv $java/lib/com.microsoft.z3.jar $java/share/java/
       ''
     )
     + lib.optionalString pythonBindings ''

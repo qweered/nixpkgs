@@ -100,9 +100,8 @@ stdenv.mkDerivation rec {
     '';
 
   postInstall = ''
-    mkdir -p $bin $dev/share
-    mv $out/bin $bin
-    mv $out/share/ice $dev/share
+    moveToOutput bin "$bin"
+    moveToOutput share/ice "$dev"
   '';
 
   meta = {

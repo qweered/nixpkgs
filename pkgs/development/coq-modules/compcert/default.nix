@@ -104,11 +104,10 @@ let
     installFlags = [ ]; # trust ./configure
     preInstall = ''
       mkdir -p $out/share/man
-      mkdir -p $man/share
     '';
     postInstall = ''
       # move man into place
-      mv $out/share/man/ $man/share/
+      moveToOutput share/man "$man"
 
       # move docs into place
       mkdir -p $doc/share/doc/compcert

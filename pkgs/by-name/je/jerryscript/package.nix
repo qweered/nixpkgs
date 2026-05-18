@@ -69,8 +69,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   # Uses a custom lib variable that ignores what nixpkgs's cmake setupHook specifies.
   postInstall = ''
-    mkdir $lib
-    mv "$out/lib" "$lib/"
+    moveToOutput lib "$lib"
   '';
 
   nativeInstallCheckInputs = [

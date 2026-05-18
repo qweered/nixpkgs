@@ -52,9 +52,8 @@ stdenv.mkDerivation (finalAttrs: {
     ];
 
   preFixup = ''
-    mkdir -p "$lib" "$dev"
-    mv "$out/lib" "$lib"
-    mv "$out/include" "$dev"
+    moveToOutput lib "$lib"
+    moveToOutput include "$dev"
   '';
 
   meta = {

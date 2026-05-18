@@ -165,7 +165,7 @@ buildPythonPackage rec {
     mv $out/lib/python $target_dir
   ''
   + lib.optionalString withDocs ''
-    mv $out/docs $doc
+    moveToOutput docs "$doc"
   '';
 
   meta = {

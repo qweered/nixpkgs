@@ -97,9 +97,13 @@ stdenv.mkDerivation (finalAttrs: {
   ++ lib.optional (variant == "tdx") "TDX=1";
 
   postInstall = ''
-    mkdir -p $dev/lib/pkgconfig
-    mv $out/lib64/pkgconfig $dev/lib/
-    mv $out/include $dev/
+    # Upstream installs pkgconfig under lib64/; normalise to lib/ so the
+    # _multioutDevs auto-mover and moveToOutput see the standard layout.
+    mkdir -p $out/lib
+    mv $out/lib64/pkgconfig $out/lib/
+    rmdir --ignore-fail-on-non-empty $out/lib64
+    moveToOutput lib/pkgconfig "$dev"
+    moveToOutput include "$dev"
   '';
 
   env.OPENSSL_NO_VENDOR = true;

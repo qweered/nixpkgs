@@ -64,8 +64,8 @@ stdenv.mkDerivation {
 
   installPhase = ''
     find $out
-    mv $out/include $dev/
-    mv $out/lib $lib/
+    moveToOutput include "$dev"
+    moveToOutput lib "$lib"
   '';
 
   meta = {

@@ -59,8 +59,11 @@ stdenv.mkDerivation (finalAttrs: {
 
   # fixes "cycle detected in build"
   postInstall = lib.optionalString stdenv.hostPlatform.isWindows ''
-    mkdir $dev/lib
-    mv $out/CMake $dev/lib/cmake
+    # Upstream installs CMake files at the top level; relocate to the
+    # standard lib/cmake/ path within $out before handing off to $dev.
+    mkdir -p $out/lib
+    mv $out/CMake $out/lib/cmake
+    moveToOutput lib/cmake "$dev"
   '';
 
   meta = {

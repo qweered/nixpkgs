@@ -45,8 +45,7 @@ stdenv.mkDerivation (finalAttrs: {
   installTargets = [ "install" ] ++ lib.optional enableManpages "install-man";
 
   postInstall = ''
-    mkdir -p $lib
-    mv $out/lib $lib/lib
+    moveToOutput lib "$lib"
   '';
 
   meta = {

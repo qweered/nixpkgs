@@ -92,7 +92,12 @@ stdenv.mkDerivation rec {
   postInstall = ''
     # avoid cycle between outputs
     if [ -f $out/lib/${pname}/e2scrub_all_cron ]; then
-      mv $out/lib/${pname}/e2scrub_all_cron $bin/bin/
+      # cron script lives under lib/ but belongs in bin/; normalise within
+      # $out so moveToOutput can route it to $bin via the standard layout.
+      mkdir -p $out/bin
+      mv $out/lib/${pname}/e2scrub_all_cron $out/bin/
+      rmdir --ignore-fail-on-non-empty $out/lib/${pname}
+      moveToOutput bin/e2scrub_all_cron "$bin"
     fi
 
     moveToOutput bin/mk_cmds "$scripts"

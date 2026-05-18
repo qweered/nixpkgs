@@ -31,9 +31,7 @@ stdenv.mkDerivation (finalAttrs: {
   configureFlags = [ "--with-libgpg-error-prefix=${libgpg-error.dev}" ];
 
   postInstall = ''
-    mkdir -p $dev/bin
-    mv $out/bin/*-config $dev/bin/
-    rmdir --ignore-fail-on-non-empty $out/bin
+    moveToOutput "bin/*-config" "$dev"
   '';
 
   meta = {

@@ -144,7 +144,7 @@ stdenv.mkDerivation (
     + (lib.optionalString
       ((lib.versionAtLeast release_version "19") && !(lib.versionAtLeast release_version "21"))
       ''
-        mv $out/lib/clang $lib/lib/clang
+        moveToOutput lib/clang "$lib"
       ''
     )
     + ''
