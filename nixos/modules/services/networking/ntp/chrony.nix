@@ -11,7 +11,6 @@ let
 
   stateDir = cfg.directory;
   driftFile = "${stateDir}/chrony.drift";
-  keyFile = "${stateDir}/chrony.keys";
   rtcFile = "${stateDir}/chrony.rtc";
 
   configFile = pkgs.writeText "chrony.conf" ''
@@ -31,7 +30,6 @@ let
     ${lib.optionalString cfg.makestep.enable "makestep ${toString cfg.makestep.threshold} ${toString cfg.makestep.limit}"}
 
     driftfile ${driftFile}
-    keyfile ${keyFile}
     ${lib.optionalString (cfg.enableRTCTrimming) "rtcfile ${rtcFile}"}
     ${lib.optionalString (cfg.enableNTS) "ntsdumpdir ${stateDir}"}
 
@@ -271,7 +269,6 @@ in
     systemd.tmpfiles.rules = [
       "d ${stateDir} 0750 chrony chrony - -"
       "f ${driftFile} 0640 chrony chrony - -"
-      "f ${keyFile} 0640 root chrony - -"
     ]
     ++ lib.optionals cfg.enableRTCTrimming [
       "f ${rtcFile} 0640 chrony chrony - -"

@@ -49,7 +49,9 @@ in
       isSystemUser = true;
       group = cfg.group;
       home = cfg.dataDir;
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
     };
     users.groups.tdarr = lib.mkIf (cfg.group == "tdarr") { };
 

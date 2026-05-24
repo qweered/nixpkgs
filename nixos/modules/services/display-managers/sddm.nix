@@ -550,7 +550,9 @@ in
     };
 
     users.users.sddm = {
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
       home = "/var/lib/sddm";
       group = "sddm";
       uid = config.ids.uids.sddm;

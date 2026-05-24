@@ -134,7 +134,9 @@ in
       group = cfg.group;
       home = cfg.stateDir;
       isSystemUser = true;
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
       description = "OpenCloud daemon user";
     };
 

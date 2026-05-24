@@ -30,7 +30,13 @@ in
         isSystemUser = true;
         group = "wheel";
         home = "/sysuser";
+        createHome = true;
         initialPassword = sysuserPassword;
+      };
+      users.users.nohome-sysuser = {
+        isSystemUser = true;
+        group = "wheel";
+        home = "/nohome-sysuser";
       };
 
       specialisation.new-generation.configuration = {
@@ -38,6 +44,7 @@ in
           isSystemUser = true;
           group = "wheel";
           home = "/new-sysuser";
+          createHome = true;
           initialHashedPassword = newSysuserPassword;
         };
       };
@@ -64,6 +71,10 @@ in
     with subtest("sysuser user is created"):
       print(machine.succeed("getent passwd sysuser"))
       assert machine.succeed("stat -c '%U' /sysuser") == "sysuser\n"
+
+    with subtest("system user home is not created without createHome"):
+      print(machine.succeed("getent passwd nohome-sysuser"))
+      machine.fail("stat /nohome-sysuser")
 
     with subtest("Manually add new user"):
       machine.succeed("useradd manual-sysuser")

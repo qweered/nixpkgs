@@ -159,7 +159,9 @@ in
     users.users.traefik = {
       group = "traefik";
       home = cfg.dataDir;
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
       isSystemUser = true;
     };
 

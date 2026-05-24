@@ -334,7 +334,9 @@ in
           description = "Kubernetes user";
           group = "kubernetes";
           home = cfg.dataDir;
-          createHome = true;
+          createHome = !(
+            config.systemd.sysusers.enable || config.services.userborn.enable
+          );
           homeMode = "755";
         };
         users.groups.kubernetes.gid = config.ids.gids.kubernetes;

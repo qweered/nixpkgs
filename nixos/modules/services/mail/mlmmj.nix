@@ -108,7 +108,9 @@ in
     users.users.${cfg.user} = {
       description = "mlmmj user";
       home = stateDir;
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
       uid = config.ids.uids.mlmmj;
       group = cfg.group;
       useDefaultShell = true;
@@ -150,7 +152,9 @@ in
     environment.systemPackages = [ pkgs.mlmmj ];
 
     systemd.tmpfiles.settings."10-mlmmj" = {
-      ${stateDir}.d = { };
+      ${stateDir}.d = {
+        inherit (cfg) user group;
+      };
       "${spoolDir}/${cfg.listDomain}".d = { };
       ${spoolDir}.Z = {
         inherit (cfg) user group;

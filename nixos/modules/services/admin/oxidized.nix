@@ -93,7 +93,9 @@ in
       description = "Oxidized service user";
       group = cfg.group;
       home = cfg.dataDir;
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
       isSystemUser = true;
     };
 

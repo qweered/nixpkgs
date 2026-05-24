@@ -353,7 +353,9 @@ in
       isSystemUser = true;
       home = cacheDir;
       homeMode = "0750";
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
       group = "dms-greeter";
       extraGroups = [ "video" ];
     };

@@ -99,7 +99,9 @@ in
       ejabberd = {
         group = cfg.group;
         home = cfg.spoolDir;
-        createHome = true;
+        createHome = !(
+          config.systemd.sysusers.enable || config.services.userborn.enable
+        );
         uid = config.ids.uids.ejabberd;
       };
     };

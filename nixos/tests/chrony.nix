@@ -13,8 +13,11 @@
     machine.start()
     machine.wait_for_unit('multi-user.target')
     machine.succeed('systemctl is-active chronyd.service')
+    machine.fail("journalctl -b --no-pager | grep -F 'unsafe path transition /var/lib/chrony'")
+    machine.fail("journalctl -b -u chronyd.service --no-pager | grep -F 'Could not open keyfile'")
     machine.succeed('/run/booted-system/specialisation/hardened/bin/switch-to-configuration test')
     machine.succeed('systemctl restart chronyd.service')
     machine.wait_for_unit('chronyd.service')
+    machine.fail("journalctl -b -u chronyd.service --no-pager | grep -F 'Could not open keyfile'")
   '';
 }

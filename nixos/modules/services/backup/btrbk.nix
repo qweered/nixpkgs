@@ -327,7 +327,9 @@ in
       isSystemUser = true;
       # ssh needs a home directory
       home = "/var/lib/btrbk";
-      createHome = true;
+      createHome = !(
+        config.systemd.sysusers.enable || config.services.userborn.enable
+      );
       shell = "${pkgs.bash}/bin/bash";
       group = "btrbk";
       openssh.authorizedKeys.keys = map (

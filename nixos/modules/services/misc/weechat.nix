@@ -48,7 +48,9 @@ in
     users = {
       groups.weechat = { };
       users.weechat = {
-        createHome = true;
+        createHome =
+          cfg.root == "/var/lib/weechat"
+          || !(config.systemd.sysusers.enable || config.services.userborn.enable);
         group = "weechat";
         home = cfg.root;
         isSystemUser = true;
