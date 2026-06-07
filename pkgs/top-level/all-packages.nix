@@ -3514,18 +3514,6 @@ with pkgs;
     mkGCCNGPackages
     ;
 
-  wrapNonDeterministicGcc =
-    stdenv: ccWrapper:
-    if ccWrapper.isGNU then
-      ccWrapper.override (prev: {
-        cc = prev.cc.override {
-          reproducibleBuild = false;
-          profiledCompiler = with stdenv; (!isDarwin && hostPlatform.isx86);
-        };
-      })
-    else
-      ccWrapper;
-
   gnuStdenv =
     if stdenv.cc.isGNU then
       stdenv
@@ -3553,10 +3541,12 @@ with pkgs;
   gcc15Stdenv = overrideCC gccStdenv buildPackages.gcc15;
   gcc16Stdenv = overrideCC gccStdenv buildPackages.gcc16;
 
-  # This is not intended for use in nixpkgs but for providing a faster-running
-  # compiler to nixpkgs users by building gcc with reproducibility-breaking
-  # profile-guided optimizations
-  fastStdenv = overrideCC gccStdenv (wrapNonDeterministicGcc gccStdenv buildPackages.gcc_latest);
+  # Profile-guided optimization is now the default for gcc on platforms where it
+  # is supported and (same-machine) reproducible -- native x86 Linux -- so a
+  # separate "fast" stdenv is no longer required. Kept as a backwards-compatible
+  # alias to the default gcc stdenv.
+  # See pkgs/development/compilers/gcc/README-deterministic-pgo.md.
+  fastStdenv = gccStdenv;
 
   wrapCCMulti =
     cc:
@@ -3573,7 +3563,6 @@ with pkgs;
           inherit bintools;
           libc = glibc_multi;
         });
-        profiledCompiler = false;
         enableMultilib = true;
       };
       libc = glibc_multi;
@@ -3620,12 +3609,12 @@ with pkgs;
         inherit noSysDirs;
         majorMinorVersion = toString default-gcc-version;
 
-        reproducibleBuild = true;
-        profiledCompiler = false;
-
         isl = if !stdenv.hostPlatform.isDarwin then isl_0_20 else null;
 
         withoutTargetLibc = true;
+        # Minimal libc-less compiler used only to bootstrap the target libc;
+        # not worth a profiled bootstrap, so keep it on the deterministic path.
+        enablePgo = false;
         langCC = stdenv.targetPlatform.isCygwin; # can't compile libcygwin1.a without C++
         libcCross = libc1;
         targetPackages.stdenv.cc.bintools = binutilsNoLibc;
@@ -3664,7 +3653,6 @@ with pkgs;
     langFortran = false;
     langCC = false;
     langC = false;
-    profiledCompiler = false;
     langJit = true;
     enableLTO = false;
   };
@@ -3677,7 +3665,6 @@ with pkgs;
       langC = true;
       langCC = false;
       langAda = true;
-      profiledCompiler = false;
       # As per upstream instructions building a cross compiler
       # should be done with a (native) compiler of the same version.
       # If we are cross-compiling GNAT, we may as well do the same.
@@ -3705,7 +3692,6 @@ with pkgs;
       langC = true;
       langCC = false;
       langAda = true;
-      profiledCompiler = false;
       # As per upstream instructions building a cross compiler
       # should be done with a (native) compiler of the same version.
       # If we are cross-compiling GNAT, we may as well do the same.
@@ -3733,7 +3719,6 @@ with pkgs;
       langC = true;
       langCC = false;
       langAda = true;
-      profiledCompiler = false;
       # As per upstream instructions building a cross compiler
       # should be done with a (native) compiler of the same version.
       # If we are cross-compiling GNAT, we may as well do the same.
@@ -3761,7 +3746,6 @@ with pkgs;
       langC = true;
       langCC = false;
       langAda = true;
-      profiledCompiler = false;
       # As per upstream instructions building a cross compiler
       # should be done with a (native) compiler of the same version.
       # If we are cross-compiling GNAT, we may as well do the same.
@@ -3819,7 +3803,6 @@ with pkgs;
       langC = true;
       langGo = true;
       langJit = true;
-      profiledCompiler = false;
     }
     // {
       # not supported on darwin: https://github.com/golang/go/issues/463
@@ -3834,7 +3817,6 @@ with pkgs;
       langC = true;
       langGo = true;
       langJit = true;
-      profiledCompiler = false;
     }
     // {
       # not supported on darwin: https://github.com/golang/go/issues/463
@@ -3849,7 +3831,6 @@ with pkgs;
       langC = true;
       langGo = true;
       langJit = true;
-      profiledCompiler = false;
     }
     // {
       # not supported on darwin: https://github.com/golang/go/issues/463
@@ -3864,7 +3845,6 @@ with pkgs;
       langC = true;
       langGo = true;
       langJit = true;
-      profiledCompiler = false;
     }
     // {
       # not supported on darwin: https://github.com/golang/go/issues/463
@@ -3879,7 +3859,6 @@ with pkgs;
       langC = true;
       langGo = true;
       langJit = true;
-      profiledCompiler = false;
     }
     // {
       # not supported on darwin: https://github.com/golang/go/issues/463

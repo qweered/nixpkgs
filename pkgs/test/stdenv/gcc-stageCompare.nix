@@ -19,8 +19,9 @@ with pkgs;
 let
   gcc-stageCompare =
     (gcc-unwrapped.override {
-      reproducibleBuild = true;
-      profiledCompiler = false;
+      # Rebuild with the same configuration as the released `gcc-unwrapped`
+      # (including PGO where it is the default) so the checksum comparison below
+      # verifies same-machine reproducibility rather than diffing two configs.
       stdenv = overrideCC stdenv (wrapCCWith {
         cc = stdenv.cc;
       });

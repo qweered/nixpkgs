@@ -130,10 +130,13 @@ let
   isBuiltByBootstrapFilesCompiler = pkg: isFromNixpkgs pkg && isFromBootstrapFiles pkg.stdenv.cc.cc;
 
   commonGccOverrides = {
-    # Use a deterministically built compiler
-    # see https://github.com/NixOS/nixpkgs/issues/108475 for context
-    reproducibleBuild = true;
-    profiledCompiler = false;
+    # NOTE: PGO (`enablePgo`) is decided per stage, not here: the transient
+    # bootstrap compilers (e.g. stage1 `xgcc`) force `enablePgo = false` so they
+    # stay on the plain deterministic, non-bootstrap path (the externalised
+    # bootstrap design), while the final stage3 compiler -- which becomes
+    # `stdenv.cc`/`pkgs.gcc` -- uses the platform default (profiled bootstrap on
+    # x86 Linux). See https://github.com/NixOS/nixpkgs/issues/108475 and
+    # pkgs/development/compilers/gcc/README-deterministic-pgo.md for context.
 
     # It appears that libcc1 (which is not a g++ plugin; it is a gdb plugin) gets linked against
     # the libstdc++ from the compiler that *built* g++, not the libstdc++ which was just built.
@@ -357,6 +360,10 @@ in
           (super.gcc-unwrapped.override (
             commonGccOverrides
             // {
+              # Transient bootstrap compiler: keep it on the plain deterministic,
+              # non-bootstrap path. Only the final stage3 gcc gets PGO.
+              enablePgo = false;
+
               # The most logical name for this package would be something like
               # "gcc-stage1".  Unfortunately "stage" is already reserved for the
               # layers of stdenv, so using "stage" in the name of this package

@@ -5,6 +5,5 @@ wrapCC (
     langFortran = true;
     langCC = false;
     langC = false;
-    profiledCompiler = false;
   }
 )

@@ -30,8 +30,6 @@ let
             _systemInfo = {
               inherit buildIsHost hostIsTarget;
             };
-            reproducibleBuild = true;
-            profiledCompiler = false;
             libcCross = if !buildIsTarget then targetPackages.libc or pkgs.libc else null;
             threadsCross = if !buildIsTarget then targetPackages.threads or pkgs.threads else { };
             isl = if stdenv.hostPlatform.isDarwin then null else isl_0_20;

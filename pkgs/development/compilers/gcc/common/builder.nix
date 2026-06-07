@@ -168,8 +168,11 @@ originalAttrs:
           )
 
           if test -z "''${targetConfig-}"; then
+              # `pgoBootCFlags` (set by the gcc derivation when building with a
+              # profiled bootstrap) is appended here so it survives this
+              # BOOT_CFLAGS assignment instead of being clobbered by it.
               makeFlagsArray+=(
-                  "BOOT_CFLAGS=$EXTRA_FLAGS $EXTRA_LDFLAGS"
+                  "BOOT_CFLAGS=$EXTRA_FLAGS $EXTRA_LDFLAGS''${pgoBootCFlags:+ $pgoBootCFlags}"
                   "BOOT_LDFLAGS=$EXTRA_FLAGS_FOR_TARGET $EXTRA_LDFLAGS_FOR_TARGET"
               )
           fi

@@ -7,8 +7,6 @@
   langObjCpp,
   langFortran,
   langGo,
-  reproducibleBuild,
-  profiledCompiler,
   langJit,
   staticCompiler,
   enableShared,

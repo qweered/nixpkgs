@@ -12,8 +12,13 @@
   langObjC ? stdenv.targetPlatform.isDarwin,
   langObjCpp ? stdenv.targetPlatform.isDarwin,
   langGo ? false,
-  reproducibleBuild ? true,
-  profiledCompiler ? false,
+  # Build the compiler with profile-guided optimization (a profiled bootstrap).
+  # When left as the `null` sentinel it is resolved below: enabled on native
+  # x86 Linux, where the profiled bootstrap is supported and (same-machine)
+  # reproducible; disabled elsewhere and for the throwaway stdenv-bootstrap
+  # compilers, which pass `enablePgo = false` explicitly.
+  # See pkgs/development/compilers/gcc/README-deterministic-pgo.md.
+  enablePgo ? null,
   langJit ? false,
   langRust ? false,
   cargo,
@@ -96,7 +101,17 @@ let
   #   "14.2.0" -> "14.2.0"
   baseVersion = lib.concatStringsSep "." (lib.take 3 (lib.splitVersion version));
 
-  disableBootstrap = !stdenv.hostPlatform.isDarwin && !profiledCompiler;
+  # Profile-guided optimization is the default where it is supported and known
+  # to build (reproducibly, same-machine): native, non-cross x86 Linux. Darwin,
+  # non-x86, and cross fall back to the plain deterministic build, as do the
+  # stdenv-bootstrap compilers (which force `enablePgo = false`).
+  doPgo =
+    if enablePgo != null then
+      enablePgo
+    else
+      !stdenv.hostPlatform.isDarwin && stdenv.hostPlatform.isx86 && hostIsTarget && buildIsHost;
+
+  disableBootstrap = !doPgo && !stdenv.hostPlatform.isDarwin;
 
   inherit (stdenv) buildPlatform hostPlatform targetPlatform;
   targetConfig = if (!hostIsTarget) then targetPlatform.config else null;
@@ -170,8 +185,6 @@ let
       patchelf
       perl
       pkgsBuildTarget
-      profiledCompiler
-      reproducibleBuild
       staticCompiler
       stdenv
       targetPackages
@@ -195,10 +208,6 @@ assert langAda -> gnat-bootstrap != null;
 
 # threadsCross is just for MinGW
 assert threadsCross != { } -> stdenv.targetPlatform.isWindows;
-
-# profiledCompiler builds inject non-determinism in one of the compilation stages.
-# If turned on, we can't provide reproducible builds anymore
-assert reproducibleBuild -> profiledCompiler == false;
 
 pipe
   ((callFile ./common/builder.nix { }) (
@@ -332,14 +341,20 @@ pipe
       inherit targetConfig;
 
       buildFlags =
-        # we do not yet have Nix-driven profiling
-        assert profiledCompiler -> !disableBootstrap;
+        assert doPgo -> !disableBootstrap;
         let
           target =
-            optionalString profiledCompiler "profiled"
+            optionalString doPgo "profiled"
             + optionalString (hostIsTarget && buildIsHost && !disableBootstrap) "bootstrap";
         in
         optional (target != "") target;
+
+      # Harden gcc's profiled bootstrap so the PGO build stays reproducible:
+      # -fno-profile-values keeps only (machine-independent) edge counters,
+      # dropping value-profiling histograms. The builder appends this to the
+      # BOOT_CFLAGS it assembles (so it is not clobbered by that assignment);
+      # gcc appends -fprofile-generate/-fprofile-use to BOOT_CFLAGS itself.
+      pgoBootCFlags = optionalString doPgo "-fno-profile-values";
 
       inherit (callFile ./common/strip-attributes.nix { })
         stripDebugList
