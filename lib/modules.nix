@@ -1489,7 +1489,13 @@ let
             (if def.value._type or "" == "override" then def.value.priority else defaultOverridePriority)
             == highestPrio
           then
-            [ (strip def) ]
+            [
+              # Avoid a nested strip call in this already-required mapper.
+              (if def.value._type or "" == "override" then
+                def // { value = def.value.content; }
+              else
+                def)
+            ]
           else
             [ ]
         ) defs;
