@@ -1935,8 +1935,7 @@ rec {
     :::
   */
   getOutput =
-    output: pkg:
-    if !pkg ? outputSpecified || !pkg.outputSpecified then pkg.${output} or pkg.out or pkg else pkg;
+    output: pkg: if pkg.outputSpecified or false then pkg else pkg.${output} or pkg.out or pkg;
 
   /**
     Get the first of the `outputs` provided by the package, or the default.
