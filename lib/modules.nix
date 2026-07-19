@@ -668,26 +668,6 @@ let
   */
   unifyModuleSyntax =
     file: key: m:
-    let
-      addMeta =
-        config:
-        if m ? meta then
-          mkMerge [
-            config
-            { meta = m.meta; }
-          ]
-        else
-          config;
-      addFreeformType =
-        config:
-        if m ? freeformType then
-          mkMerge [
-            config
-            { _module.freeformType = m.freeformType; }
-          ]
-        else
-          config;
-    in
     if m ? config || m ? options then
       let
         badAttrs = removeAttrs m [
@@ -712,7 +692,24 @@ let
           disabledModules = m.disabledModules or [ ];
           imports = m.imports or [ ];
           options = m.options or { };
-          config = addFreeformType (addMeta (m.config or { }));
+          config =
+            let
+              configWithMeta =
+                if m ? meta then
+                  mkMerge [
+                    (m.config or { })
+                    { meta = m.meta; }
+                  ]
+                else
+                  m.config or { };
+            in
+            if m ? freeformType then
+              mkMerge [
+                configWithMeta
+                { _module.freeformType = m.freeformType; }
+              ]
+            else
+              configWithMeta;
         }
     else
     # shorthand syntax
@@ -726,17 +723,25 @@ let
         disabledModules = m.disabledModules or [ ];
         imports = if m ? require then m.require ++ (m.imports or [ ]) else m.imports or [ ];
         options = { };
-        config = addFreeformType (
-          removeAttrs m [
-            "_class"
-            "_file"
-            "key"
-            "disabledModules"
-            "require"
-            "imports"
-            "freeformType"
-          ]
-        );
+        config =
+          let
+            config = removeAttrs m [
+              "_class"
+              "_file"
+              "key"
+              "disabledModules"
+              "require"
+              "imports"
+              "freeformType"
+            ];
+          in
+          if m ? freeformType then
+            mkMerge [
+              config
+              { _module.freeformType = m.freeformType; }
+            ]
+          else
+            config;
       };
 
   applyModuleArgsIfFunction =
