@@ -375,7 +375,9 @@ lib.extendMkDerivation {
       ++ nativeBuildInputs
       ++ getFinalPassthru "build-system";
 
-      buildInputs = validatePythonMatches "buildInputs" (buildInputs ++ pythonPath);
+      buildInputs = validatePythonMatches "buildInputs" (
+        if pythonPath == [ ] then buildInputs else buildInputs ++ pythonPath
+      );
 
       propagatedBuildInputs =
         validatePythonMatches "propagatedBuildInputs" (
