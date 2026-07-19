@@ -1485,17 +1485,14 @@ let
       {
         values = concatMap (
           def:
-          if
-            (if def.value._type or "" == "override" then def.value.priority else defaultOverridePriority)
-            == highestPrio
-          then
-            [
-              # Avoid a nested strip call in this already-required mapper.
-              (if def.value._type or "" == "override" then
-                def // { value = def.value.content; }
-              else
-                def)
-            ]
+          # Select both the priority and retained value from one tag test.
+          if def.value._type or "" == "override" then
+            if def.value.priority == highestPrio then
+              [ (def // { value = def.value.content; }) ]
+            else
+              [ ]
+          else if defaultOverridePriority == highestPrio then
+            [ def ]
           else
             [ ]
         ) defs;
