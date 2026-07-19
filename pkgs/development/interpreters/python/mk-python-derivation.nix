@@ -223,10 +223,12 @@ lib.extendMkDerivation {
           ''
         ));
 
+      finalPyproject = getFinalPassthru "pyproject";
+
       format' =
-        assert (getFinalPassthru "pyproject" != null) -> (format == null);
-        if getFinalPassthru "pyproject" != null then
-          if getFinalPassthru "pyproject" then "pyproject" else "other"
+        assert (finalPyproject != null) -> (format == null);
+        if finalPyproject != null then
+          if finalPyproject then "pyproject" else "other"
         else if format != null then
           format
         else
