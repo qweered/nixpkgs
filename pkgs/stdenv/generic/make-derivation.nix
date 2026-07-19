@@ -134,7 +134,7 @@ let
   ];
 
   isSingularDependency =
-    dep: dep == null || (dep.type or null) == "derivation" || isString dep || isPath dep;
+    dep: (dep.type or null) == "derivation" || dep == null || isString dep || isPath dep;
 
   cachedOutputChecks = {
     out = { };
