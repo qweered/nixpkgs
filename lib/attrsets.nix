@@ -1770,13 +1770,16 @@ rec {
   recursiveUpdate =
     lhs: rhs:
     lhs
-    // mapAttrs (
-      name: value:
-      let
-        lhsValue = lhs.${name} or null;
-      in
-      if isAttrs lhsValue && isAttrs value then recursiveUpdate lhsValue value else value
-    ) rhs;
+    // (
+      rhs
+      // mapAttrs (
+        name: value:
+        let
+          lhsValue = lhs.${name};
+        in
+        if isAttrs lhsValue && isAttrs value then recursiveUpdate lhsValue value else value
+      ) (intersectAttrs lhs rhs)
+    );
 
   /**
     Recurse into every attribute set of the first argument and check that:
