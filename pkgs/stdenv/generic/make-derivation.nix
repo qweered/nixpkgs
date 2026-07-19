@@ -1009,7 +1009,7 @@ let
             overlappingArgs = intersectAttrs env' derivationArg;
           in
           assert
-            (isAttrs env && !isDerivation env)
+            (isAttrs env && (env.type or null) != "derivation")
             || throw "`env` must be an attribute set of environment variables. Set `env.env` or pick a more specific name.";
           assert
             (overlappingArgs == { })
