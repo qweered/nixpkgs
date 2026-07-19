@@ -589,13 +589,23 @@ let
         modulesPath:
         { disabled, modules }:
         let
-          isDisabledModule = isDisabled modulesPath disabled;
-          keyFilter = filter (attrs: !isDisabledModule attrs);
+          closure =
+            if disabled == [ ] then
+              genericClosure {
+                startSet = modules;
+                operator = attrs: attrs.modules;
+              }
+            else
+              let
+                isDisabledModule = isDisabled modulesPath disabled;
+                keyFilter = filter (attrs: !isDisabledModule attrs);
+              in
+              genericClosure {
+                startSet = keyFilter modules;
+                operator = attrs: keyFilter attrs.modules;
+              };
         in
-        map (attrs: attrs.module) (genericClosure {
-          startSet = keyFilter modules;
-          operator = attrs: keyFilter attrs.modules;
-        });
+        map (attrs: attrs.module) closure;
 
       toGraph =
         modulesPath:
