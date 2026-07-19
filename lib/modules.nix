@@ -915,11 +915,11 @@ let
       # extract the definitions for each loc
       rawDefinitionsByName = zipAttrs (
         map (
-          module:
+          { file, config, ... }:
           mapAttrs (n: value: {
-            inherit (module) file;
+            inherit file;
             inherit value;
-          }) module.config
+          }) config
         ) checkedConfigs
       );
 
