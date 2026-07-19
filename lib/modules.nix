@@ -69,6 +69,9 @@ let
     levenshteinAtMost
     ;
 
+  builtinFunctionArgs = builtins.functionArgs;
+  builtinIsFunction = builtins.isFunction;
+
   showDeclPrefix =
     loc: decl: prefix:
     " - option(s) with prefix `${showOption (loc ++ [ prefix ])}' in module `${decl._file}'";
@@ -714,7 +717,26 @@ let
       };
 
   applyModuleArgsIfFunction =
-    key: f: args@{ config, ... }: if isFunction f then applyModuleArgs key f args else f;
+    key: f:
+    args@{ config, ... }:
+    if builtinIsFunction f then
+      let
+        context = name: ''while evaluating the module argument `${name}' in "${key}":'';
+        extraArgs = mapAttrs (
+          name: _:
+          addErrorContext (context name) (
+            args.${name} or (addErrorContext
+              "noting that argument `${name}` is not externally provided, so querying `_module.args` instead, requiring `config`"
+              config._module.args.${name}
+            )
+          )
+        ) (builtinFunctionArgs f);
+      in
+      f (args // extraArgs)
+    else if isFunction f then
+      applyModuleArgs key f args
+    else
+      f;
 
   applyModuleArgs =
     key: f:
