@@ -958,7 +958,12 @@ let
         in
         if all isOptionDecl decls then
           let
-            opt = fixupOptionType loc (mergeOptionDecls loc decls);
+            merged = mergeOptionDecls loc decls;
+            opt =
+              if merged ? type && (merged.type.getSubModules or null) == null then
+                merged
+              else
+                fixupOptionType loc merged;
           in
           {
             matchedOptions = evalOptionValue loc opt defns';
