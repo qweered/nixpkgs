@@ -284,8 +284,9 @@ lib.extendMkDerivation {
           throw "fetchurl requires a hash for fixed-output derivation: ${lib.generators.toPretty { } urls_}";
 
       finalHash = finalAttrs.hash;
-      finalHashHasColon = substring 0 7 finalHash != "sha256-" && match ".*:.*" finalHash != null;
-      finalHashColonMatch = match "([^:]+)[:](.*)" finalHash;
+      finalHashColonMatch =
+        if substring 0 7 finalHash == "sha256-" then null else match "([^:]+)[:](.*)" finalHash;
+      finalHashHasColon = finalHashColonMatch != null;
       normalizedHash = hash_.outputHash;
       normalizedHashAlgo = hash_.outputHashAlgo;
     in
