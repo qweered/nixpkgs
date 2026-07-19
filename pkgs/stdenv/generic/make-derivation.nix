@@ -983,33 +983,36 @@ let
       validity = assertValidity { inherit meta attrs; };
 
       checkedEnv =
-        let
-          overlappingArgs = intersectAttrs env' derivationArg;
-        in
-        assert
-          (isAttrs env && !isDerivation env)
-          || throw "`env` must be an attribute set of environment variables. Set `env.env` or pick a more specific name.";
-        assert
-          (overlappingArgs == { })
-          || throw (
-            let
-              errors = concatMapStringsSep "\n" (
-                name:
-                "  - ${name}: in `env`: ${toPretty { } env'.${name}}; in derivation arguments: ${
-                    toPretty { } derivationArg.${name}
-                  }"
-              ) (attrNames overlappingArgs);
-
-            in
-            "The `env` attribute set cannot contain any attributes passed to derivation. The following attributes are overlapping:\n${errors}"
-          );
-        mapAttrs (
-          n: v:
+        if env' == { } then
+          { }
+        else
+          let
+            overlappingArgs = intersectAttrs env' derivationArg;
+          in
           assert
-            (isString v || isBool v || isInt v || isDerivation v)
-            || throw "The `env` attribute set can only contain derivation, string, boolean or integer attributes. The `${n}` attribute is of type ${typeOf v}.";
-          v
-        ) env';
+            (isAttrs env && !isDerivation env)
+            || throw "`env` must be an attribute set of environment variables. Set `env.env` or pick a more specific name.";
+          assert
+            (overlappingArgs == { })
+            || throw (
+              let
+                errors = concatMapStringsSep "\n" (
+                  name:
+                  "  - ${name}: in `env`: ${toPretty { } env'.${name}}; in derivation arguments: ${
+                      toPretty { } derivationArg.${name}
+                    }"
+                ) (attrNames overlappingArgs);
+
+              in
+              "The `env` attribute set cannot contain any attributes passed to derivation. The following attributes are overlapping:\n${errors}"
+            );
+          mapAttrs (
+            n: v:
+            assert
+              (isString v || isBool v || isInt v || isDerivation v)
+              || throw "The `env` attribute set can only contain derivation, string, boolean or integer attributes. The `${n}` attribute is of type ${typeOf v}.";
+            v
+          ) env';
     in
 
     extendDerivation validity.handled (
