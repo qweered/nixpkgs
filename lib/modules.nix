@@ -1086,78 +1086,102 @@ let
   */
   mergeOptionDecls =
     loc: opts:
-    foldl'
-      (
-        res: opt:
-        let
-          t = res.type;
-          t' = opt.options.type;
-          mergedType = t.typeMerge t'.functor;
-          typesMergeable = mergedType != null;
-
-          typeSet =
-            if opt.options ? type && res ? type then
-              if typesMergeable then
-                {
-                  type = mergedType;
-                }
-              else
-                # Keep in sync with the same error below!
-                throw
-                  "The option `${showOption loc}' in `${opt._file}' is already declared in ${showFiles res.declarations}."
-            else
-              { };
-        in
-        if
-          opt.options ? default && res ? default
-          || opt.options ? example && res ? example
-          || opt.options ? description && res ? description
-          || opt.options ? apply && res ? apply
-        then
-          # Keep in sync with the same error above!
-          throw
-            "The option `${showOption loc}' in `${opt._file}' is already declared in ${showFiles res.declarations}."
-        else
-          let
-            getSubModules = opt.options.type.getSubModules or null;
-            submodules =
-              if getSubModules != null then
-                map (setDefaultModuleLocation opt._file) getSubModules ++ res.options
-              else
-                res.options;
-          in
-          opt.options
-          // res
-          // {
-            declarations = res.declarations ++ [ opt._file ];
-            # In the case of modules that are generated dynamically, we won't
-            # have exact declaration lines; fall back to just the file being
-            # evaluated.
-            declarationPositions =
-              res.declarationPositions
-              ++ (
-                if opt.pos != null then
-                  [ opt.pos ]
-                else
-                  [
-                    {
-                      file = opt._file;
-                      line = null;
-                      column = null;
-                    }
-                  ]
-              );
-            options = submodules;
-          }
-          // typeSet
-      )
-      {
+    if length opts == 1 then
+      let
+        opt = head opts;
+        getSubModules = opt.options.type.getSubModules or null;
+      in
+      opt.options
+      // {
         inherit loc;
-        declarations = [ ];
-        declarationPositions = [ ];
-        options = [ ];
+        declarations = [ opt._file ];
+        declarationPositions =
+          if opt.pos != null then
+            [ opt.pos ]
+          else
+            [
+              {
+                file = opt._file;
+                line = null;
+                column = null;
+              }
+            ];
+        options =
+          if getSubModules != null then map (setDefaultModuleLocation opt._file) getSubModules else [ ];
       }
-      opts;
+    else
+      foldl'
+        (
+          res: opt:
+          let
+            t = res.type;
+            t' = opt.options.type;
+            mergedType = t.typeMerge t'.functor;
+            typesMergeable = mergedType != null;
+
+            typeSet =
+              if opt.options ? type && res ? type then
+                if typesMergeable then
+                  {
+                    type = mergedType;
+                  }
+                else
+                  # Keep in sync with the same error below!
+                  throw
+                    "The option `${showOption loc}' in `${opt._file}' is already declared in ${showFiles res.declarations}."
+              else
+                { };
+          in
+          if
+            opt.options ? default && res ? default
+            || opt.options ? example && res ? example
+            || opt.options ? description && res ? description
+            || opt.options ? apply && res ? apply
+          then
+            # Keep in sync with the same error above!
+            throw
+              "The option `${showOption loc}' in `${opt._file}' is already declared in ${showFiles res.declarations}."
+          else
+            let
+              getSubModules = opt.options.type.getSubModules or null;
+              submodules =
+                if getSubModules != null then
+                  map (setDefaultModuleLocation opt._file) getSubModules ++ res.options
+                else
+                  res.options;
+            in
+            opt.options
+            // res
+            // {
+              declarations = res.declarations ++ [ opt._file ];
+              # In the case of modules that are generated dynamically, we won't
+              # have exact declaration lines; fall back to just the file being
+              # evaluated.
+              declarationPositions =
+                res.declarationPositions
+                ++ (
+                  if opt.pos != null then
+                    [ opt.pos ]
+                  else
+                    [
+                      {
+                        file = opt._file;
+                        line = null;
+                        column = null;
+                      }
+                    ]
+                );
+              options = submodules;
+            }
+            // typeSet
+        )
+        {
+          inherit loc;
+          declarations = [ ];
+          declarationPositions = [ ];
+          options = [ ];
+        }
+        opts;
 
   /**
     Merge all the definitions of an option to produce the final
