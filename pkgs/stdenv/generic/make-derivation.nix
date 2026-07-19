@@ -579,13 +579,19 @@ let
           if nativeBuildInputs' == [ ] then
             [ ]
           else
+            let
+              checked = checkDependencyList "nativeBuildInputs" nativeBuildInputs';
+            in
             map (
               drv:
-              let
-                pkg = drv.__spliced.buildHost or drv;
-              in
-              if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg
-            ) (checkDependencyList "nativeBuildInputs" nativeBuildInputs');
+              if (drv.type or null) == "derivation" || drv == null || isString drv || isPath drv then
+                let
+                  pkg = drv.__spliced.buildHost or drv;
+                in
+                if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg
+              else
+                seq checked drv
+            ) nativeBuildInputs';
         buildTargetOutputs =
           if depsBuildTarget == [ ] then
             [ ]
