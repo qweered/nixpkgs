@@ -883,7 +883,16 @@ let
             mapNullable unsafeDerivationToUntrackedOutpath attrs.allowedRequisites;
           ${if __structuredAttrs then "outputChecks" else null} =
             let
-              attrsOutputChecks = makeOutputChecks attrs;
+              attrsOutputChecks =
+                if
+                  attrs ? disallowedReferences
+                  || attrs ? disallowedRequisites
+                  || attrs ? allowedReferences
+                  || attrs ? allowedRequisites
+                then
+                  makeOutputChecks attrs
+                else
+                  { };
               attrsOutputChecksFiltered = filterAttrs (_: v: v != null) attrsOutputChecks;
             in
             # to avoid the listToAttrs in most common situations, we replicate
