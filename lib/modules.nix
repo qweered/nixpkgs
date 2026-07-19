@@ -1137,14 +1137,14 @@ let
       # yield a value computed from the definitions
       value = if opt ? apply then opt.apply res.mergedValue else res.mergedValue;
 
-      warnDeprecation =
+      checkedOption =
         if (opt.type.deprecationMessage != null) then
-          warn "The type `types.${opt.type.name}' of option `${showOption loc}' defined in ${showFiles opt.declarations} is deprecated. ${opt.type.deprecationMessage}"
+          warn "The type `types.${opt.type.name}' of option `${showOption loc}' defined in ${showFiles opt.declarations} is deprecated. ${opt.type.deprecationMessage}" opt
         else
-          x: x;
+          opt;
 
     in
-    warnDeprecation opt
+    checkedOption
     // {
       value = addErrorContext "while evaluating the option `${showOption loc}':" value;
       inherit (res.defsFinal') highestPrio;
