@@ -404,9 +404,6 @@ let
       hasUnsupportedPlatform' = hasUnsupportedPlatform hostPlatform;
     in
     attrs:
-    if !(attrs ? meta) || attrs.meta == { } then
-      null
-    else
     # Check meta attribute types first, to make sure it is always called even when there are other issues
     # Note that this is not a full type check and functions below still need to by careful about their inputs!
     if checkMeta && !metaType.verify attrs.meta then
