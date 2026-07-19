@@ -589,7 +589,8 @@ let
         modulesPath:
         { disabled, modules }:
         let
-          keyFilter = filter (attrs: !isDisabled modulesPath disabled attrs);
+          isDisabledModule = isDisabled modulesPath disabled;
+          keyFilter = filter (attrs: !isDisabledModule attrs);
         in
         map (attrs: attrs.module) (genericClosure {
           startSet = keyFilter modules;
