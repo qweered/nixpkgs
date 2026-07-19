@@ -539,13 +539,30 @@ let
         doCheck = doCheck';
         doInstallCheck = doInstallCheck';
         buildInputs' =
-          buildInputs ++ optionals doCheck checkInputs ++ optionals doInstallCheck installCheckInputs;
+          if doCheck then
+            buildInputs ++ checkInputs ++ (if doInstallCheck then installCheckInputs else [ ])
+          else if doInstallCheck then
+            buildInputs ++ installCheckInputs
+          else
+            buildInputs;
+        nativeBuildInputsWithoutChecks =
+          if separateDebugInfo' then
+            nativeBuildInputs
+            ++ [ ../../build-support/setup-hooks/separate-debug-info.sh ]
+            ++ (if isWindows then [ ../../build-support/setup-hooks/win-dll-link.sh ] else [ ])
+          else if isWindows then
+            nativeBuildInputs ++ [ ../../build-support/setup-hooks/win-dll-link.sh ]
+          else
+            nativeBuildInputs;
         nativeBuildInputs' =
-          nativeBuildInputs
-          ++ optional separateDebugInfo' ../../build-support/setup-hooks/separate-debug-info.sh
-          ++ optional isWindows ../../build-support/setup-hooks/win-dll-link.sh
-          ++ optionals doCheck nativeCheckInputs
-          ++ optionals doInstallCheck nativeInstallCheckInputs;
+          if doCheck then
+            nativeBuildInputsWithoutChecks
+            ++ nativeCheckInputs
+            ++ (if doInstallCheck then nativeInstallCheckInputs else [ ])
+          else if doInstallCheck then
+            nativeBuildInputsWithoutChecks ++ nativeInstallCheckInputs
+          else
+            nativeBuildInputsWithoutChecks;
 
         outputs = outputs';
 
