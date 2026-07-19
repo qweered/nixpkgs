@@ -235,10 +235,17 @@ lib.extendMkDerivation {
       urls_ = if rewriteURL == null then preRewriteUrls else rewriteAllUrls preRewriteUrls;
 
       hash_ =
-        if
+        if hash != "" then
+          if outputHash == "" && sha1 == "" && sha256 == "" && sha512 == "" then
+            {
+              outputHashAlgo = null;
+              outputHash = hash;
+            }
+          else
+            throw "multiple hashes passed to fetchurl: ${lib.generators.toPretty { } urls_}"
+        else if
           length (
             filter (s: s != "") [
-              hash
               outputHash
               sha1
               sha256
@@ -247,13 +254,6 @@ lib.extendMkDerivation {
           ) > 1
         then
           throw "multiple hashes passed to fetchurl: ${lib.generators.toPretty { } urls_}"
-        else
-
-        if hash != "" then
-          {
-            outputHashAlgo = null;
-            outputHash = hash;
-          }
         else if outputHash != "" then
           if outputHashAlgo != "" then
             { inherit outputHashAlgo outputHash; }
