@@ -1474,10 +1474,25 @@ let
       }
     else
       let
-        highestPrio = foldl' (prio: def: min (getPrio def) prio) 9999 defs;
+        # Avoid a getPrio call for every definition in both forced scans.
+        highestPrio = foldl' (
+          prio: def:
+          min (
+            if def.value._type or "" == "override" then def.value.priority else defaultOverridePriority
+          ) prio
+        ) 9999 defs;
       in
       {
-        values = concatMap (def: if getPrio def == highestPrio then [ (strip def) ] else [ ]) defs;
+        values = concatMap (
+          def:
+          if
+            (if def.value._type or "" == "override" then def.value.priority else defaultOverridePriority)
+            == highestPrio
+          then
+            [ (strip def) ]
+          else
+            [ ]
+        ) defs;
         inherit highestPrio;
       };
 
