@@ -877,13 +877,12 @@ let
           loc = prefix ++ [ name ];
           defns = pushedDownDefinitionsByName.${name} or [ ];
           defns' = rawDefinitionsByName.${name} or [ ];
-          optionDecls = filter (
+          isOptionDecl =
             m:
             m.options ? _type
-            && (m.options._type == "option" || throwDeclarationTypeError loc m.options._type m._file)
-          ) decls;
+            && (m.options._type == "option" || throwDeclarationTypeError loc m.options._type m._file);
         in
-        if length optionDecls == length decls then
+        if all isOptionDecl decls then
           let
             opt = fixupOptionType loc (mergeOptionDecls loc decls);
           in
@@ -891,35 +890,39 @@ let
             matchedOptions = evalOptionValue loc opt defns';
             unmatchedDefns = [ ];
           }
-        else if optionDecls != [ ] then
-          if
-            all (x: x.options.type.name or null == "submodule") optionDecls
-          # Raw options can only be merged into submodules. Merging into
-          # attrsets might be nice, but ambiguous. Suppose we have
-          # attrset as a `attrsOf submodule`. User declares option
-          # attrset.foo.bar, this could mean:
-          #  a. option `bar` is only available in `attrset.foo`
-          #  b. option `foo.bar` is available in all `attrset.*`
-          #  c. reject and require "<name>" as a reminder that it behaves like (b).
-          #  d. magically combine (a) and (c).
-          # All of the above are merely syntax sugar though.
-          then
-            let
-              opt = fixupOptionType loc (mergeOptionDecls loc (map optionTreeToOption decls));
-            in
-            {
-              matchedOptions = evalOptionValue loc opt defns';
-              unmatchedDefns = [ ];
-            }
-          else
-            let
-              nonOptions = filter (m: !isOption m.options) decls;
-            in
-            throw "The option `${showOption loc}' in module `${(head optionDecls)._file}' would be a parent of the following options, but its type `${
-              (head optionDecls).options.type.description or "<no description>"
-            }' does not support nested options.\n${showRawDecls loc nonOptions}"
         else
-          mergeModules' loc decls defns
+          let
+            optionDecls = filter isOptionDecl decls;
+          in
+          if optionDecls != [ ] then
+            if
+              all (x: x.options.type.name or null == "submodule") optionDecls
+            # Raw options can only be merged into submodules. Merging into
+            # attrsets might be nice, but ambiguous. Suppose we have
+            # attrset as a `attrsOf submodule`. User declares option
+            # attrset.foo.bar, this could mean:
+            #  a. option `bar` is only available in `attrset.foo`
+            #  b. option `foo.bar` is available in all `attrset.*`
+            #  c. reject and require "<name>" as a reminder that it behaves like (b).
+            #  d. magically combine (a) and (c).
+            # All of the above are merely syntax sugar though.
+            then
+              let
+                opt = fixupOptionType loc (mergeOptionDecls loc (map optionTreeToOption decls));
+              in
+              {
+                matchedOptions = evalOptionValue loc opt defns';
+                unmatchedDefns = [ ];
+              }
+            else
+              let
+                nonOptions = filter (m: !isOption m.options) decls;
+              in
+              throw "The option `${showOption loc}' in module `${(head optionDecls)._file}' would be a parent of the following options, but its type `${
+                (head optionDecls).options.type.description or "<no description>"
+              }' does not support nested options.\n${showRawDecls loc nonOptions}"
+          else
+            mergeModules' loc decls defns
       ) declsByName;
 
       matchedOptions = mapAttrs (n: v: v.matchedOptions) resultsByName;
