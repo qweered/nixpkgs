@@ -232,7 +232,7 @@ lib.extendMkDerivation {
         else
           throw "fetchurl requires either `url` or `urls` to be set: ${lib.generators.toPretty { } args}";
 
-      urls_ = rewriteAllUrls preRewriteUrls;
+      urls_ = if rewriteURL == null then preRewriteUrls else rewriteAllUrls preRewriteUrls;
 
       hash_ =
         if
