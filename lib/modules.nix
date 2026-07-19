@@ -1037,10 +1037,13 @@ let
                   "The option `${showOption loc}' in `${opt._file}' is already declared in ${showFiles res.declarations}."
             else
               { };
-
-          bothHave = k: opt.options ? ${k} && res ? ${k};
         in
-        if bothHave "default" || bothHave "example" || bothHave "description" || bothHave "apply" then
+        if
+          opt.options ? default && res ? default
+          || opt.options ? example && res ? example
+          || opt.options ? description && res ? description
+          || opt.options ? apply && res ? apply
+        then
           # Keep in sync with the same error above!
           throw
             "The option `${showOption loc}' in `${opt._file}' is already declared in ${showFiles res.declarations}."
