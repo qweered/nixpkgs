@@ -284,9 +284,13 @@ lib.extendMkDerivation {
           throw "fetchurl requires a hash for fixed-output derivation: ${lib.generators.toPretty { } urls_}";
 
       finalHash = finalAttrs.hash;
+      finalHashPrefix = substring 0 7 finalHash;
       finalHashColonMatch =
-        if substring 0 7 finalHash == "sha256-" then null else match "([^:]+)[:](.*)" finalHash;
-      finalHashHasColon = finalHashColonMatch != null;
+        if finalHashPrefix == "sha256-" || finalHashPrefix == "sha256:" then
+          null
+        else
+          match "([^:]+)[:](.*)" finalHash;
+      finalHashHasColon = finalHashPrefix == "sha256:" || finalHashColonMatch != null;
       normalizedHash = hash_.outputHash;
       normalizedHashAlgo = hash_.outputHashAlgo;
     in
@@ -325,10 +329,18 @@ lib.extendMkDerivation {
           normalizedHash
         else
           "${normalizedHashAlgo}:${normalizedHash}";
-      outputHashAlgo = if finalHashHasColon then head finalHashColonMatch else null;
+      outputHashAlgo =
+        if finalHashPrefix == "sha256:" then
+          "sha256"
+        else if finalHashHasColon then
+          head finalHashColonMatch
+        else
+          null;
       outputHash =
         if finalHash == "" then
           fakeHash
+        else if finalHashPrefix == "sha256:" then
+          substring 7 (-1) finalHash
         else if finalHashHasColon then
           elemAt finalHashColonMatch 1
         else
