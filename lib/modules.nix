@@ -108,15 +108,6 @@ let
       check ? true,
     }:
     let
-      withWarnings =
-        x:
-        warnIf (evalModulesArgs ? args)
-          "The args argument to evalModules is deprecated. Please set config._module.args instead."
-          warnIf
-          (evalModulesArgs ? check)
-          "The check argument to evalModules is deprecated. Please set config._module.check instead."
-          x;
-
       legacyModules =
         optional (evalModulesArgs ? args) {
           config = {
@@ -407,14 +398,28 @@ let
         inherit modules specialArgs class;
       };
 
-      result = withWarnings {
-        _type = "configuration";
-        options = checked options;
-        config = checked (removeAttrs config [ "_module" ]);
-        _module = checked (config._module);
-        inherit (doCollect { }) graph;
-        inherit extendModules type class;
-      };
+      result =
+        let
+          value = {
+            _type = "configuration";
+            options = checked options;
+            config = checked (removeAttrs config [ "_module" ]);
+            _module = checked (config._module);
+            inherit (doCollect { }) graph;
+            inherit extendModules type class;
+          };
+        in
+        if evalModulesArgs ? args then
+          warn "The args argument to evalModules is deprecated. Please set config._module.args instead." (
+            if evalModulesArgs ? check then
+              warn "The check argument to evalModules is deprecated. Please set config._module.check instead." value
+            else
+              value
+          )
+        else if evalModulesArgs ? check then
+          warn "The check argument to evalModules is deprecated. Please set config._module.check instead." value
+        else
+          value;
     in
     result;
 
