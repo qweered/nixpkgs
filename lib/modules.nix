@@ -127,7 +127,11 @@ let
             _module.check = mkDefault check;
           };
         };
-      regularModules = modules ++ legacyModules;
+      regularModules =
+        if !(evalModulesArgs ? args) && !(evalModulesArgs ? check) then
+          modules
+        else
+          modules ++ legacyModules;
 
       # This internal module declare internal options under the `_module'
       # attribute.  These options are fragile, as they are used by the
