@@ -1323,44 +1323,30 @@ let
           "The option `${showOption loc}' was accessed but has no value defined. Try setting the option.";
 
     checkedAndMerged =
-      (
-        # This function (which is immediately applied) checks that type.merge
-        # returns the proper attrset.
-        # Once use of the merge.v2 feature has propagated, consider removing this
-        # for an estimated one thousandth performance improvement (NixOS by nr.thunks).
+      if type.merge ? v2 then
+        let
+          # Check for v2 merge coherence
+          r = checkV2MergeCoherence loc type (
+            type.merge.v2 {
+              inherit loc;
+              defs = defsFinal;
+            }
+          );
+        in
+        r
+        // {
+          valueMeta = r.valueMeta // {
+            _internal = {
+              inherit type;
+            };
+          };
+        }
+      else
         {
-          headError,
-          value,
-          valueMeta,
-        }@args:
-        args
-      )
-        (
-          if type.merge ? v2 then
-            let
-              # Check for v2 merge coherence
-              r = checkV2MergeCoherence loc type (
-                type.merge.v2 {
-                  inherit loc;
-                  defs = defsFinal;
-                }
-              );
-            in
-            r
-            // {
-              valueMeta = r.valueMeta // {
-                _internal = {
-                  inherit type;
-                };
-              };
-            }
-          else
-            {
-              headError = null;
-              value = mergedValue;
-              valueMeta = { };
-            }
-        );
+          headError = null;
+          value = mergedValue;
+          valueMeta = { };
+        };
 
     isDefined = defsFinal != [ ];
 
