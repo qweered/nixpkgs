@@ -272,8 +272,6 @@ assert stdenv.hostPlatform.isWasm -> enableStaticLibraries == false;
 let
 
   inherit (lib)
-    optional
-    optionals
     versionAtLeast
     concatStringsSep
     enableFeature
@@ -341,31 +339,54 @@ let
     "--with-ghc-pkg=${ghc.targetPrefix}ghc-pkg"
     "--with-gcc=${cc}"
   ]
-  ++ optionals stdenv.hasCC [
-    "--with-ld=${stdenv.cc.bintools.targetPrefix}ld"
-    "--with-ar=${stdenv.cc.bintools.targetPrefix}ar"
-    # use the one that comes with the cross compiler.
-    "--with-hsc2hs=${ghc.targetPrefix}hsc2hs"
-    "--with-strip=${stdenv.cc.bintools.targetPrefix}strip"
-  ]
-  ++ optionals (!isHaLVM) [
-    "--hsc2hs-option=--cross-compile"
-    (if enableHsc2hsViaAsm then "--hsc2hs-option=--via-asm" else "")
-  ]
-  ++ optional (allPkgconfigDepends != [ ]) "--with-pkg-config=${pkg-config.targetPrefix}pkg-config"
-
-  ++ optionals enableExternalInterpreter (
-    map (opt: "--ghc-option=${opt}") (
+  ++ (
+    if stdenv.hasCC then
       [
-        "-fexternal-interpreter"
-        "-pgmi"
-        crossSupport.iservWrapper
+        "--with-ld=${stdenv.cc.bintools.targetPrefix}ld"
+        "--with-ar=${stdenv.cc.bintools.targetPrefix}ar"
+        # use the one that comes with the cross compiler.
+        "--with-hsc2hs=${ghc.targetPrefix}hsc2hs"
+        "--with-strip=${stdenv.cc.bintools.targetPrefix}strip"
       ]
-      ++ lib.optionals stdenv.hostPlatform.isWindows [
-        "-L${windows.pthreads}/bin"
-        "-L${windows.pthreads}/lib"
+    else
+      [ ]
+  )
+  ++ (
+    if !isHaLVM then
+      [
+        "--hsc2hs-option=--cross-compile"
+        (if enableHsc2hsViaAsm then "--hsc2hs-option=--via-asm" else "")
       ]
-    )
+    else
+      [ ]
+  )
+  ++ (
+    if allPkgconfigDepends != [ ] then
+      [ "--with-pkg-config=${pkg-config.targetPrefix}pkg-config" ]
+    else
+      [ ]
+  )
+
+  ++ (
+    if enableExternalInterpreter then
+      map (opt: "--ghc-option=${opt}") (
+        [
+          "-fexternal-interpreter"
+          "-pgmi"
+          crossSupport.iservWrapper
+        ]
+        ++ (
+          if stdenv.hostPlatform.isWindows then
+            [
+              "-L${windows.pthreads}/bin"
+              "-L${windows.pthreads}/lib"
+            ]
+          else
+            [ ]
+        )
+      )
+    else
+      [ ]
   );
 
   makeGhcOptions = opts: lib.concatStringsSep " " (map (opt: "--ghc-option=${opt}") opts);
@@ -379,9 +400,14 @@ let
     (if enableSeparateDataOutput then "--datadir=$data/share/${ghcNameWithPrefix}" else "")
     (if enableSeparateDocOutput then "--docdir=${docdir "$doc"}" else "")
   ]
-  ++ optionals stdenv.hasCC [
-    "--with-gcc=$CC" # Clang won't work without that extra information.
-  ]
+  ++ (
+    if stdenv.hasCC then
+      [
+        "--with-gcc=$CC" # Clang won't work without that extra information.
+      ]
+    else
+      [ ]
+  )
   ++ [
     "--package-db=$packageConfDir"
     (
@@ -438,23 +464,41 @@ let
     (enableFeature (!dontStrip) "library-stripping")
     (enableFeature (!dontStrip) "executable-stripping")
   ]
-  ++ optionals enableObjectDeterminism [
-    "--ghc-option=-fobject-determinism"
-  ]
-  ++ optionals isCross (
-    [
-      "--configure-option=--host=${stdenv.hostPlatform.config}"
-    ]
-    ++ crossCabalFlags
+  ++ (
+    if enableObjectDeterminism then
+      [
+        "--ghc-option=-fobject-determinism"
+      ]
+    else
+      [ ]
   )
-  ++ optionals enableSeparateBinOutput [
-    "--bindir=${binDir}"
-  ]
-  ++ optionals (doHaddockInterfaces && isLibrary) [
-    "--ghc-option=-haddock"
-  ];
+  ++ (
+    if isCross then
+      [
+        "--configure-option=--host=${stdenv.hostPlatform.config}"
+      ]
+      ++ crossCabalFlags
+    else
+      [ ]
+  )
+  ++ (
+    if enableSeparateBinOutput then
+      [
+        "--bindir=${binDir}"
+      ]
+    else
+      [ ]
+  )
+  ++ (
+    if doHaddockInterfaces && isLibrary then
+      [
+        "--ghc-option=-haddock"
+      ]
+    else
+      [ ]
+  );
 
-  postPhases = optional doInstallIntermediates "installIntermediatesPhase";
+  postPhases = if doInstallIntermediates then [ "installIntermediatesPhase" ] else [ ];
 
   setupCompileFlags = [
     (if !coreSetup then "-package-db=$setupPackageConfDir" else "")
@@ -515,45 +559,52 @@ let
     pkg-configDepends
     ++ libraryPkgconfigDepends
     ++ executablePkgconfigDepends
-    ++ optionals doCheck testPkgconfigDepends
-    ++ optionals doBenchmark benchmarkPkgconfigDepends;
+    ++ (if doCheck then testPkgconfigDepends else [ ])
+    ++ (if doBenchmark then benchmarkPkgconfigDepends else [ ]);
 
   depsBuildBuild = [
     nativeGhc
   ]
   # CC_FOR_BUILD may be necessary if we have no C preprocessor for the host
   # platform. See crossCabalFlags above for more details.
-  ++ lib.optionals (!stdenv.hasCC) [ buildPackages.stdenv.cc ];
+  ++ (if !stdenv.hasCC then [ buildPackages.stdenv.cc ] else [ ]);
   collectedToolDepends =
     buildTools
     ++ libraryToolDepends
     ++ executableToolDepends
-    ++ optionals doCheck testToolDepends
-    ++ optionals doBenchmark benchmarkToolDepends;
+    ++ (if doCheck then testToolDepends else [ ])
+    ++ (if doBenchmark then benchmarkToolDepends else [ ]);
   nativeBuildInputs = [
     ghc
     removeReferencesTo
   ]
-  ++ optional (allPkgconfigDepends != [ ]) (
-    assert pkg-config != null;
-    pkg-config
+  ++ (
+    if allPkgconfigDepends != [ ] then
+      [
+        (
+          assert pkg-config != null;
+          pkg-config
+        )
+      ]
+    else
+      [ ]
   )
   ++ setupHaskellDepends
   ++ collectedToolDepends
-  ++ optional stdenv.hostPlatform.isGhcjs nodejs;
+  ++ (if stdenv.hostPlatform.isGhcjs then [ nodejs ] else [ ]);
   propagatedBuildInputs =
     buildDepends ++ libraryHaskellDepends ++ executableHaskellDepends ++ libraryFrameworkDepends;
   otherBuildInputsHaskell =
-    optionals doCheck (testDepends ++ testHaskellDepends)
-    ++ optionals doBenchmark (benchmarkDepends ++ benchmarkHaskellDepends);
+    (if doCheck then testDepends ++ testHaskellDepends else [ ])
+    ++ (if doBenchmark then benchmarkDepends ++ benchmarkHaskellDepends else [ ]);
   otherBuildInputsSystem =
     extraLibraries
     ++ librarySystemDepends
     ++ executableSystemDepends
     ++ executableFrameworkDepends
     ++ allPkgconfigDepends
-    ++ optionals doCheck (testSystemDepends ++ testFrameworkDepends)
-    ++ optionals doBenchmark (benchmarkSystemDepends ++ benchmarkFrameworkDepends);
+    ++ (if doCheck then testSystemDepends ++ testFrameworkDepends else [ ])
+    ++ (if doBenchmark then benchmarkSystemDepends ++ benchmarkFrameworkDepends else [ ]);
   # TODO next rebuild just define as `otherBuildInputsHaskell ++ otherBuildInputsSystem`
   otherBuildInputs =
     extraLibraries
@@ -561,11 +612,17 @@ let
     ++ executableSystemDepends
     ++ executableFrameworkDepends
     ++ allPkgconfigDepends
-    ++ optionals doCheck (
-      testDepends ++ testHaskellDepends ++ testSystemDepends ++ testFrameworkDepends
+    ++ (
+      if doCheck then
+        testDepends ++ testHaskellDepends ++ testSystemDepends ++ testFrameworkDepends
+      else
+        [ ]
     )
-    ++ optionals doBenchmark (
-      benchmarkDepends ++ benchmarkHaskellDepends ++ benchmarkSystemDepends ++ benchmarkFrameworkDepends
+    ++ (
+      if doBenchmark then
+        benchmarkDepends ++ benchmarkHaskellDepends ++ benchmarkSystemDepends ++ benchmarkFrameworkDepends
+      else
+        [ ]
     );
 
   setupCommand = "./Setup";
@@ -659,10 +716,10 @@ lib.fix (
       outputs = [
         "out"
       ]
-      ++ (optional enableSeparateDataOutput "data")
-      ++ (optional enableSeparateDocOutput "doc")
-      ++ (optional enableSeparateBinOutput "bin")
-      ++ (optional enableSeparateIntermediatesOutput "intermediates");
+      ++ (if enableSeparateDataOutput then [ "data" ] else [ ])
+      ++ (if enableSeparateDocOutput then [ "doc" ] else [ ])
+      ++ (if enableSeparateBinOutput then [ "bin" ] else [ ])
+      ++ (if enableSeparateIntermediatesOutput then [ "intermediates" ] else [ ]);
 
       setOutputFlags = false;
 
@@ -677,10 +734,10 @@ lib.fix (
       inherit depsBuildBuild nativeBuildInputs;
       buildInputs =
         otherBuildInputs
-        ++ optionals (!isLibrary) propagatedBuildInputs
+        ++ (if !isLibrary then propagatedBuildInputs else [ ])
         # For patchShebangsAuto in fixupPhase
-        ++ optionals stdenv.hostPlatform.isGhcjs [ nodejs ];
-      propagatedBuildInputs = optionals isLibrary propagatedBuildInputs;
+        ++ (if stdenv.hostPlatform.isGhcjs then [ nodejs ] else [ ]);
+      propagatedBuildInputs = if isLibrary then propagatedBuildInputs else [ ];
 
       env =
         optionalAttrs (stdenv.buildPlatform.libc == "glibc") {
@@ -848,8 +905,8 @@ lib.fix (
       # Note: the options here must be always added, regardless of whether the
       # package specifies `hardeningDisable`.
       hardeningDisable =
-        lib.optionals (args ? hardeningDisable) hardeningDisable
-        ++ lib.optional (ghc.isHaLVM or false) "all";
+        (if args ? hardeningDisable then hardeningDisable else [ ])
+        ++ (if ghc.isHaLVM or false then [ "all" ] else [ ]);
 
       configurePhase = ''
         runHook preConfigure
@@ -1124,7 +1181,8 @@ lib.fix (
               buildHaskellPackages.ghcWithPackages (_: setupHaskellDepends);
 
             ghcEnv = withPackages (
-              _: otherBuildInputsHaskell ++ propagatedBuildInputs ++ lib.optionals (!isCross) setupHaskellDepends
+              _:
+              otherBuildInputsHaskell ++ propagatedBuildInputs ++ (if !isCross then setupHaskellDepends else [ ])
             );
 
             ghcCommandCaps = lib.toUpper ghcCommand';
@@ -1132,11 +1190,11 @@ lib.fix (
           runCommandCC name {
             inherit shellHook;
 
-            depsBuildBuild = lib.optional isCross ghcEnvForBuild;
+            depsBuildBuild = if isCross then [ ghcEnvForBuild ] else [ ];
             nativeBuildInputs = [
               ghcEnv
             ]
-            ++ optional (allPkgconfigDepends != [ ]) pkg-config
+            ++ (if allPkgconfigDepends != [ ] then [ pkg-config ] else [ ])
             ++ collectedToolDepends;
             buildInputs = otherBuildInputsSystem;
 
