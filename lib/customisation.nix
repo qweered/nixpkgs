@@ -401,15 +401,7 @@ rec {
     let
       commonAttrs =
         drv
-        // listToAttrs (
-          outputsList
-          ++ [
-            {
-              name = "all";
-              value = map (x: x.value) outputsList;
-            }
-          ]
-        )
+        // outputAttrs
         // passthru
         // {
           drvPath =
@@ -420,9 +412,11 @@ rec {
             drv.outPath;
         };
 
-      outputsList = map (outputName: {
-        name = outputName;
-        value = commonAttrs // {
+      outputNames = drv.outputs or [ "out" ];
+      makeOutput =
+        outputName:
+        commonAttrs
+        // {
           inherit (drv.${outputName}) type outputName;
           outputSpecified = true;
           drvPath =
@@ -438,7 +432,33 @@ rec {
           ${if passthru ? overrideAttrs then "overrideAttrs" else null} =
             f: (passthru.overrideAttrs f).${outputName};
         };
-      }) (drv.outputs or [ "out" ]);
+      # Avoid the generic name/value list conversion for the overwhelmingly
+      # common single-output derivation.
+      outputAttrs =
+        if outputNames == [ "out" ] then
+          let
+            output = makeOutput "out";
+          in
+          {
+            out = output;
+            all = [ output ];
+          }
+        else
+          let
+            outputsList = map (outputName: {
+              name = outputName;
+              value = makeOutput outputName;
+            }) outputNames;
+          in
+          listToAttrs (
+            outputsList
+            ++ [
+              {
+                name = "all";
+                value = map (x: x.value) outputsList;
+              }
+            ]
+          );
     in
     commonAttrs;
 
