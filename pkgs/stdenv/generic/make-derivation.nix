@@ -674,22 +674,26 @@ let
               # suffix. But we have some weird ones with run-time deps that are
               # just used for their side-affects. Those might as well since the
               # hash can't be the same. See #32986.
-              hostSuffix = optionalString (
-                hostSuffixNecessary
-                && (
-                  !(attrs ? outputHash)
-                  ||
-                    depsBuildTarget == [ ]
-                    && depsBuildTargetPropagated == [ ]
-                    && depsHostHost == [ ]
-                    && depsHostHostPropagated == [ ]
-                    && buildInputs == [ ]
-                    && propagatedBuildInputs == [ ]
-                    && depsTargetTarget == [ ]
-                    && depsTargetTargetPropagated == [ ]
+              hostSuffix =
+                if
+                  hostSuffixNecessary
+                  && (
+                    !(attrs ? outputHash)
+                    ||
+                      depsBuildTarget == [ ]
+                      && depsBuildTargetPropagated == [ ]
+                      && depsHostHost == [ ]
+                      && depsHostHostPropagated == [ ]
+                      && buildInputs == [ ]
+                      && propagatedBuildInputs == [ ]
+                      && depsTargetTarget == [ ]
+                      && depsTargetTargetPropagated == [ ]
 
-                )
-              ) stdenvHostSuffix;
+                  )
+                then
+                  stdenvHostSuffix
+                else
+                  "";
 
               # Disambiguate statically built packages. This was originally
               # introduce as a means to prevent nix-env to get confused between
