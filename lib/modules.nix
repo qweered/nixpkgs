@@ -1279,14 +1279,20 @@ let
           )
         then
           {
-            values =
-              let
-                stripped = map (def: {
+            values = map (
+              def:
+              if def.value.content._type or "" == "order" then
+                {
+                  inherit (def) file;
+                  value = def.value.content.content;
+                  priority = def.value.content.priority;
+                }
+              else
+                {
                   inherit (def) file;
                   value = def.value.content;
-                }) defs;
-              in
-              if (head stripped).value._type or "" == "order" then sortProperties stripped else stripped;
+                }
+            ) defs;
             highestPrio = d.value.priority;
           }
         else
