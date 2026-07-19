@@ -30,7 +30,6 @@ let
     length
     mapAttrs
     mapAttrsToList
-    min
     optional
     optionalAttrs
     optionalString
@@ -1474,12 +1473,14 @@ let
       }
     else
       let
-        # Avoid a getPrio call for every definition in both forced scans.
+        # Avoid nested getPrio and min calls in this forced scan.
         highestPrio = foldl' (
           prio: def:
-          min (
-            if def.value._type or "" == "override" then def.value.priority else defaultOverridePriority
-          ) prio
+          let
+            priority =
+              if def.value._type or "" == "override" then def.value.priority else defaultOverridePriority;
+          in
+          if priority < prio then priority else prio
         ) 9999 defs;
       in
       {
