@@ -338,7 +338,8 @@ let
   # Including it then would cause needless mass rebuilds.
   #
   # TODO(@Ericson2314): Make [ "build" "host" ] always the default / resolve #87909
-  useDefaultConfigurePlatforms = hostPlatform != buildPlatform || config.configurePlatformsByDefault;
+  isCross = hostPlatform != buildPlatform;
+  useDefaultConfigurePlatforms = isCross || config.configurePlatformsByDefault;
   defaultConfigurePlatforms = optionals useDefaultConfigurePlatforms [
     "build"
     "host"
@@ -352,11 +353,11 @@ let
   ];
 
   # TODO(@Ericson2314): Make always true and remove / resolve #178468
-  defaultStrictDeps = if config.strictDepsByDefault then true else hostPlatform != buildPlatform;
+  defaultStrictDeps = if config.strictDepsByDefault then true else isCross;
 
   canExecuteHostOnBuild = buildPlatform.canExecute hostPlatform;
   defaultHardeningFlags = stdenv.cc.defaultHardeningFlags or knownHardeningFlags;
-  hostSuffixNecessary = hostPlatform != buildPlatform && stdenvHasCC;
+  hostSuffixNecessary = isCross && stdenvHasCC;
   stdenvHostSuffix = "-${hostPlatform.config}";
   stdenvStaticMarker = optionalString isStatic "-static";
 
@@ -984,8 +985,8 @@ let
         removeAttrs attrs argumentAttrsToRemove
         // {
           ${if __structuredAttrs then "env" else null} = checkedEnv;
-          cmakeFlags = makeCMakeFlags attrs;
-          mesonFlags = makeMesonFlags attrs;
+          cmakeFlags = if isCross then makeCMakeFlags attrs else cmakeFlags;
+          mesonFlags = if isCross then makeMesonFlags attrs else mesonFlags;
         }
       );
 
