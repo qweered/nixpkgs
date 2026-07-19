@@ -94,20 +94,19 @@ let
     "allowedReferences"
     "allowedRequisites"
     "allowedImpureDLLs"
+    "meta"
+    "passthru"
+    "pos"
   ];
+
+  # Unstructured env entries are merged into the final derivation separately.
+  unstructuredRemovedOrReplacedAttrNames = removedOrReplacedAttrNames ++ [ "env" ];
 
   referenceCheckingAttrsToRemove = [
     "allowedReferences"
     "allowedRequisites"
     "disallowedReferences"
     "disallowedRequisites"
-  ];
-
-  argumentAttrsToRemove = [
-    "meta"
-    "passthru"
-    "pos"
-    "env"
   ];
 
   attrsToRemoveLast = [
@@ -685,271 +684,275 @@ let
           propagatedTargetTargetOutputs
         ];
 
-        derivationArg = removeAttrs attrs removedOrReplacedAttrNames // {
-          ${if (attrs ? name || (attrs ? pname && attrs ? version)) then "name" else null} =
-            let
-              # Indicate the host platform of the derivation if cross compiling.
-              # Fixed-output derivations like source tarballs shouldn't get a host
-              # suffix. But we have some weird ones with run-time deps that are
-              # just used for their side-affects. Those might as well since the
-              # hash can't be the same. See #32986.
-              hostSuffix =
-                if
-                  hostSuffixNecessary
-                  && (
-                    !(attrs ? outputHash)
-                    ||
-                      depsBuildTarget == [ ]
-                      && depsBuildTargetPropagated == [ ]
-                      && depsHostHost == [ ]
-                      && depsHostHostPropagated == [ ]
-                      && buildInputs == [ ]
-                      && propagatedBuildInputs == [ ]
-                      && depsTargetTarget == [ ]
-                      && depsTargetTargetPropagated == [ ]
+        derivationArg =
+          removeAttrs attrs (
+            if __structuredAttrs then removedOrReplacedAttrNames else unstructuredRemovedOrReplacedAttrNames
+          )
+          // {
+            ${if (attrs ? name || (attrs ? pname && attrs ? version)) then "name" else null} =
+              let
+                # Indicate the host platform of the derivation if cross compiling.
+                # Fixed-output derivations like source tarballs shouldn't get a host
+                # suffix. But we have some weird ones with run-time deps that are
+                # just used for their side-affects. Those might as well since the
+                # hash can't be the same. See #32986.
+                hostSuffix =
+                  if
+                    hostSuffixNecessary
+                    && (
+                      !(attrs ? outputHash)
+                      ||
+                        depsBuildTarget == [ ]
+                        && depsBuildTargetPropagated == [ ]
+                        && depsHostHost == [ ]
+                        && depsHostHostPropagated == [ ]
+                        && buildInputs == [ ]
+                        && propagatedBuildInputs == [ ]
+                        && depsTargetTarget == [ ]
+                        && depsTargetTargetPropagated == [ ]
 
-                  )
-                then
-                  stdenvHostSuffix
+                    )
+                  then
+                    stdenvHostSuffix
+                  else
+                    "";
+
+                # Disambiguate statically built packages. This was originally
+                # introduce as a means to prevent nix-env to get confused between
+                # nix and nixStatic. This should be also achieved by moving the
+                # hostSuffix before the version, so we could contemplate removing
+                # it again.
+                staticMarker = stdenvStaticMarker;
+              in
+              sanitizeDerivationName (
+                if attrs ? name then
+                  attrs.name + hostSuffix
                 else
-                  "";
-
-              # Disambiguate statically built packages. This was originally
-              # introduce as a means to prevent nix-env to get confused between
-              # nix and nixStatic. This should be also achieved by moving the
-              # hostSuffix before the version, so we could contemplate removing
-              # it again.
-              staticMarker = stdenvStaticMarker;
-            in
-            sanitizeDerivationName (
-              if attrs ? name then
-                attrs.name + hostSuffix
-              else
-                # we cannot coerce null to a string below
-                assert
-                  (attrs ? version && attrs.version != null) || throw "The `version` attribute cannot be null.";
-                "${attrs.pname}${staticMarker}${hostSuffix}-${attrs.version}"
-            );
-
-          builder = attrs.realBuilder or stdenvShell;
-          args =
-            attrs.args or (
-              if attrs ? builder then
-                [
-                  "-e"
-                  ./source-stdenv.sh
-                  attrs.builder
-                ]
-              else
-                defaultBuilderArgs
-            );
-          inherit stdenv;
-
-          # The `system` attribute of a derivation has special meaning to Nix.
-          # Derivations set it to choose what sort of machine could be used to
-          # execute the build, The build platform entirely determines this,
-          # indeed more finely than Nix knows or cares about. The `system`
-          # attribute of `buildPlatform` matches Nix's degree of specificity.
-          # exactly.
-          system = buildPlatformSystem;
-
-          inherit userHook;
-          __ignoreNulls = true;
-          inherit __structuredAttrs strictDeps;
-
-          depsBuildBuild = buildBuildOutputs;
-          nativeBuildInputs = buildHostOutputs;
-          depsBuildTarget = buildTargetOutputs;
-          depsHostHost = hostHostOutputs;
-          buildInputs = hostTargetOutputs;
-          depsTargetTarget = targetTargetOutputs;
-
-          depsBuildBuildPropagated = propagatedBuildBuildOutputs;
-          propagatedNativeBuildInputs = propagatedBuildHostOutputs;
-          depsBuildTargetPropagated = propagatedBuildTargetOutputs;
-          depsHostHostPropagated = propagatedHostHostOutputs;
-          propagatedBuildInputs = propagatedHostTargetOutputs;
-          depsTargetTargetPropagated = propagatedTargetTargetOutputs;
-
-          configureFlags =
-            configureFlags
-            ++ (
-              if configurePlatforms == defaultConfigurePlatforms then
-                defaultConfigurePlatformsFlags
-              else
-                optional (elem "build" configurePlatforms) buildPlatformConfigureFlag
-                ++ optional (elem "host" configurePlatforms) hostPlatformConfigureFlag
-                ++ optional (elem "target" configurePlatforms) targetPlatformConfigureFlag
-            );
-
-          inherit patches;
-
-          inherit doCheck doInstallCheck;
-
-          inherit outputs;
-
-          # When the derivations is content addressed provide default values
-          # for outputHashMode and outputHashAlgo because most people won't
-          # care about these anyways
-          ${if __contentAddressed then "__contentAddressed" else null} = __contentAddressed;
-          ${if __contentAddressed then "outputHashAlgo" else null} = attrs.outputHashAlgo or "sha256";
-          ${if __contentAddressed then "outputHashMode" else null} = attrs.outputHashMode or "recursive";
-
-          ${if enableParallelBuilding then "enableParallelBuilding" else null} = enableParallelBuilding;
-          ${if enableParallelBuilding then "enableParallelChecking" else null} =
-            attrs.enableParallelChecking or true;
-          ${if enableParallelBuilding then "enableParallelInstalling" else null} =
-            attrs.enableParallelInstalling or true;
-
-          ${
-            if (hardeningDisable != [ ] || hardeningEnable != [ ] || isMusl) then
-              "NIX_HARDENING_ENABLE"
-            else
-              null
-          } =
-            concatStringsSep " " (
-              if elem "all" hardeningDisable then
-                [ ]
-              else
-                filter (
-                  flag:
-                  !(elem flag hardeningDisable)
-                  # disabling fortify implies fortify3 should also be disabled
-                  && (flag == "fortify3" -> !elem "fortify" hardeningDisable)
-                  # disabling strictflexarrays1 implies strictflexarrays3 should also be disabled
-                  && (flag == "strictflexarrays3" -> !elem "strictflexarrays1" hardeningDisable)
-                  # disabling libcxxhardeningfast implies libcxxhardeningextensive should also be disabled
-                  && (flag == "libcxxhardeningextensive" -> !elem "libcxxhardeningfast" hardeningDisable)
-                ) (defaultHardeningFlags ++ hardeningEnable)
-            );
-
-          # TODO: remove platform condition
-          # Enabling this check could be a breaking change as it requires to edit nix.conf
-          # NixOS module already sets gccarch, unsure of nix installers and other distributions
-          ${if requiredSystemFeaturesShouldBeSet then "requiredSystemFeatures" else null} =
-            attrs.requiredSystemFeatures or [ ] ++ gccArchFeature;
-
-          # -- Darwin-specific attrs --
-          ${if buildIsDarwin then "__darwinAllowLocalNetworking" else null} = __darwinAllowLocalNetworking;
-          ${if buildIsDarwin then "__sandboxProfile" else null} =
-            let
-              computedSandboxProfile = concatMap (input: input.__propagatedSandboxProfile or [ ]) (
-                extraNativeBuildInputs ++ extraBuildInputs ++ allDependencies
+                  # we cannot coerce null to a string below
+                  assert
+                    (attrs ? version && attrs.version != null) || throw "The `version` attribute cannot be null.";
+                  "${attrs.pname}${staticMarker}${hostSuffix}-${attrs.version}"
               );
-              computedPropagatedSandboxProfile = concatMap (
-                input: input.__propagatedSandboxProfile or [ ]
-              ) allPropagatedDependencies;
-              profiles = [
-                extraSandboxProfile
-              ]
-              ++ computedSandboxProfile
-              ++ computedPropagatedSandboxProfile
-              ++ [
-                propagatedSandboxProfile
-                sandboxProfile
-              ];
-            in
-            # TODO: remove `unique` once nix has a list canonicalization primitive
-            concatStringsSep "\n" (filter (x: x != "") (unique profiles));
-          ${if buildIsDarwin then "__propagatedSandboxProfile" else null} =
-            let
-              computedPropagatedSandboxProfile = concatMap (
-                input: input.__propagatedSandboxProfile or [ ]
-              ) allPropagatedDependencies;
-            in
-            unique (computedPropagatedSandboxProfile ++ [ propagatedSandboxProfile ]);
-          ${if buildIsDarwin then "__impureHostDeps" else null} =
-            let
-              computedImpureHostDeps = unique (
-                concatMap (input: input.__propagatedImpureHostDeps or [ ]) (
+
+            builder = attrs.realBuilder or stdenvShell;
+            args =
+              attrs.args or (
+                if attrs ? builder then
+                  [
+                    "-e"
+                    ./source-stdenv.sh
+                    attrs.builder
+                  ]
+                else
+                  defaultBuilderArgs
+              );
+            inherit stdenv;
+
+            # The `system` attribute of a derivation has special meaning to Nix.
+            # Derivations set it to choose what sort of machine could be used to
+            # execute the build, The build platform entirely determines this,
+            # indeed more finely than Nix knows or cares about. The `system`
+            # attribute of `buildPlatform` matches Nix's degree of specificity.
+            # exactly.
+            system = buildPlatformSystem;
+
+            inherit userHook;
+            __ignoreNulls = true;
+            inherit __structuredAttrs strictDeps;
+
+            depsBuildBuild = buildBuildOutputs;
+            nativeBuildInputs = buildHostOutputs;
+            depsBuildTarget = buildTargetOutputs;
+            depsHostHost = hostHostOutputs;
+            buildInputs = hostTargetOutputs;
+            depsTargetTarget = targetTargetOutputs;
+
+            depsBuildBuildPropagated = propagatedBuildBuildOutputs;
+            propagatedNativeBuildInputs = propagatedBuildHostOutputs;
+            depsBuildTargetPropagated = propagatedBuildTargetOutputs;
+            depsHostHostPropagated = propagatedHostHostOutputs;
+            propagatedBuildInputs = propagatedHostTargetOutputs;
+            depsTargetTargetPropagated = propagatedTargetTargetOutputs;
+
+            configureFlags =
+              configureFlags
+              ++ (
+                if configurePlatforms == defaultConfigurePlatforms then
+                  defaultConfigurePlatformsFlags
+                else
+                  optional (elem "build" configurePlatforms) buildPlatformConfigureFlag
+                  ++ optional (elem "host" configurePlatforms) hostPlatformConfigureFlag
+                  ++ optional (elem "target" configurePlatforms) targetPlatformConfigureFlag
+              );
+
+            inherit patches;
+
+            inherit doCheck doInstallCheck;
+
+            inherit outputs;
+
+            # When the derivations is content addressed provide default values
+            # for outputHashMode and outputHashAlgo because most people won't
+            # care about these anyways
+            ${if __contentAddressed then "__contentAddressed" else null} = __contentAddressed;
+            ${if __contentAddressed then "outputHashAlgo" else null} = attrs.outputHashAlgo or "sha256";
+            ${if __contentAddressed then "outputHashMode" else null} = attrs.outputHashMode or "recursive";
+
+            ${if enableParallelBuilding then "enableParallelBuilding" else null} = enableParallelBuilding;
+            ${if enableParallelBuilding then "enableParallelChecking" else null} =
+              attrs.enableParallelChecking or true;
+            ${if enableParallelBuilding then "enableParallelInstalling" else null} =
+              attrs.enableParallelInstalling or true;
+
+            ${
+              if (hardeningDisable != [ ] || hardeningEnable != [ ] || isMusl) then
+                "NIX_HARDENING_ENABLE"
+              else
+                null
+            } =
+              concatStringsSep " " (
+                if elem "all" hardeningDisable then
+                  [ ]
+                else
+                  filter (
+                    flag:
+                    !(elem flag hardeningDisable)
+                    # disabling fortify implies fortify3 should also be disabled
+                    && (flag == "fortify3" -> !elem "fortify" hardeningDisable)
+                    # disabling strictflexarrays1 implies strictflexarrays3 should also be disabled
+                    && (flag == "strictflexarrays3" -> !elem "strictflexarrays1" hardeningDisable)
+                    # disabling libcxxhardeningfast implies libcxxhardeningextensive should also be disabled
+                    && (flag == "libcxxhardeningextensive" -> !elem "libcxxhardeningfast" hardeningDisable)
+                  ) (defaultHardeningFlags ++ hardeningEnable)
+              );
+
+            # TODO: remove platform condition
+            # Enabling this check could be a breaking change as it requires to edit nix.conf
+            # NixOS module already sets gccarch, unsure of nix installers and other distributions
+            ${if requiredSystemFeaturesShouldBeSet then "requiredSystemFeatures" else null} =
+              attrs.requiredSystemFeatures or [ ] ++ gccArchFeature;
+
+            # -- Darwin-specific attrs --
+            ${if buildIsDarwin then "__darwinAllowLocalNetworking" else null} = __darwinAllowLocalNetworking;
+            ${if buildIsDarwin then "__sandboxProfile" else null} =
+              let
+                computedSandboxProfile = concatMap (input: input.__propagatedSandboxProfile or [ ]) (
                   extraNativeBuildInputs ++ extraBuildInputs ++ allDependencies
-                )
-              );
-              computedPropagatedImpureHostDeps = unique (
-                concatMap (input: input.__propagatedImpureHostDeps or [ ]) allPropagatedDependencies
-              );
-            in
-            computedImpureHostDeps
-            ++ computedPropagatedImpureHostDeps
-            ++ __propagatedImpureHostDeps
-            ++ __impureHostDeps
-            ++ __extraImpureHostDeps
-            ++ [
-              "/dev/zero"
-              "/dev/random"
-              "/dev/urandom"
-              "/bin/sh"
-            ];
-          ${if buildIsDarwin then "__propagatedImpureHostDeps" else null} =
-            let
-              computedPropagatedImpureHostDeps = unique (
-                concatMap (input: input.__propagatedImpureHostDeps or [ ]) allPropagatedDependencies
-              );
-            in
-            computedPropagatedImpureHostDeps ++ __propagatedImpureHostDeps;
+                );
+                computedPropagatedSandboxProfile = concatMap (
+                  input: input.__propagatedSandboxProfile or [ ]
+                ) allPropagatedDependencies;
+                profiles = [
+                  extraSandboxProfile
+                ]
+                ++ computedSandboxProfile
+                ++ computedPropagatedSandboxProfile
+                ++ [
+                  propagatedSandboxProfile
+                  sandboxProfile
+                ];
+              in
+              # TODO: remove `unique` once nix has a list canonicalization primitive
+              concatStringsSep "\n" (filter (x: x != "") (unique profiles));
+            ${if buildIsDarwin then "__propagatedSandboxProfile" else null} =
+              let
+                computedPropagatedSandboxProfile = concatMap (
+                  input: input.__propagatedSandboxProfile or [ ]
+                ) allPropagatedDependencies;
+              in
+              unique (computedPropagatedSandboxProfile ++ [ propagatedSandboxProfile ]);
+            ${if buildIsDarwin then "__impureHostDeps" else null} =
+              let
+                computedImpureHostDeps = unique (
+                  concatMap (input: input.__propagatedImpureHostDeps or [ ]) (
+                    extraNativeBuildInputs ++ extraBuildInputs ++ allDependencies
+                  )
+                );
+                computedPropagatedImpureHostDeps = unique (
+                  concatMap (input: input.__propagatedImpureHostDeps or [ ]) allPropagatedDependencies
+                );
+              in
+              computedImpureHostDeps
+              ++ computedPropagatedImpureHostDeps
+              ++ __propagatedImpureHostDeps
+              ++ __impureHostDeps
+              ++ __extraImpureHostDeps
+              ++ [
+                "/dev/zero"
+                "/dev/random"
+                "/dev/urandom"
+                "/bin/sh"
+              ];
+            ${if buildIsDarwin then "__propagatedImpureHostDeps" else null} =
+              let
+                computedPropagatedImpureHostDeps = unique (
+                  concatMap (input: input.__propagatedImpureHostDeps or [ ]) allPropagatedDependencies
+                );
+              in
+              computedPropagatedImpureHostDeps ++ __propagatedImpureHostDeps;
 
-          # -- Windows/Cygwin-specific attrs --
-          ${if isWindows || isCygwin then "allowedImpureDLLs" else null} =
-            allowedImpureDLLs
-            ++ optionals isCygwin [
-              "KERNEL32.dll"
-            ];
+            # -- Windows/Cygwin-specific attrs --
+            ${if isWindows || isCygwin then "allowedImpureDLLs" else null} =
+              allowedImpureDLLs
+              ++ optionals isCygwin [
+                "KERNEL32.dll"
+              ];
 
-          # -- Output reference checks --
-          ${if !__structuredAttrs && attrs ? disallowedReferences then "disallowedReferences" else null} =
-            map unsafeDerivationToUntrackedOutpath attrs.disallowedReferences;
-          ${if !__structuredAttrs && attrs ? disallowedRequisites then "disallowedRequisites" else null} =
-            map unsafeDerivationToUntrackedOutpath attrs.disallowedRequisites;
-          ${if !__structuredAttrs && attrs ? allowedReferences then "allowedReferences" else null} =
-            mapNullable unsafeDerivationToUntrackedOutpath attrs.allowedReferences;
-          ${if !__structuredAttrs && attrs ? allowedRequisites then "allowedRequisites" else null} =
-            mapNullable unsafeDerivationToUntrackedOutpath attrs.allowedRequisites;
-          ${if __structuredAttrs then "outputChecks" else null} =
-            let
-              attrsOutputChecks =
-                if
-                  attrs ? disallowedReferences
-                  || attrs ? disallowedRequisites
-                  || attrs ? allowedReferences
-                  || attrs ? allowedRequisites
-                then
-                  makeOutputChecks attrs
-                else
-                  { };
-              attrsOutputChecksFiltered = filterAttrs (_: v: v != null) attrsOutputChecks;
-            in
-            # to avoid the listToAttrs in most common situations, we replicate
-            # what it would produce for most derivations. this can be improved
-            # in the future at the cost of a mass rebuild - empty attrsets for
-            # each output is a noop
-            if
-              !attrs ? outputs
-              && !attrs ? outputChecks
-              && (attrsOutputChecks == { } || attrsOutputChecksFiltered == { })
-            then
-              if separateDebugInfo' then debugCachedOutputChecks else cachedOutputChecks
-            else
-              listToAttrs (
-                map (name: {
-                  inherit name;
-                  value =
-                    let
-                      raw = zipAttrsWith (_: concatLists) [
-                        attrsOutputChecksFiltered
-                        (makeOutputChecks (attrs.outputChecks.${name} or { }))
-                      ];
-                    in
-                    # separateDebugInfo = true will put all sorts of files in
-                    # the debug output which could carry references, but
-                    # that's "normal". Notably it symlinks to the source.
-                    # So disable reference checking for the debug output
-                    if separateDebugInfo' && name == "debug" then
-                      removeAttrs raw referenceCheckingAttrsToRemove
-                    else
-                      raw;
-                }) outputs
-              );
-        };
+            # -- Output reference checks --
+            ${if !__structuredAttrs && attrs ? disallowedReferences then "disallowedReferences" else null} =
+              map unsafeDerivationToUntrackedOutpath attrs.disallowedReferences;
+            ${if !__structuredAttrs && attrs ? disallowedRequisites then "disallowedRequisites" else null} =
+              map unsafeDerivationToUntrackedOutpath attrs.disallowedRequisites;
+            ${if !__structuredAttrs && attrs ? allowedReferences then "allowedReferences" else null} =
+              mapNullable unsafeDerivationToUntrackedOutpath attrs.allowedReferences;
+            ${if !__structuredAttrs && attrs ? allowedRequisites then "allowedRequisites" else null} =
+              mapNullable unsafeDerivationToUntrackedOutpath attrs.allowedRequisites;
+            ${if __structuredAttrs then "outputChecks" else null} =
+              let
+                attrsOutputChecks =
+                  if
+                    attrs ? disallowedReferences
+                    || attrs ? disallowedRequisites
+                    || attrs ? allowedReferences
+                    || attrs ? allowedRequisites
+                  then
+                    makeOutputChecks attrs
+                  else
+                    { };
+                attrsOutputChecksFiltered = filterAttrs (_: v: v != null) attrsOutputChecks;
+              in
+              # to avoid the listToAttrs in most common situations, we replicate
+              # what it would produce for most derivations. this can be improved
+              # in the future at the cost of a mass rebuild - empty attrsets for
+              # each output is a noop
+              if
+                !attrs ? outputs
+                && !attrs ? outputChecks
+                && (attrsOutputChecks == { } || attrsOutputChecksFiltered == { })
+              then
+                if separateDebugInfo' then debugCachedOutputChecks else cachedOutputChecks
+              else
+                listToAttrs (
+                  map (name: {
+                    inherit name;
+                    value =
+                      let
+                        raw = zipAttrsWith (_: concatLists) [
+                          attrsOutputChecksFiltered
+                          (makeOutputChecks (attrs.outputChecks.${name} or { }))
+                        ];
+                      in
+                      # separateDebugInfo = true will put all sorts of files in
+                      # the debug output which could carry references, but
+                      # that's "normal". Notably it symlinks to the source.
+                      # So disable reference checking for the debug output
+                      if separateDebugInfo' && name == "debug" then
+                        removeAttrs raw referenceCheckingAttrsToRemove
+                      else
+                        raw;
+                  }) outputs
+                );
+          };
       in
       derivationArg;
 
@@ -1015,7 +1018,7 @@ let
         if attrs ? meta.mainProgram then env // { NIX_MAIN_PROGRAM = attrs.meta.mainProgram; } else env;
 
       derivationArg = makeDerivationArgument (
-        removeAttrs attrs argumentAttrsToRemove
+        attrs
         // {
           ${if __structuredAttrs then "env" else null} = checkedEnv;
           cmakeFlags = if isCross then makeCMakeFlags attrs else cmakeFlags;
