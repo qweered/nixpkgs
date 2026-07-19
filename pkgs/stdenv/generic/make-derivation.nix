@@ -133,7 +133,8 @@ let
     ./default-builder.sh
   ];
 
-  isSingularDependency = dep: dep == null || isDerivation dep || isString dep || isPath dep;
+  isSingularDependency =
+    dep: dep == null || (dep.type or null) == "derivation" || isString dep || isPath dep;
 
   cachedOutputChecks = {
     out = { };
