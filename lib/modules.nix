@@ -1210,7 +1210,12 @@ let
           [
             {
               file = head opt.declarations;
-              value = mkOptionDefault opt.default;
+              # Inline `mkOptionDefault` in this hot path.
+              value = {
+                _type = "override";
+                priority = 1500;
+                content = opt.default;
+              };
             }
           ]
           ++ defs
