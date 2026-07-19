@@ -274,7 +274,6 @@ let
   inherit (lib)
     versionAtLeast
     concatStringsSep
-    enableFeature
     optionalAttrs
     ;
 
@@ -444,25 +443,25 @@ let
       else
         ""
     )
-    (enableFeature enableLibraryProfiling "library-profiling")
+    (if enableLibraryProfiling then "--enable-library-profiling" else "--disable-library-profiling")
     (
       if enableExecutableProfiling || enableLibraryProfiling then
         "--profiling-detail=${profilingDetail}"
       else
         ""
     )
-    (enableFeature enableExecutableProfiling "profiling")
-    (enableFeature enableSharedLibraries "shared")
-    (enableFeature doCoverage "coverage")
-    (enableFeature enableStaticLibraries "static")
-    (enableFeature enableSharedExecutables "executable-dynamic")
-    (enableFeature doCheck "tests")
-    (enableFeature doBenchmark "benchmarks")
+    (if enableExecutableProfiling then "--enable-profiling" else "--disable-profiling")
+    (if enableSharedLibraries then "--enable-shared" else "--disable-shared")
+    (if doCoverage then "--enable-coverage" else "--disable-coverage")
+    (if enableStaticLibraries then "--enable-static" else "--disable-static")
+    (if enableSharedExecutables then "--enable-executable-dynamic" else "--disable-executable-dynamic")
+    (if doCheck then "--enable-tests" else "--disable-tests")
+    (if doBenchmark then "--enable-benchmarks" else "--disable-benchmarks")
     "--enable-library-vanilla" # TODO: Should this be configurable?
-    (enableFeature enableLibraryForGhci "library-for-ghci")
-    (enableFeature enableDeadCodeElimination "split-sections")
-    (enableFeature (!dontStrip) "library-stripping")
-    (enableFeature (!dontStrip) "executable-stripping")
+    (if enableLibraryForGhci then "--enable-library-for-ghci" else "--disable-library-for-ghci")
+    (if enableDeadCodeElimination then "--enable-split-sections" else "--disable-split-sections")
+    (if !dontStrip then "--enable-library-stripping" else "--disable-library-stripping")
+    (if !dontStrip then "--enable-executable-stripping" else "--disable-executable-stripping")
   ]
   ++ (
     if enableObjectDeterminism then
