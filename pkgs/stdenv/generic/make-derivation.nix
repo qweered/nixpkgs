@@ -580,9 +580,13 @@ let
           if nativeBuildInputs' == [ ] then
             [ ]
           else
-            map (drv: getDev drv.__spliced.buildHost or drv) (
-              checkDependencyList "nativeBuildInputs" nativeBuildInputs'
-            );
+            map (
+              drv:
+              let
+                pkg = drv.__spliced.buildHost or drv;
+              in
+              if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg
+            ) (checkDependencyList "nativeBuildInputs" nativeBuildInputs');
         buildTargetOutputs =
           if depsBuildTarget == [ ] then
             [ ]
@@ -599,7 +603,13 @@ let
           if buildInputs' == [ ] then
             [ ]
           else
-            map (drv: getDev drv.__spliced.hostTarget or drv) (checkDependencyList "buildInputs" buildInputs');
+            map (
+              drv:
+              let
+                pkg = drv.__spliced.hostTarget or drv;
+              in
+              if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg
+            ) (checkDependencyList "buildInputs" buildInputs');
         targetTargetOutputs =
           if depsTargetTarget == [ ] then
             [ ]
@@ -627,9 +637,13 @@ let
           if propagatedNativeBuildInputs == [ ] then
             [ ]
           else
-            map (drv: getDev drv.__spliced.buildHost or drv) (
-              checkDependencyList "propagatedNativeBuildInputs" propagatedNativeBuildInputs
-            );
+            map (
+              drv:
+              let
+                pkg = drv.__spliced.buildHost or drv;
+              in
+              if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg
+            ) (checkDependencyList "propagatedNativeBuildInputs" propagatedNativeBuildInputs);
         propagatedBuildTargetOutputs =
           if depsBuildTargetPropagated == [ ] then
             [ ]
@@ -648,9 +662,13 @@ let
           if propagatedBuildInputs == [ ] then
             [ ]
           else
-            map (drv: getDev drv.__spliced.hostTarget or drv) (
-              checkDependencyList "propagatedBuildInputs" propagatedBuildInputs
-            );
+            map (
+              drv:
+              let
+                pkg = drv.__spliced.hostTarget or drv;
+              in
+              if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg
+            ) (checkDependencyList "propagatedBuildInputs" propagatedBuildInputs);
         propagatedTargetTargetOutputs =
           if depsTargetTargetPropagated == [ ] then
             [ ]
