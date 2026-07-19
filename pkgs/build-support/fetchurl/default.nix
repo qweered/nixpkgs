@@ -348,7 +348,9 @@ lib.extendMkDerivation {
       outputHashMode = if (recursiveHash || executable) then "recursive" else "flat";
 
       curlOpts =
-        if isList curlOpts then
+        if curlOpts == "" then
+          ""
+        else if isList curlOpts then
           warn (
             let
               url = toString (builtins.head urls_);
