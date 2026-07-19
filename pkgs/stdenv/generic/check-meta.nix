@@ -703,32 +703,38 @@ let
       checkValidity' = checkValidity hostPlatform;
     in
     { meta, attrs }:
-    let
-      invalid = checkValidity' attrs;
-      problems = checkProblems attrs;
-    in
-    if invalid == null then
-      if problems == null then
-        {
-          valid = "yes";
-          handled = true;
-        }
+    if !(attrs ? meta) || attrs.meta == { } then
+      {
+        valid = "yes";
+        handled = true;
+      }
+    else
+      let
+        invalid = checkValidity' attrs;
+        problems = checkProblems attrs;
+      in
+      if invalid == null then
+        if problems == null then
+          {
+            valid = "yes";
+            handled = true;
+          }
+        else
+          {
+            valid = if problems.error == null then "warn" else "no";
+            handled = handle {
+              inherit attrs meta;
+              inherit (problems) error warnings;
+            };
+          }
       else
         {
-          valid = if problems.error == null then "warn" else "no";
+          valid = "no";
           handled = handle {
             inherit attrs meta;
-            inherit (problems) error warnings;
+            error = invalid;
           };
-        }
-    else
-      {
-        valid = "no";
-        handled = handle {
-          inherit attrs meta;
-          error = invalid;
         };
-      };
 
 in
 {
