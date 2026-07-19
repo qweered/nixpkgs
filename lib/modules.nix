@@ -1207,32 +1207,6 @@ let
       __toString = _: showOption loc;
     };
 
-  # Check that a type with v2 merge has a coherent check attribute.
-  # Throws an error if the type uses an ad-hoc `type // { check }` override.
-  # Returns the last argument like `seq`, allowing usage: checkV2MergeCoherence loc type expr
-  checkV2MergeCoherence =
-    loc: type: result:
-    if type.check.isV2MergeCoherent or false then
-      result
-    else
-      throw ''
-        The option `${showOption loc}' has a type `${type.description}' that uses
-        an ad-hoc `type // { check = ...; }' override, which is incompatible with
-        the v2 merge mechanism.
-
-        Please use `lib.types.addCheck` instead of `type // { check }' to add
-        custom validation. For example:
-
-          lib.types.addCheck baseType (value: /* your check */)
-
-        instead of:
-
-          baseType // { check = value: /* your check */; }
-
-        Alternatively, this message may also occur as false positive when mixing Nixpkgs
-        versions, if one Nixpkgs is between 83fed2e6..58696117 (Aug 28 - Oct 28 2025)
-      '';
-
   # Merge definitions of a value of a given type.
   mergeDefinitions = loc: type: defs: rec {
     defsFinal' =
@@ -1326,12 +1300,30 @@ let
       if type.merge ? v2 then
         let
           # Check for v2 merge coherence
-          r = checkV2MergeCoherence loc type (
-            type.merge.v2 {
-              inherit loc;
-              defs = defsFinal;
-            }
-          );
+          r =
+            if type.check.isV2MergeCoherent or false then
+              type.merge.v2 {
+                inherit loc;
+                defs = defsFinal;
+              }
+            else
+              throw ''
+                The option `${showOption loc}' has a type `${type.description}' that uses
+                an ad-hoc `type // { check = ...; }' override, which is incompatible with
+                the v2 merge mechanism.
+
+                Please use `lib.types.addCheck` instead of `type // { check }' to add
+                custom validation. For example:
+
+                  lib.types.addCheck baseType (value: /* your check */)
+
+                instead of:
+
+                  baseType // { check = value: /* your check */; }
+
+                Alternatively, this message may also occur as false positive when mixing Nixpkgs
+                versions, if one Nixpkgs is between 83fed2e6..58696117 (Aug 28 - Oct 28 2025)
+              '';
         in
         r
         // {
