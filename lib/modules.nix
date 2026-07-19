@@ -925,8 +925,8 @@ let
           defns' = rawDefinitionsByName.${name} or [ ];
           isOptionDecl =
             m:
-            m.options ? _type
-            && (m.options._type == "option" || throwDeclarationTypeError loc m.options._type m._file);
+            (m.options._type or null) == "option"
+            || (m.options ? _type && throwDeclarationTypeError loc m.options._type m._file);
         in
         if all isOptionDecl decls then
           let
