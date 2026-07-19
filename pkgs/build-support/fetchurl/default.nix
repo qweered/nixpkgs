@@ -25,6 +25,7 @@ let
     isString
     length
     match
+    substring
     warn
     ;
   nixpkgsVersion = lib.trivial.release;
@@ -282,7 +283,8 @@ lib.extendMkDerivation {
         else
           throw "fetchurl requires a hash for fixed-output derivation: ${lib.generators.toPretty { } urls_}";
 
-      finalHashHasColon = match ".*:.*" finalAttrs.hash != null;
+      finalHashHasColon =
+        substring 0 7 finalAttrs.hash != "sha256-" && match ".*:.*" finalAttrs.hash != null;
       finalHashColonMatch = match "([^:]+)[:](.*)" finalAttrs.hash;
     in
 
