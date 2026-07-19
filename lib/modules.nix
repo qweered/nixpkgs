@@ -994,12 +994,12 @@ let
             mergeModules' loc decls defns
       ) declsByName;
 
-      matchedOptions = mapAttrs (n: v: v.matchedOptions) resultsByName;
+      matchedOptions = mapAttrs (_: { matchedOptions, ... }: matchedOptions) resultsByName;
 
       # an attrset 'name' => list of unmatched definitions for 'name'
       unmatchedDefnsByName =
         # Propagate all unmatched definitions from nested option sets
-        mapAttrs (n: v: v.unmatchedDefns) resultsByName
+        mapAttrs (_: { unmatchedDefns, ... }: unmatchedDefns) resultsByName
         # Plus the definitions for the current prefix that don't have a matching option
         // removeAttrs rawDefinitionsByName (attrNames matchedOptions);
     in
