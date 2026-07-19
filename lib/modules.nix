@@ -686,7 +686,7 @@ let
         _class = m._class or null;
         key = toString m.key or key;
         disabledModules = m.disabledModules or [ ];
-        imports = m.require or [ ] ++ m.imports or [ ];
+        imports = if m ? require then m.require ++ (m.imports or [ ]) else m.imports or [ ];
         options = { };
         config = addFreeformType (
           removeAttrs m [
