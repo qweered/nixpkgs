@@ -1370,13 +1370,16 @@ let
           val;
     in
     cfg:
-    if cfg._type or "" == "merge" then
-      concatMap pushDownProperties cfg.contents
-    else if cfg._type or "" == "if" then
-      map (mapAttrsIfAttrs (n: v: mkIf cfg.condition v)) (pushDownProperties cfg.content)
-    else if cfg._type or "" == "override" then
-      map (mapAttrsIfAttrs (n: v: mkOverride cfg.priority v)) (pushDownProperties cfg.content)
-    # FIXME: handle mkOrder?
+    if cfg ? _type then
+      if cfg._type == "merge" then
+        concatMap pushDownProperties cfg.contents
+      else if cfg._type == "if" then
+        map (mapAttrsIfAttrs (n: v: mkIf cfg.condition v)) (pushDownProperties cfg.content)
+      else if cfg._type == "override" then
+        map (mapAttrsIfAttrs (n: v: mkOverride cfg.priority v)) (pushDownProperties cfg.content)
+      # FIXME: handle mkOrder?
+      else
+        [ cfg ]
     else
       [ cfg ];
 
