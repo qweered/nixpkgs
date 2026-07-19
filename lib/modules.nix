@@ -1261,19 +1261,39 @@ let
       # several intermediate lists and closures. Detect it up front and hand
       # the original singleton straight to the type merge. The let-bindings
       # above are lazy and thus never forced on this branch.
-      if
-        length defs == 1
-        && (
-          let
-            d = head defs;
-          in
-          addErrorContext "while evaluating definitions from `${d.file}':" (!(d.value ? _type))
-        )
-      then
-        {
-          values = defs;
-          highestPrio = defaultOverridePriority;
-        }
+      if length defs == 1 then
+        let
+          d = head defs;
+        in
+        if addErrorContext "while evaluating definitions from `${d.file}':" (!(d.value ? _type)) then
+          {
+            values = defs;
+            highestPrio = defaultOverridePriority;
+          }
+        # A lone override only needs its priority and content selected. Keep
+        # order-wrapper handling inside `values` so asking only for the priority
+        # does not force the content.
+        else if
+          addErrorContext "while evaluating definitions from `${d.file}':" (
+            (d.value._type or null) == "override"
+          )
+        then
+          {
+            values =
+              let
+                stripped = map (def: {
+                  inherit (def) file;
+                  value = def.value.content;
+                }) defs;
+              in
+              if (head stripped).value._type or "" == "order" then sortProperties stripped else stripped;
+            highestPrio = d.value.priority;
+          }
+        else
+          {
+            values = defsSorted;
+            inherit (defsFiltered) highestPrio;
+          }
       else
         {
           values = defsSorted;
