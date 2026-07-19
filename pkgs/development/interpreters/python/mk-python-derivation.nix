@@ -404,10 +404,16 @@ lib.extendMkDerivation {
       inherit dontWrapPythonPrograms;
 
       postFixup =
-        optionalString (!finalAttrs.dontWrapPythonPrograms) ''
-          wrapPythonPrograms
-        ''
-        + attrs.postFixup or "";
+        let
+          postFixup = attrs.postFixup or "";
+        in
+        if finalAttrs.dontWrapPythonPrograms then
+          postFixup
+        else
+          ''
+            wrapPythonPrograms
+          ''
+          + postFixup;
 
       # Python packages built through cross-compilation are always for the host platform.
       disallowedReferences = optionals (python.stdenv.hostPlatform != python.stdenv.buildPlatform) [
