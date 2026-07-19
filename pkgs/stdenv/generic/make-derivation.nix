@@ -517,7 +517,8 @@ let
     in
     if
       # Check if any hardening flag is erroneous
-      any isErroneous hardeningEnable || any (flag: flag != "all" && isErroneous flag) hardeningDisable
+      (hardeningEnable != [ ] && any isErroneous hardeningEnable)
+      || (hardeningDisable != [ ] && any (flag: flag != "all" && isErroneous flag) hardeningDisable)
     then
       abort (
         let
