@@ -283,9 +283,9 @@ lib.extendMkDerivation {
         else
           throw "fetchurl requires a hash for fixed-output derivation: ${lib.generators.toPretty { } urls_}";
 
-      finalHashHasColon =
-        substring 0 7 finalAttrs.hash != "sha256-" && match ".*:.*" finalAttrs.hash != null;
-      finalHashColonMatch = match "([^:]+)[:](.*)" finalAttrs.hash;
+      finalHash = finalAttrs.hash;
+      finalHashHasColon = substring 0 7 finalHash != "sha256-" && match ".*:.*" finalHash != null;
+      finalHashColonMatch = match "([^:]+)[:](.*)" finalHash;
     in
 
     derivationArgs
@@ -324,12 +324,12 @@ lib.extendMkDerivation {
           "${hash_.outputHashAlgo}:${hash_.outputHash}";
       outputHashAlgo = if finalHashHasColon then head finalHashColonMatch else null;
       outputHash =
-        if finalAttrs.hash == "" then
+        if finalHash == "" then
           fakeHash
         else if finalHashHasColon then
           elemAt finalHashColonMatch 1
         else
-          finalAttrs.hash;
+          finalHash;
 
       # Disable TLS verification only when we know the hash and no credentials are
       # needed to access the resource
