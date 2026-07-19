@@ -1242,11 +1242,17 @@ let
 
         # Sort mkOrder properties.
         defsSorted =
+          let
+            values = defsFiltered.values;
+          in
+          # A singleton is already sorted; only its order wrapper needs stripping.
+          if length values == 1 then
+            if (head values).value._type or "" == "order" then sortProperties values else values
           # Avoid sorting if we don't have to.
-          if any (def: def.value._type or "" == "order") defsFiltered.values then
-            sortProperties defsFiltered.values
+          else if any (def: def.value._type or "" == "order") values then
+            sortProperties values
           else
-            defsFiltered.values;
+            values;
       in
       # Fast path: the overwhelming majority of options have exactly one
       # definition whose value carries no property wrapper
@@ -1490,10 +1496,7 @@ let
           def:
           # Select both the priority and retained value from one tag test.
           if def.value._type or "" == "override" then
-            if def.value.priority == highestPrio then
-              [ (def // { value = def.value.content; }) ]
-            else
-              [ ]
+            if def.value.priority == highestPrio then [ (def // { value = def.value.content; }) ] else [ ]
           else if defaultOverridePriority == highestPrio then
             [ def ]
           else
