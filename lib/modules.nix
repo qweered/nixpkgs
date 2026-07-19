@@ -895,14 +895,21 @@ let
       # an attrset 'name' => list of submodules that define ‘name’.
       pushedDownDefinitionsByName = zipAttrsWith (n: concatLists) (
         map (
-          module:
+          { file, config, ... }:
           mapAttrs (
             n: value:
-            map (config: {
-              inherit (module) file;
-              inherit config;
-            }) (pushDownProperties value)
-          ) module.config
+            if !(value ? _type) then
+              [
+                {
+                  inherit file;
+                  config = value;
+                }
+              ]
+            else
+              map (config: {
+                inherit file config;
+              }) (pushDownProperties value)
+          ) config
         ) checkedConfigs
       );
       # extract the definitions for each loc
