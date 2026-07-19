@@ -831,11 +831,19 @@ let
     prefix: modules:
     mergeModules' prefix modules (
       concatMap (
-        m:
-        map (config: {
-          file = m._file;
-          inherit config;
-        }) (pushDownProperties m.config)
+        { _file, config, ... }:
+        if !(config ? _type) then
+          [
+            {
+              file = _file;
+              inherit config;
+            }
+          ]
+        else
+          map (config: {
+            file = _file;
+            inherit config;
+          }) (pushDownProperties config)
       ) modules
     );
 
