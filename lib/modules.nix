@@ -287,9 +287,9 @@ let
           # For definitions that have an associated option
           declaredConfig =
             let
+              # matchedOptions contains only nested attribute sets and option declarations.
               collectOptionValues = mapAttrs (
-                _: value:
-                if isAttrs value && (value._type or "") != "option" then collectOptionValues value else value.value
+                _: value: if (value._type or "") != "option" then collectOptionValues value else value.value
               );
             in
             collectOptionValues options;
