@@ -288,7 +288,8 @@ let
           declaredConfig =
             let
               collectOptionValues = mapAttrs (
-                _: value: if isAttrs value && !isOption value then collectOptionValues value else value.value
+                _: value:
+                if isAttrs value && (value._type or "") != "option" then collectOptionValues value else value.value
               );
             in
             collectOptionValues options;
