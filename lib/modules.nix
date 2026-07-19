@@ -67,6 +67,7 @@ let
     ;
 
   builtinFunctionArgs = builtins.functionArgs;
+  builtinFoldl' = builtins.foldl';
   builtinIsFunction = builtins.isFunction;
 
   showDeclPrefix =
@@ -1474,7 +1475,8 @@ let
     else
       let
         # Avoid nested getPrio and min calls in this forced scan.
-        highestPrio = foldl' (
+        # Its initial integer is already strict, so the builtin fold is enough.
+        highestPrio = builtinFoldl' (
           prio: def:
           let
             priority =
