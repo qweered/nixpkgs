@@ -2332,6 +2332,40 @@ runTests {
     };
   };
 
+  testRecursiveUpdate = {
+    expr =
+      attrsets.recursiveUpdate
+        {
+          keep = 1;
+          nested = {
+            keep = 2;
+            replace = 3;
+          };
+          scalarToSet = 4;
+          setToScalar.old = 5;
+        }
+        {
+          add = 6;
+          nested = {
+            add = 7;
+            replace = 8;
+          };
+          scalarToSet.new = 9;
+          setToScalar = 10;
+        };
+    expected = {
+      keep = 1;
+      add = 6;
+      nested = {
+        keep = 2;
+        add = 7;
+        replace = 8;
+      };
+      scalarToSet.new = 9;
+      setToScalar = 10;
+    };
+  };
+
   testMatchAttrsMatchingExact = {
     expr =
       matchAttrs

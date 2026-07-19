@@ -1769,10 +1769,14 @@ rec {
   */
   recursiveUpdate =
     lhs: rhs:
-    recursiveUpdateUntil (
-      path: lhs: rhs:
-      !(isAttrs lhs && isAttrs rhs)
-    ) lhs rhs;
+    lhs
+    // mapAttrs (
+      name: value:
+      let
+        lhsValue = lhs.${name} or null;
+      in
+      if isAttrs lhsValue && isAttrs value then recursiveUpdate lhsValue value else value
+    ) rhs;
 
   /**
     Recurse into every attribute set of the first argument and check that:
