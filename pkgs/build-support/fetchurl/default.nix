@@ -286,6 +286,8 @@ lib.extendMkDerivation {
       finalHash = finalAttrs.hash;
       finalHashHasColon = substring 0 7 finalHash != "sha256-" && match ".*:.*" finalHash != null;
       finalHashColonMatch = match "([^:]+)[:](.*)" finalHash;
+      normalizedHash = hash_.outputHash;
+      normalizedHashAlgo = hash_.outputHashAlgo;
     in
 
     derivationArgs
@@ -315,13 +317,13 @@ lib.extendMkDerivation {
       # New-style output content requirements.
       hash =
         if
-          hash_.outputHashAlgo == null
-          || hash_.outputHash == ""
-          || hasAlgoPrefix.${hash_.outputHashAlgo} hash_.outputHash
+          normalizedHashAlgo == null
+          || normalizedHash == ""
+          || hasAlgoPrefix.${normalizedHashAlgo} normalizedHash
         then
-          hash_.outputHash
+          normalizedHash
         else
-          "${hash_.outputHashAlgo}:${hash_.outputHash}";
+          "${normalizedHashAlgo}:${normalizedHash}";
       outputHashAlgo = if finalHashHasColon then head finalHashColonMatch else null;
       outputHash =
         if finalHash == "" then
@@ -336,10 +338,10 @@ lib.extendMkDerivation {
       env.SSL_CERT_FILE =
         if
           (
-            hash_.outputHash == ""
-            || hash_.outputHash == fakeSha256
-            || hash_.outputHash == fakeSha512
-            || hash_.outputHash == fakeHash
+            normalizedHash == ""
+            || normalizedHash == fakeSha256
+            || normalizedHash == fakeSha512
+            || normalizedHash == fakeHash
             || netrcPhase != null
           )
         then
