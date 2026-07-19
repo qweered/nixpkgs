@@ -1257,7 +1257,14 @@ let
             throw "A definition for option `${showOption loc}' is not of type `${type.description}'. TypeError: ${checkedAndMerged.headError.message}"
           else
             checkedAndMerged.value
-        else if all (def: type.check def.value) defsFinal then
+        else if
+          (
+            if length defsFinal == 1 then
+              type.check (head defsFinal).value
+            else
+              all (def: type.check def.value) defsFinal
+          )
+        then
           type.merge loc defsFinal
         else
           let
