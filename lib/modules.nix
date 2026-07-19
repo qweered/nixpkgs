@@ -533,7 +533,7 @@ let
           }
         else
           let
-            modules = imap1 (
+            collectModule =
               n: x:
               let
                 module = checkModule (loadModule args parentFile "${parentKey}:anon-${toString n}" x);
@@ -554,8 +554,12 @@ let
                     ++ collectedImports.disabled
                   else
                     collectedImports.disabled;
-              }
-            ) initialModules;
+              };
+            modules =
+              if length initialModules == 1 then
+                [ (collectModule 1 (head initialModules)) ]
+              else
+                imap1 collectModule initialModules;
           in
           {
             disabled = concatLists (catAttrs "disabled" modules);
