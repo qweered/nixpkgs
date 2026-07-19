@@ -605,7 +605,7 @@ let
                 operator = attrs: keyFilter attrs.modules;
               };
         in
-        map (attrs: attrs.module) closure;
+        catAttrs "module" closure;
 
       toGraph =
         modulesPath:
