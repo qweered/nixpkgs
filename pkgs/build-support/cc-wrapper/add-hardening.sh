@@ -68,7 +68,7 @@ fi
 
 
 if (( "${NIX_DEBUG:-0}" >= 1 )); then
-  declare -a allHardeningFlags=(fortify fortify3 shadowstack stackprotector stackclashprotection nostrictaliasing pacret strictflexarrays1 strictflexarrays3 pic strictoverflow libcxxhardeningfast libcxxhardeningextensive glibcxxassertions format trivialautovarinit zerocallusedregs)
+  declare -a allHardeningFlags=(fortify fortify3 shadowstack stackprotector stackclashprotection nostrictaliasing pacret strictflexarrays1 strictflexarrays3 pic strictoverflow libcxxhardeningfast libcxxhardeningextensive glibcxxassertions format securitywarnings nowerror nodeletenullpointerchecks trivialautovarinit zerocallusedregs)
   declare -A hardeningDisableMap=()
 
   # Determine which flags were effectively disabled so we can report below.
@@ -147,6 +147,15 @@ for flag in "${!hardeningEnableMap[@]}"; do
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling stackclashprotection >&2; fi
       hardeningCFlagsBefore+=('-fstack-clash-protection')
       ;;
+    nodeletenullpointerchecks)
+      if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling nodeletenullpointerchecks >&2; fi
+      # Stops the optimiser from deleting a null check on the grounds that an
+      # earlier dereference already made a null pointer undefined behaviour.
+      # Such deletions silently turn a defensive check into an exploitable
+      # null dereference. This only ever keeps code the compiler would
+      # otherwise remove, so it cannot change the meaning of a correct program.
+      hardeningCFlagsBefore+=('-fno-delete-null-pointer-checks')
+      ;;
     nostrictaliasing)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling nostrictaliasing >&2; fi
       hardeningCFlagsBefore+=('-fno-strict-aliasing')
@@ -176,6 +185,56 @@ for flag in "${!hardeningEnableMap[@]}"; do
     format)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling format >&2; fi
       hardeningCFlagsBefore+=('-Wformat' '-Wformat-security' '-Werror=format-security')
+      ;;
+    securitywarnings)
+      if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling securitywarnings >&2; fi
+      # Diagnostics recommended by the OpenSSF Compiler Options Hardening Guide
+      # for C and C++. These go in the 'before' array so that a package can
+      # still silence any of them with its own '-Wno-...'.
+      #
+      # The guide also lists '-Wformat=2', which is deliberately omitted: the
+      # 'format' flag already supplies '-Wformat -Wformat-security', and all
+      # '-Wformat=2' adds on top is '-Wformat-nonliteral', which fires on the
+      # ordinary varargs logging wrapper. The dangerous case -- a non-literal
+      # format with no arguments, the '%n' vector -- is '-Wformat-security',
+      # which 'format' already makes fatal.
+      hardeningCFlagsBefore+=('-Wall' '-Wextra' '-Wimplicit-fallthrough')
+      # '-Wtrampolines' and '-Wbidi-chars' are GCC-only. Every other compiler
+      # driven by this wrapper -- clang, arocc -- would emit an
+      # "unknown warning option" diagnostic for each of them on *every*
+      # compile, so gate on isGNU rather than merely excluding clang.
+      if (( @isGNU@ )); then
+        hardeningCFlagsBefore+=('-Wtrampolines' '-Wbidi-chars=any')
+      fi
+      # Constraint violations that C23, GCC 14+ and Clang 16+ already reject by
+      # default. Requesting them explicitly holds the older compilers still
+      # present in nixpkgs to the same standard.
+      #
+      # These go in the 'after' array, and name the individual diagnostics
+      # rather than the '-Werror=implicit' group, so that they outrank any
+      # '-Wno-error=' the package's own build system passes: equally specific
+      # '-W' options are resolved by position, and a group option always loses
+      # to a more specific one. A package can still opt out through
+      # 'env.NIX_CFLAGS_COMPILE', which cc-wrapper.sh appends after these.
+      #
+      # They are C-only, and GCC prints an unsuppressable "'-Werror=' argument
+      # ... is not valid for C++" note once per compile if they reach cc1plus,
+      # so skip them for GCC when we know we are compiling C++. Note that this
+      # must not be gated on isCxx alone: cc-wrapper.sh force-sets isCxx=1 for
+      # every clang invocation regardless of source language, so doing so would
+      # drop these flags from all clang compiles, C included.
+      if ! (( @isGNU@ )) || [[ "${isCxx-0}" != 1 ]]; then
+        hardeningCFlagsAfter+=('-Werror=implicit-function-declaration' '-Werror=implicit-int' '-Werror=int-conversion' '-Werror=incompatible-pointer-types')
+      fi
+      ;;
+    nowerror)
+      if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling nowerror >&2; fi
+      # Appended *after* the package's own flags, which is the only position
+      # from which it can cancel a '-Werror' the build system set itself.
+      # Warning-specific '-Werror=' options -- the ones above, and any the
+      # package sets -- are more specific and survive this regardless of
+      # position, on both GCC and Clang.
+      hardeningCFlagsAfter+=('-Wno-error')
       ;;
     zerocallusedregs)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling zerocallusedregs >&2; fi

@@ -199,6 +199,96 @@ let
         ''
       );
 
+  # `securitywarnings` and `nowerror` leave no trace in the produced binary,
+  # so unlike the flags above they cannot be checked with hardening-check.
+  # Observe whether the compiler accepts the program instead.
+  ccDiagnosticTest =
+    {
+      code,
+      extraFlags ? "",
+      expectCompileFailure ? false,
+      derivationArgs ? { },
+    }:
+    runCommandCC "cc-diagnostic-test"
+      (
+        {
+          codePath = writeText "diagnostic-example.c" code;
+          preferLocalBuild = true;
+          allowSubstitutes = false;
+        }
+        // derivationArgs
+      )
+      ''
+        cp "$codePath" test.c
+        if NIX_DEBUG=1 $CC -c test.c -o test.o ${extraFlags}; then
+          compiled=1
+        else
+          compiled=0
+        fi
+        if [ "$compiled" = ${if expectCompileFailure then "1" else "0"} ]; then
+          echo "ERROR: expected the compile to ${
+            if expectCompileFailure then "fail, but it succeeded" else "succeed, but it failed"
+          }" >&2
+          exit 1
+        fi
+        touch $out
+      '';
+
+  # A nested function makes GCC emit a trampoline on the stack, which is the
+  # one common construct that asks the linker for an executable stack. Clang
+  # has no nested functions, so this can only be exercised on GCC.
+  trampolineExampleWithStdEnv = writeCBinWithStdenv (
+    writeText "trampoline-example.c" ''
+      int main(void) {
+        int x = 0;
+        int nested(void) { return x; }
+        int (*p)(void) = nested;
+        return p();
+      }
+    ''
+  );
+
+  # An executable stack shows up as the E permission on the GNU_STACK program
+  # header rather than as a note, so this cannot reuse elfNoteTest.
+  noExecStackTest =
+    testBin:
+    brokenIf stdenv.cc.isClang (
+      overridePlatforms lib.platforms.linux (
+        runCommand "noexecstack-test"
+          {
+            nativeBuildInputs = [ bintools ];
+            buildInputs = [ testBin ];
+          }
+          ''
+            touch $out
+            header=$($READELF -lW "$(PATH=$HOST_PATH type -P test-bin)" | grep -E '\bGNU_STACK\b' || true)
+            echo "GNU_STACK: $header" >&2
+            if [ -z "$header" ]; then
+              echo "ERROR: no GNU_STACK segment found" >&2
+              exit 1
+            fi
+            if echo "$header" | grep -qE '\bRWE\b'; then
+              echo "ERROR: stack is executable despite the noexecstack flag" >&2
+              exit 1
+            fi
+          ''
+      )
+    );
+
+  unusedVariableExample = ''
+    int main(void) { int unused; return 0; }
+  '';
+
+  implicitDeclarationExample = ''
+    int main(void) { return undeclared_function(); }
+  '';
+
+  formatSecurityExample = ''
+    int printf(const char *, ...);
+    void f(char *s) { printf(s); }
+    int main(void) { return 0; }
+  '';
+
   nameDrvAfterAttrName = builtins.mapAttrs (
     name: drv:
     drv.overrideAttrs (_: {
@@ -323,6 +413,95 @@ let
 in
 nameDrvAfterAttrName (
   {
+    # Even a binary whose objects ask for an executable stack must end up with
+    # a non-executable one.
+    noExecStackDefaultEnabled = noExecStackTest (trampolineExampleWithStdEnv stdenv { });
+
+    # `nowerror` must cancel a blanket -Werror the build system sets itself.
+    nowerrorDefaultEnabled = ccDiagnosticTest {
+      code = unusedVariableExample;
+      extraFlags = "-Wall -Werror";
+    };
+
+    # ...including the -Werror=<warning> form, which no appended flag can
+    # cancel and which is therefore stripped from the command line instead.
+    nowerrorStripsSpecificWerror = ccDiagnosticTest {
+      code = unusedVariableExample;
+      extraFlags = "-Wall -Werror=unused-variable";
+    };
+
+    # ...and '-w', which would otherwise stop the diagnostic being emitted at
+    # all, leaving nothing for our -Werror= to escalate.
+    nowerrorStripsW = ccDiagnosticTest {
+      code = formatSecurityExample;
+      extraFlags = "-w";
+      expectCompileFailure = true;
+    };
+
+    # NIX_CFLAGS_COMPILE is appended after the hardening flags and is therefore
+    # still able to ask for '-w'.
+    nowerrorNixCflagsCanStillSuppress = ccDiagnosticTest {
+      code = formatSecurityExample;
+      derivationArgs.env.NIX_CFLAGS_COMPILE = "-w";
+    };
+
+    nowerrorExplicitDisabledKeepsW = ccDiagnosticTest {
+      code = formatSecurityExample;
+      extraFlags = "-w";
+      derivationArgs.hardeningDisable = [ "nowerror" ];
+    };
+
+    nowerrorExplicitDisabled = ccDiagnosticTest {
+      code = unusedVariableExample;
+      extraFlags = "-Wall -Werror";
+      expectCompileFailure = true;
+      derivationArgs.hardeningDisable = [ "nowerror" ];
+    };
+
+    nowerrorExplicitDisabledKeepsSpecificWerror = ccDiagnosticTest {
+      code = unusedVariableExample;
+      extraFlags = "-Wall -Werror=unused-variable";
+      expectCompileFailure = true;
+      derivationArgs.hardeningDisable = [ "nowerror" ];
+    };
+
+    # ...but it must not weaken a -Werror= that names a specific diagnostic,
+    # whether that comes from `format`, from `securitywarnings` or from the
+    # package itself.
+    nowerrorKeepsFormatSecurityFatal = ccDiagnosticTest {
+      code = formatSecurityExample;
+      expectCompileFailure = true;
+    };
+
+    securitywarningsImplicitIsFatal = ccDiagnosticTest {
+      code = implicitDeclarationExample;
+      extraFlags = "-std=gnu89";
+      expectCompileFailure = true;
+    };
+
+    # The package's own flags must not be able to countermand a diagnostic we
+    # make fatal, however they reach the command line.
+    securitywarningsOutrankPackageFlags = ccDiagnosticTest {
+      code = implicitDeclarationExample;
+      extraFlags = "-std=gnu89 -Wno-error=implicit-function-declaration";
+      expectCompileFailure = true;
+    };
+
+    # NIX_CFLAGS_COMPILE, which cc-wrapper appends after the hardening flags,
+    # remains the supported way to opt out of an individual diagnostic without
+    # disabling the whole flag.
+    securitywarningsNixCflagsOverrideWins = ccDiagnosticTest {
+      code = implicitDeclarationExample;
+      extraFlags = "-std=gnu89";
+      derivationArgs.env.NIX_CFLAGS_COMPILE = "-Wno-error=implicit-function-declaration";
+    };
+
+    securitywarningsExplicitDisabled = ccDiagnosticTest {
+      code = implicitDeclarationExample;
+      extraFlags = "-std=gnu89";
+      derivationArgs.hardeningDisable = [ "securitywarnings" ];
+    };
+
     bindNowExplicitEnabled = brokenIf stdenv.hostPlatform.isStatic (
       checkTestBin
         (f2exampleWithStdEnv stdenv {

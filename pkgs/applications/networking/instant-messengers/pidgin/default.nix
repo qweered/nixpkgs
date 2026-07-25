@@ -58,7 +58,10 @@ let
       intltool
     ];
 
-    env.NIX_CFLAGS_COMPILE = "-I${gst_all_1.gst-plugins-base.dev}/include/gstreamer-1.0";
+    env.NIX_CFLAGS_COMPILE = toString (
+      [ "-I${gst_all_1.gst-plugins-base.dev}/include/gstreamer-1.0" ]
+      ++ lib.optional stdenv.cc.isClang "-Wno-error=int-conversion"
+    );
 
     buildInputs =
       let
@@ -131,8 +134,7 @@ let
       "--enable-gnutls=yes"
       "--enable-nss=no"
     ]
-    ++ lib.optionals stdenv.hostPlatform.isDarwin [ "--disable-vv" ]
-    ++ lib.optionals stdenv.cc.isClang [ "CFLAGS=-Wno-error=int-conversion" ];
+    ++ lib.optionals stdenv.hostPlatform.isDarwin [ "--disable-vv" ];
 
     enableParallelBuilding = true;
 

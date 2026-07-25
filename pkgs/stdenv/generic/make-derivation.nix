@@ -59,6 +59,10 @@ let
   knownHardeningFlags = [
     "bindnow"
     "format"
+    "securitywarnings"
+    "nowerror"
+    "noexecstack"
+    "nodeletenullpointerchecks"
     "fortify"
     "fortify3"
     "strictflexarrays1"

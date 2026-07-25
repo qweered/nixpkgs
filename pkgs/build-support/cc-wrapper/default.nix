@@ -933,13 +933,13 @@ stdenvNoCC.mkDerivation {
       hardening_unsupported_flags+=" stackprotector fortify"
     ''
     + optionalString cc.langAda or false ''
-      hardening_unsupported_flags+=" format stackprotector strictoverflow"
+      hardening_unsupported_flags+=" format securitywarnings stackprotector strictoverflow"
     ''
     + optionalString cc.langFortran or false ''
-      hardening_unsupported_flags+=" format"
+      hardening_unsupported_flags+=" format securitywarnings"
     ''
     + optionalString cc.langGo or false ''
-      hardening_unsupported_flags+=" format"
+      hardening_unsupported_flags+=" format securitywarnings"
     ''
     + optionalString targetPlatform.isWasm ''
       hardening_unsupported_flags+=" stackprotector fortify pie pic"
@@ -1009,6 +1009,7 @@ stdenvNoCC.mkDerivation {
   env = {
     inherit isClang;
     inherit isFlang;
+    inherit isGNU;
 
     # for substitution in utils.bash
     # TODO(@sternenseemann): invent something cleaner than passing in "" in case of absence

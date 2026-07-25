@@ -1570,6 +1570,69 @@ This needs to be turned off or fixed for errors similar to:
 cc1plus: some warnings being treated as errors
 ```
 
+#### `securitywarnings` {#securitywarnings}
+
+Enables the diagnostics recommended for C and C++ by the [OpenSSF Compiler Options Hardening Guide](https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html).
+
+Adds `-Wall -Wextra -Wimplicit-fallthrough`, and on GCC additionally `-Wtrampolines -Wbidi-chars=any`. These are warnings only and do not by themselves fail a build.
+
+The guide's `-Wformat=2` is deliberately omitted. [`format`](#format) already supplies `-Wformat -Wformat-security`, which `-Wformat=2` merely subsumes; the only diagnostic it adds on top is `-Wformat-nonliteral`, which fires on the ordinary varargs logging wrapper. The dangerous case — a non-literal format string with no arguments, the `%n` vector — is `-Wformat-security`, which `format` already makes fatal.
+
+It also adds `-Werror=implicit-function-declaration -Werror=implicit-int -Werror=int-conversion -Werror=incompatible-pointer-types`. These describe constraint violations that C23, GCC 14 and Clang 16 already reject by default; requesting them explicitly holds the older compilers still packaged in Nixpkgs to the same standard. They are C-only, so on GCC they are omitted when the wrapper can tell it is compiling C++ (that is, when invoked as `g++` or with `-x c++`; a bare `gcc foo.cc` cannot be detected and will print a harmless `'-Werror=' argument ... is not valid for C++` note).
+
+The warnings are placed before the package's own flags, so a package can silence an individual one with its own `-Wno-...`. The `-Werror=` options are placed *after* them, and name individual diagnostics rather than the `-Werror=implicit` group, so that a package's build system cannot quietly turn them back into warnings. To opt out of one, use `env.NIX_CFLAGS_COMPILE`, which the wrapper appends last of all:
+
+```nix
+env.NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
+```
+
+Note that passing the same option through `CFLAGS`, `makeFlags`, `configureFlags` or `cmakeFlags` will *not* work, because those reach the compiler ahead of the hardening flags.
+
+This flag is not supported for Ada, Fortran or Go, nor by Aro, and is silently ignored there.
+
+#### `nowerror` {#nowerror}
+
+Stops a package's own build system from deciding which diagnostics are fatal. Upstream projects frequently build with `-Werror` during their own development, which makes their releases fail to compile on any new diagnostic introduced by a compiler upgrade — a recurring source of breakage in Nixpkgs that is unrelated to the correctness of the program being built.
+
+This works in two parts:
+
+- `-Wno-error` is appended *after* the package's flags, which is the only position from which it can override a blanket `-Werror`.
+- `-Werror`, `-Werror=<warning>`, the deprecated `-Werror-<warning>` spelling and `-w` are removed from the package's own command line by the compiler wrapper. Appending a flag cannot cancel the `-Werror=<warning>` form, because both GCC and Clang resolve conflicting `-W` options by specificity rather than by position, so a specific `-Werror=` set by the package outranks a general `-Wno-error` no matter where it appears. `-w` is likewise unreachable by appending: it inhibits the *emission* of warnings rather than mapping their severity, so there is no warning left for a `-Werror=` to escalate.
+
+`-Wno-error` and `-Wno-error=<warning>` are deliberately left in place, since they only ever make a build more permissive.
+
+This does not affect the diagnostics Nixpkgs itself makes fatal: the errors requested by [`format`](#format) and [`securitywarnings`](#securitywarnings) are added by the wrapper rather than by the package, and are not subject to the filtering.
+
+Note that a package built with `-w` previously lost every diagnostic Nixpkgs enables, most importantly `-Werror=format-security` from [`format`](#format). It never lost diagnostics that are errors in their own right — `-w` suppresses neither a genuine error nor the constraint violations that GCC 14 and Clang 16 reject by default — so the `-Werror=` options added by `securitywarnings` were only defeated in the legacy `-std=c89`/`-std=gnu89` modes where those diagnostics are still warnings.
+
+A package that genuinely needs one of these options — typically one vendoring a large third-party tree — should ask for it through `env.NIX_CFLAGS_COMPILE`, which the wrapper appends after the hardening flags and does not filter:
+
+```nix
+env.NIX_CFLAGS_COMPILE = "-w";
+```
+
+Disable the flag entirely for packages whose test suites are meant to assert that the sources build warning-free:
+
+```nix
+hardeningDisable = [ "nowerror" ];
+```
+
+Expect a package that relied on `-w` to produce considerably more build log output, and to fail if it contains a format-string defect.
+
+#### `noexecstack` {#noexecstack}
+
+Adds the `-z noexecstack` linker option, marking the stack of the produced binary as non-executable so that data written to it cannot be run as code. This is the long-standing default in Debian, Fedora and Arch.
+
+A program only needs an executable stack if it generates code on the stack at runtime, which in C almost always means GCC's nested function trampolines. Such a program will build successfully and then crash when it first calls through a trampoline, so this is one of the few hardening flags whose breakage shows up at runtime rather than at build time. The [`securitywarnings`](#securitywarnings) flag enables `-Wtrampolines`, which reports the construct at compile time; if it fires for a package, that package likely needs `hardeningDisable = [ "noexecstack" ]`.
+
+This flag is skipped automatically for linkers that do not understand `-z` options.
+
+#### `nodeletenullpointerchecks` {#nodeletenullpointerchecks}
+
+Adds the `-fno-delete-null-pointer-checks` compiler option. Dereferencing a null pointer is undefined behaviour, so a compiler is entitled to conclude that a pointer already dereferenced cannot be null and to delete a later `if (p == NULL)` check as dead code. Where the earlier dereference was itself the bug, this silently removes the defence against it. This option keeps such checks.
+
+Because it only ever preserves code the optimiser would otherwise discard, it cannot change the behaviour of a correct program. The Linux kernel is built with it for the same reason.
+
 #### `stackprotector` {#stackprotector}
 
 Adds the `-fstack-protector-strong --param ssp-buffer-size=4` compiler options. This adds safety checks against stack overwrites rendering many potential code injection attacks into aborting situations. In the best case this turns code injection vulnerabilities into denial of service or into non-issues (depending on the application).

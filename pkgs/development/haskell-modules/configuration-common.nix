@@ -386,21 +386,21 @@ with haskellLib;
   # https://github.com/haskell-cryptography/HsOpenSSL/issues/88
   # https://github.com/haskell-cryptography/HsOpenSSL/issues/93
   # https://github.com/haskell-cryptography/HsOpenSSL/issues/95
-  HsOpenSSL = appendConfigureFlags [
-    "--ghc-option=-optc=-Wno-error=incompatible-pointer-types"
-  ] super.HsOpenSSL;
+  HsOpenSSL = super.HsOpenSSL.overrideAttrs (old: {
+    NIX_CFLAGS_COMPILE = (old.NIX_CFLAGS_COMPILE or "") + " -Wno-error=incompatible-pointer-types";
+  });
   # https://github.com/rethab/bindings-dsl/issues/46
-  bindings-libcddb = appendConfigureFlags [
-    "--ghc-option=-optc=-Wno-error=incompatible-pointer-types"
-  ] super.bindings-libcddb;
+  bindings-libcddb = super.bindings-libcddb.overrideAttrs (old: {
+    NIX_CFLAGS_COMPILE = (old.NIX_CFLAGS_COMPILE or "") + " -Wno-error=incompatible-pointer-types";
+  });
   # https://github.com/ocramz/hdf5-lite/issues/3
-  hdf5-lite = appendConfigureFlags [
-    "--ghc-option=-optc=-Wno-error=implicit-function-declaration"
-  ] super.hdf5-lite;
+  hdf5-lite = super.hdf5-lite.overrideAttrs (old: {
+    NIX_CFLAGS_COMPILE = (old.NIX_CFLAGS_COMPILE or "") + " -Wno-error=implicit-function-declaration";
+  });
   # https://github.com/awkward-squad/termbox/issues/5
-  termbox-bindings-c = appendConfigureFlags [
-    "--ghc-option=-optc=-Wno-error=implicit-function-declaration"
-  ] super.termbox-bindings-c;
+  termbox-bindings-c = super.termbox-bindings-c.overrideAttrs (old: {
+    NIX_CFLAGS_COMPILE = (old.NIX_CFLAGS_COMPILE or "") + " -Wno-error=implicit-function-declaration";
+  });
 
   # There are numerical tests on random data, that may fail occasionally
   lapack = dontCheck super.lapack;

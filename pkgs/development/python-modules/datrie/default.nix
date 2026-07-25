@@ -31,7 +31,7 @@ buildPythonPackage rec {
   ];
 
   # workaround https://github.com/pytries/datrie/issues/101
-  env.CFLAGS = "-Wno-error=incompatible-pointer-types";
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
 
   nativeCheckInputs = [
     hypothesis

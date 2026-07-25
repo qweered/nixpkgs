@@ -41,9 +41,10 @@ stdenv.mkDerivation {
   makeFlags = [
     # The PREFIX var is hardcoded in the makefile.
     "PREFIX=$(out)"
-    # Disables the incompatible-pointer-types build check.
-    "CFLAGS=-Wno-error=incompatible-pointer-types"
   ];
+
+  # Disables the incompatible-pointer-types build check.
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
 
   postFixup = ''
     substituteInPlace $out/bin/mew-run \

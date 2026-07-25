@@ -92,6 +92,11 @@ stdenv.mkDerivation (finalAttrs: {
       "zerocallusedregs"
       "stackprotector"
       "stackclashprotection"
+      # The OpenSSF diagnostics are C-family warnings; Flang's driver reads
+      # hardeningCFlagsBefore as Fortran flags and does not accept them.
+      "securitywarnings"
+      "nowerror"
+      "nodeletenullpointerchecks"
     ];
   };
 

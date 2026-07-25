@@ -46,8 +46,8 @@ stdenv.mkDerivation {
 
     # Build C64 debugger
     make -C MTEngine \
-      CFLAGS="-w -O2 -fcommon -std=gnu17" \
-      CXXFLAGS="-w -O2 --std=c++11" \
+      CFLAGS="-O2 -fcommon -std=gnu17" \
+      CXXFLAGS="-O2 --std=c++11" \
       DEFINES="-DRUN_COMMODORE64" \
       -j$NIX_BUILD_CORES
     mv MTEngine/c64debugger c64debugger
@@ -55,8 +55,8 @@ stdenv.mkDerivation {
 
     # Build 65XE debugger
     make -C MTEngine \
-      CFLAGS="-w -O2 -fcommon -std=gnu17" \
-      CXXFLAGS="-w -O2 --std=c++11" \
+      CFLAGS="-O2 -fcommon -std=gnu17" \
+      CXXFLAGS="-O2 --std=c++11" \
       DEFINES="-DRUN_ATARI" \
       -j$NIX_BUILD_CORES
     mv MTEngine/c64debugger 65xedebugger
@@ -64,8 +64,8 @@ stdenv.mkDerivation {
 
     # Build NES debugger
     make -C MTEngine \
-      CFLAGS="-w -O2 -fcommon -std=gnu17" \
-      CXXFLAGS="-w -O2 --std=c++11" \
+      CFLAGS="-O2 -fcommon -std=gnu17" \
+      CXXFLAGS="-O2 --std=c++11" \
       DEFINES="-DRUN_NES" \
       -j$NIX_BUILD_CORES
     mv MTEngine/c64debugger nesdebugger
@@ -87,6 +87,7 @@ stdenv.mkDerivation {
 
   env = {
     NIX_CFLAGS_COMPILE = toString [
+      "-w"
       "-Wno-error=narrowing"
       "-Wno-error=implicit-function-declaration"
       "-Wno-error=int-conversion"

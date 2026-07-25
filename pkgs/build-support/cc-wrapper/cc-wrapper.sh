@@ -185,6 +185,47 @@ fi
 
 source @out@/nix-support/add-hardening.sh
 
+# Strip any request by the build system to turn warnings into errors. Appending
+# '-Wno-error' (see the 'nowerror' flag in add-hardening.sh) only cancels the
+# blanket '-Werror' form: both GCC and Clang resolve conflicting '-W' options by
+# specificity rather than position, so a '-Werror=<warning>' set by the package
+# outranks it and stays fatal. Removing them here is the only way to keep an
+# upstream project's own choice of fatal diagnostics from deciding whether the
+# package builds for us.
+#
+# '-Wno-error' and '-Wno-error=<warning>' are deliberately left alone: they only
+# ever make a build more permissive, and are how a package opts back out of the
+# diagnostics we make fatal ourselves.
+#
+# '-w' is dropped for the same reason. It inhibits the emission of warnings
+# rather than mapping their severity, so a diagnostic we asked to be fatal is
+# never produced in the first place and no later option can bring it back.
+#
+# '-Wno-error' and '-Wno-error=<warning>' are deliberately left alone: they only
+# ever make a build more permissive, and are how a package opts back out of the
+# diagnostics we make fatal ourselves. Neither is NIX_CFLAGS_COMPILE touched,
+# which cc-wrapper appends after these flags; that remains the supported way for
+# a package to ask for '-w' or to exempt itself from an individual '-Werror='.
+if [[ -n "${hardeningEnableMap[nowerror]-}" ]]; then
+    kept=()
+    # Old bash empty array hack
+    for p in ${params+"${params[@]}"}; do
+        case "$p" in
+            # '-Werror-implicit-function-declaration' is a deprecated GCC
+            # spelling of '-Werror=implicit-function-declaration'.
+            -Werror | -Werror=* | -Werror-* | -w)
+                if (( "${NIX_DEBUG:-0}" >= 1 )); then
+                    echo "HARDENING: dropping $p because the nowerror flag is enabled" >&2
+                fi
+                continue
+                ;;
+        esac
+        kept+=("$p")
+    done
+    # Old bash empty array hack
+    params=(${kept+"${kept[@]}"})
+fi
+
 # Add the flags for the compiler proper. Flang reads its user-supplied
 # flags from the Fortran-specific NIX_FFLAGS_COMPILE channel so that
 # C-only flags injected by setup hooks (e.g. -frandom-seed= from

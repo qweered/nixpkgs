@@ -101,6 +101,8 @@ buildGoModule rec {
       --replace-fail '"errors"' ' '
   '';
 
+  env.NIX_CFLAGS_COMPILE = lib.optionalString withNonBTF "-Wno-error=implicit-function-declaration";
+
   postConfigure = ''
     sed -i '/git/d' Makefile
     sed -i '/git/d' variables.mk

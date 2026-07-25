@@ -120,8 +120,8 @@ stdenv.mkDerivation (finalAttrs: {
           -DWITH_NOTCURSES -lnotcurses-core \
           -DS7_LOAD_PATH=\"$out/share/s7/scm\"
 
+      NIX_CFLAGS_COMPILE="$NIX_CFLAGS_COMPILE -Wno-error=implicit-function-declaration" \
       $CC notcurses_s7.c -o libnotcurses_s7.so \
-          -Wno-error=implicit-function-declaration \
           -lnotcurses-core \
           -shared -fPIC
     ''}

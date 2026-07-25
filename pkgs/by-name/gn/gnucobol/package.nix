@@ -95,12 +95,16 @@ stdenv.mkDerivation (finalAttrs: {
   # (C23 empty parentheses means no args, not unspecified). These flags are needed
   # until gnucobol is updated to compile cleanly with GCC 15.
   # See: https://gcc.gnu.org/gcc-15/porting_to.html
-  env.CFLAGS =
+  env.CFLAGS = lib.optionalString (
+    stdenv.cc.isGNU && lib.versionAtLeast stdenv.cc.version "15.0.0"
+  ) "-std=gnu11";
+
+  env.NIX_CFLAGS_COMPILE =
     let
       # Clang needs -Wno-error=implicit-function-declaration for xmlCleanupParser
       clangFlags = "-Wno-error=implicit-function-declaration";
       # GCC 15+ needs additional flags for incompatible pointer type errors
-      gcc15Flags = "-Wno-error=incompatible-pointer-types -std=gnu11";
+      gcc15Flags = "-Wno-error=incompatible-pointer-types";
     in
     if stdenv.cc.isGNU && lib.versionAtLeast stdenv.cc.version "15.0.0" then
       gcc15Flags

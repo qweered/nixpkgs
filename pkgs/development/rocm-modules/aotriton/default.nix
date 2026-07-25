@@ -66,8 +66,9 @@ stdenv.mkDerivation (finalAttrs: {
   env = {
     AOTRITON_CI_SUPPLIED_SHA1 = finalAttrs.version;
     ROCM_PATH = "${clr}";
-    CFLAGS = "-w -g1 -gz -Wno-c++11-narrowing";
+    CFLAGS = "-g1 -gz -Wno-c++11-narrowing";
     CXXFLAGS = finalAttrs.env.CFLAGS;
+    NIX_CFLAGS_COMPILE = "-w";
     TRITON_STORE_BINARY_ONLY = 1; # reduce triton disk space usage
   };
 

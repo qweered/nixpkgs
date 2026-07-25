@@ -130,10 +130,11 @@ stdenv.mkDerivation (finalAttrs: {
     "--disable-sparkle"
   ];
 
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=implicit-function-declaration";
+
   preConfigure = ''
     configureFlagsArray+=(
       --with-developer-dir="$DEVELOPER_DIR"
-      CFLAGS="-Wno-error=implicit-function-declaration"
     )
   ''
   # Having `$LD` set causes Xcode to invoke `ld` instead of `clang` as the linker, but it still

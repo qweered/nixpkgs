@@ -32,9 +32,11 @@ stdenv.mkDerivation (finalAttrs: {
 
   dontConfigure = true;
 
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
+
   preBuild = ''
     makeFlagsArray+=(SYSDEFS="-DSYSVR4 -D_XOPEN_SOURCE=500" \
-      OPTFLAGS="-O -Wno-error=incompatible-pointer-types" \
+      OPTFLAGS="-O" \
       JTMPDIR=$TMPDIR
       TERMCAPLIB=-lncurses \
       SHELL=${runtimeShell} \

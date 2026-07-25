@@ -80,8 +80,7 @@ stdenv.mkDerivation {
       ];
     in
     {
-      CFLAGS = FLAGS;
-      CXXFLAGS = FLAGS;
+      NIX_CFLAGS_COMPILE = FLAGS;
     };
 
   postPatch = ''

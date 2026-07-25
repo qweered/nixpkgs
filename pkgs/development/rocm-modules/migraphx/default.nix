@@ -143,7 +143,8 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   postPatch = ''
-    export CXXFLAGS+=" -w -isystem${rocmlir}/include/rocmlir -I${half}/include -I${lib.getInclude abseil-cpp}/include -I${hipblas-common}/include -I${lib.getInclude protobuf}/include"
+    export NIX_CFLAGS_COMPILE+=" -w"
+    export CXXFLAGS+=" -isystem${rocmlir}/include/rocmlir -I${half}/include -I${lib.getInclude abseil-cpp}/include -I${hipblas-common}/include -I${lib.getInclude protobuf}/include"
     patchShebangs tools
 
     # `error: '__clang_hip_runtime_wrapper.h' file not found [clang-diagnostic-error]`

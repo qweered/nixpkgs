@@ -14,9 +14,10 @@ stdenv.mkDerivation (finalAttrs: {
 
   makeFlags = [
     "PREFIX=$(out)"
-    # Fix build with GCC 14
-    "CFLAGS=-Wno-error=incompatible-pointer-types"
   ];
+
+  # Fix build with GCC 14
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
 
   meta = {
     homepage = "https://www.pixelbeat.org/programs/dvd-vr/";

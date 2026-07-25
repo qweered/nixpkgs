@@ -16,6 +16,13 @@ stdenv.mkDerivation (finalAttrs: {
   passthru = {
     inherit zig;
     isArocc = true;
+    # Aro implements a subset of the GCC/Clang warning options, so the
+    # OpenSSF diagnostics set is not safely applicable here yet.
+    hardeningUnsupportedFlags = [
+      "securitywarnings"
+      "nowerror"
+      "nodeletenullpointerchecks"
+    ];
     wrapped = wrapCCWith { cc = finalAttrs.finalPackage; };
     stdenv = overrideCC stdenv finalAttrs.passthru.wrapped;
   };

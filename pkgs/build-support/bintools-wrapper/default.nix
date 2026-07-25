@@ -50,8 +50,12 @@
     "fortify"
     "fortify3"
     "libcxxhardeningfast"
+    "nodeletenullpointerchecks"
+    "noexecstack"
+    "nowerror"
     "pic"
     "relro"
+    "securitywarnings"
     "stackclashprotection"
     "stackprotector"
     "strictflexarrays1"
@@ -375,6 +379,9 @@ stdenvNoCC.mkDerivation {
       if [[ "$($ldPath/${targetPrefix}ld -z relro 2>&1 || true)" =~ un(recognized|known)\ option ]]; then
         hardening_unsupported_flags+=" relro"
       fi
+      if [[ "$($ldPath/${targetPrefix}ld -z noexecstack 2>&1 || true)" =~ un(recognized|known)\ option ]]; then
+        hardening_unsupported_flags+=" noexecstack"
+      fi
     ''
 
     + optionalString hostPlatform.isCygwin ''
@@ -382,7 +389,7 @@ stdenvNoCC.mkDerivation {
     ''
 
     + optionalString (targetPlatform.isAvr || targetPlatform.isWindows) ''
-      hardening_unsupported_flags+=" relro bindnow"
+      hardening_unsupported_flags+=" relro bindnow noexecstack"
     ''
 
     + optionalString (libc != null && targetPlatform.isAvr) ''

@@ -28,7 +28,7 @@ stdenv.mkDerivation (finalAttrs: {
       -e '/bin_PROGRAMS/s/spf_example_static//' src/spf_example/Makefile.am
   '';
 
-  env.CFLAGS = "-Wno-error=implicit-function-declaration";
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=implicit-function-declaration";
 
   doCheck = true;
 

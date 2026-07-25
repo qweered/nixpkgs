@@ -15,7 +15,7 @@ for flag in @hardening_unsupported_flags@; do
 done
 
 if (( "${NIX_DEBUG:-0}" >= 1 )); then
-  declare -a allHardeningFlags=(relro bindnow)
+  declare -a allHardeningFlags=(relro bindnow noexecstack)
   declare -A hardeningDisableMap=()
 
   # Determine which flags were effectively disabled so we can report below.
@@ -43,6 +43,10 @@ for flag in "${!hardeningEnableMap[@]}"; do
     bindnow)
       if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling bindnow >&2; fi
       hardeningLDFlags+=('-z' 'now')
+      ;;
+    noexecstack)
+      if (( "${NIX_DEBUG:-0}" >= 1 )); then echo HARDENING: enabling noexecstack >&2; fi
+      hardeningLDFlags+=('-z' 'noexecstack')
       ;;
     *)
       # Ignore unsupported. Checked in Nix that at least *some*

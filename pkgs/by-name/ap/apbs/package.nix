@@ -27,16 +27,16 @@ let
       cmake
     ];
 
-    env = lib.optionalAttrs (!stdenv.hostPlatform.isDarwin) {
+    env.NIX_CFLAGS_COMPILE = toString (
+      [ "-Wno-error=implicit-int" ]
       # Required for gcc-15 compatibility
-      NIX_CFLAGS_COMPILE = "-std=gnu17";
-    };
+      ++ lib.optional (!stdenv.hostPlatform.isDarwin) "-std=gnu17"
+    );
 
     cmakeFlags = [
       "-DBLAS_LIBRARIES=${blas}/lib"
       "-DBLA_STATIC=OFF"
       "-DBUILD_SUPERLU=OFF"
-      "-DCMAKE_C_FLAGS=-Wno-error=implicit-int"
     ];
 
     buildInputs = [
@@ -96,8 +96,9 @@ stdenv.mkDerivation (finalAttrs: {
     "-DAPBS_LIBS=mc;maloc"
     "-DCMAKE_MODULE_PATH=${fetk}/share/fetk/cmake;"
     "-DENABLE_TESTS=1"
-    "-DCMAKE_C_FLAGS=-Wno-error=incompatible-pointer-types"
   ];
+
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
 
   doCheck = true;
 

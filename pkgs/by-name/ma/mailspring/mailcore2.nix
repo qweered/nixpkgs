@@ -49,14 +49,9 @@ stdenv.mkDerivation {
 
   # Prevent GCC 14 pointer errors
   env = {
-    CXXFLAGS = toString [
-      "-std=gnu++17"
-      "-Wno-error=incompatible-pointer-types"
-    ];
+    CXXFLAGS = "-std=gnu++17";
 
-    CFLAGS = toString [
-      "-Wno-error=incompatible-pointer-types"
-    ];
+    NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
   };
 
   # Only build the core library, mimicking ./build.sh

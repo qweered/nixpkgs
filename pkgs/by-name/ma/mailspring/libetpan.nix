@@ -35,10 +35,9 @@ stdenv.mkDerivation {
   ];
 
   # Prevent GCC 14 from treating pointer type mismatches as fatal build errors
-  env.CFLAGS = toString [
-    "-std=gnu17"
-    "-Wno-error=incompatible-pointer-types"
-  ];
+  env.CFLAGS = "-std=gnu17";
+
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=incompatible-pointer-types";
 
   meta = {
     description = "Modified fork of the libetpan mail framework";
