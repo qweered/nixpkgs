@@ -1301,41 +1301,39 @@ let
         let
           d = head defs;
         in
-        if addErrorContext "while evaluating definitions from `${d.file}':" (!(d.value ? _type)) then
-          {
-            values = defs;
-            highestPrio = defaultOverridePriority;
-          }
-        # A lone override only needs its priority and content selected. Keep
-        # order-wrapper handling inside `values` so asking only for the priority
-        # does not force the content.
-        else if
-          addErrorContext "while evaluating definitions from `${d.file}':" (
-            (d.value._type or null) == "override"
-          )
-        then
-          {
-            values = map (
-              def:
-              if def.value.content._type or "" == "order" then
-                {
-                  inherit (def) file;
-                  value = def.value.content.content;
-                  priority = def.value.content.priority;
-                }
-              else
-                {
-                  inherit (def) file;
-                  value = def.value.content;
-                }
-            ) defs;
-            highestPrio = d.value.priority;
-          }
-        else
-          {
-            values = defsSorted;
-            inherit (defsFiltered) highestPrio;
-          }
+        addErrorContext "while evaluating definitions from `${d.file}':" (
+          if !(d.value ? _type) then
+            {
+              values = defs;
+              highestPrio = defaultOverridePriority;
+            }
+          # A lone override only needs its priority and content selected. Keep
+          # order-wrapper handling inside `values` so asking only for the priority
+          # does not force the content.
+          else if (d.value._type or null) == "override" then
+            {
+              values = map (
+                def:
+                if def.value.content._type or "" == "order" then
+                  {
+                    inherit (def) file;
+                    value = def.value.content.content;
+                    priority = def.value.content.priority;
+                  }
+                else
+                  {
+                    inherit (def) file;
+                    value = def.value.content;
+                  }
+              ) defs;
+              highestPrio = d.value.priority;
+            }
+          else
+            {
+              values = defsSorted;
+              inherit (defsFiltered) highestPrio;
+            }
+        )
       else
         {
           values = defsSorted;
