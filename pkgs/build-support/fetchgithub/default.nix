@@ -19,11 +19,6 @@ let
     rootDir = "";
     sparseCheckout = null;
   };
-  useFetchGitArgsDefaultNullable = {
-    leaveDotGit = false;
-    sparseCheckout = [ ];
-  };
-
   useFetchGitArgNames = lib.attrNames useFetchGitArgsDefault;
 
   # useFetchGitArgsWD to exclude from automatic passing.
@@ -32,17 +27,11 @@ let
     "forceFetchGit"
   ];
 
-  faUseFetchGit = lib.mapAttrs (_: _: true) useFetchGitArgsDefault;
-
-  adjustFunctionArgs = f: lib.setFunctionArgs f (faUseFetchGit // lib.functionArgs f);
-
-  decorate = f: lib.makeOverridable (adjustFunctionArgs f);
-
   # fetchzip may not be overridable when using external tools, for example nix-prefetch
   fetchzip =
     if args.fetchzip ? override then args.fetchzip.override { withUnzip = false; } else args.fetchzip;
 in
-decorate (
+lib.makeOverridable (
   {
     owner,
     repo,
@@ -56,6 +45,14 @@ decorate (
     varPrefix ? null,
     passthru ? { },
     meta ? { },
+    deepClone ? false,
+    fetchLFS ? false,
+    fetchSubmodules ? false,
+    forceFetchGit ? false,
+    leaveDotGit ? null,
+    postCheckout ? "",
+    rootDir ? "",
+    sparseCheckout ? null,
     ... # For hash agility and additional fetchgit arguments
   }@args:
 
@@ -65,12 +62,15 @@ decorate (
   );
 
   let
-    useFetchGit = lib.any (
-      name:
-      args ? ${name}
-      && (useFetchGitArgsDefaultNullable ? ${name} -> args.${name} != null)
-      && args.${name} != (useFetchGitArgsDefaultNullable.${name} or useFetchGitArgsDefault.${name})
-    ) useFetchGitArgNames;
+    useFetchGit =
+      deepClone != false
+      || fetchLFS != false
+      || fetchSubmodules != false
+      || forceFetchGit != false
+      || (leaveDotGit != null && leaveDotGit != false)
+      || postCheckout != ""
+      || rootDir != ""
+      || (sparseCheckout != null && sparseCheckout != [ ]);
 
     useFetchGitArgsWDPassing = lib.overrideExisting (removeAttrs useFetchGitArgsDefault excludeUseFetchGitArgNames) args;
 
