@@ -285,12 +285,8 @@ lib.extendMkDerivation {
 
       finalHash = finalAttrs.hash;
       finalHashPrefix = substring 0 7 finalHash;
-      finalHashColonMatch =
-        if finalHashPrefix == "sha256-" || finalHashPrefix == "sha256:" then
-          null
-        else
-          match "([^:]+)[:](.*)" finalHash;
-      finalHashHasColon = finalHashPrefix == "sha256:" || finalHashColonMatch != null;
+      # The common SRI form returns before forcing this legacy colon parser.
+      finalHashColonMatch = match "([^:]+)[:](.*)" finalHash;
       normalizedHash = hash_.outputHash;
       normalizedHashAlgo = hash_.outputHashAlgo;
     in
@@ -330,18 +326,22 @@ lib.extendMkDerivation {
         else
           "${normalizedHashAlgo}:${normalizedHash}";
       outputHashAlgo =
-        if finalHashPrefix == "sha256:" then
+        if finalHashPrefix == "sha256-" then
+          null
+        else if finalHashPrefix == "sha256:" then
           "sha256"
-        else if finalHashHasColon then
+        else if finalHashColonMatch != null then
           head finalHashColonMatch
         else
           null;
       outputHash =
-        if finalHash == "" then
+        if finalHashPrefix == "sha256-" then
+          finalHash
+        else if finalHash == "" then
           fakeHash
         else if finalHashPrefix == "sha256:" then
           substring 7 (-1) finalHash
-        else if finalHashHasColon then
+        else if finalHashColonMatch != null then
           elemAt finalHashColonMatch 1
         else
           finalHash;
