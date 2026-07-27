@@ -513,6 +513,33 @@ runTests {
     };
   };
 
+  testIsFunction = {
+    expr = builtins.map lib.isFunction [
+      (x: x)
+      # Functors are applicable, so they count as functions.
+      { __functor = self: x: x; }
+      # A functor may yield another functor; the result is still applicable.
+      {
+        __functor = self: { __functor = self': x: x; };
+      }
+      { a = 1; }
+      null
+      1
+      "foo"
+      [ ]
+    ];
+    expected = [
+      true
+      true
+      true
+      false
+      false
+      false
+      false
+      false
+    ];
+  };
+
   # STRINGS
 
   testJoin = {
