@@ -10,10 +10,8 @@ lib:
 let
   # Lib attributes are inherited to the lexical scope for performance reasons.
   inherit (lib)
-    attrNames
     concatLists
     concatMap
-    concatMapStringsSep
     concatStringsSep
     elem
     extendDerivation
@@ -21,15 +19,10 @@ let
     filterAttrs
     getDev
     head
-    intersectAttrs
     isAttrs
-    isBool
     isDerivation
-    isInt
     isFunction
-    isString
     listToAttrs
-    mapAttrs
     mapNullable
     optional
     optionalString
@@ -39,7 +32,6 @@ let
     splitString
     subtractLists
     toFunction
-    typeOf
     unique
     unsafeDiscardStringContext
     unsafeGetAttrPos
@@ -961,33 +953,10 @@ let
         if env' == { } then
           { }
         else
-          let
-            overlappingArgs = intersectAttrs env' derivationArg;
-          in
           assert
             (isAttrs env && (env.type or null) != "derivation")
             || throw "`env` must be an attribute set of environment variables. Set `env.env` or pick a more specific name.";
-          assert
-            (overlappingArgs == { })
-            || throw (
-              let
-                errors = concatMapStringsSep "\n" (
-                  name:
-                  "  - ${name}: in `env`: ${toPretty { } env'.${name}}; in derivation arguments: ${
-                      toPretty { } derivationArg.${name}
-                    }"
-                ) (attrNames overlappingArgs);
-
-              in
-              "The `env` attribute set cannot contain any attributes passed to derivation. The following attributes are overlapping:\n${errors}"
-            );
-          mapAttrs (
-            n: v:
-            assert
-              (isString v || isBool v || isInt v || isDerivation v)
-              || throw "The `env` attribute set can only contain derivation, string, boolean or integer attributes. The `${n}` attribute is of type ${typeOf v}.";
-            v
-          ) env';
+          env';
     in
 
     extendDerivation validity.handled (
