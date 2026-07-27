@@ -16,7 +16,6 @@ let
     escapeShellArg
     filter
     getExe
-    hasAttr
     hasPrefix
     head
     listToAttrs
@@ -28,8 +27,6 @@ let
     ;
 
   hasGitPrefix = hasPrefix "git+";
-  hasSparsePrefix = hasPrefix "sparse+";
-  hasRegistryPrefix = hasPrefix "registry+";
   removeRegistryPrefix = removePrefix "registry+";
 
   # Parse a git source into different components.
@@ -84,7 +81,7 @@ in
   allowBuiltinFetchGit ? false,
 
   # Additional registries to pull sources from
-  #   { "https://<registry index URL>" = "https://<registry download URL>"; }
+  #   { "registry+https://<registry index URL>" = "https://<registry download URL>"; }
   #   or if the registry is using the new sparse protocol
   #   { "sparse+https://<registry download URL>" = "https://<registry download URL>"; }
   # where:
@@ -170,7 +167,7 @@ let
     # Use static.crates.io (CDN) instead of crates.io/api to avoid the 1 req/sec
     # rate limit on the API servers, which currently returns intermittent 403s.
     # See https://github.com/rust-lang/crates.io/issues/13482
-    "https://github.com/rust-lang/crates.io-index" = "https://static.crates.io/crates";
+    "registry+https://github.com/rust-lang/crates.io-index" = "https://static.crates.io/crates";
   }
   // extraRegistries;
 
@@ -179,11 +176,10 @@ let
     pkg:
     let
       gitParts = parseGit pkg.source;
-      registryIndexUrl = removeRegistryPrefix pkg.source;
     in
-    if hasAttr registryIndexUrl registries then
+    if registries ? ${pkg.source} then
       let
-        crateTarball = fetchCrate pkg registries.${registryIndexUrl};
+        crateTarball = fetchCrate pkg registries.${pkg.source};
       in
       runCommand "${pkg.name}-${pkg.version}" { } ''
         mkdir $out
@@ -326,7 +322,7 @@ let
 
             declare -A keysSeen
 
-            for registry in ${toString (attrNames extraRegistries)}; do
+            for registry in ${toString (map removeRegistryPrefix (attrNames extraRegistries))}; do
               cat >> $out/.cargo/config.toml <<EOF
 
         [source."$registry"]
