@@ -181,9 +181,7 @@ let
       gitParts = parseGit pkg.source;
       registryIndexUrl = removeRegistryPrefix pkg.source;
     in
-    if
-      (hasRegistryPrefix pkg.source || hasSparsePrefix pkg.source) && hasAttr registryIndexUrl registries
-    then
+    if hasAttr registryIndexUrl registries then
       let
         crateTarball = fetchCrate pkg registries.${registryIndexUrl};
       in
