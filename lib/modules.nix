@@ -14,7 +14,6 @@ let
     elem
     filter
     foldl'
-    functionArgs
     getAttrFromPath
     genericClosure
     head
@@ -22,7 +21,6 @@ let
     imap1
     init
     isAttrs
-    isFunction
     oldestSupportedReleaseIsAtLeast
     isList
     isString
@@ -434,7 +432,7 @@ let
       # Like unifyModuleSyntax, but also imports paths and calls functions if necessary
       loadModule =
         args: fallbackFile: fallbackKey: m:
-        if isFunction m then
+        if builtinIsFunction m then
           unifyModuleSyntax fallbackFile fallbackKey (applyModuleArgs fallbackKey m args)
         else if isAttrs m then
           if m._type or "module" == "module" then
@@ -750,26 +748,8 @@ let
       };
 
   applyModuleArgsIfFunction =
-    key: f:
-    args@{ config, ... }:
-    if builtinIsFunction f then
-      let
-        context = name: ''while evaluating the module argument `${name}' in "${key}":'';
-        extraArgs = mapAttrs (
-          name: _:
-          addErrorContext (context name) (
-            args.${name} or (addErrorContext
-              "noting that argument `${name}` is not externally provided, so querying `_module.args` instead, requiring `config`"
-              config._module.args.${name}
-            )
-          )
-        ) (builtinFunctionArgs f);
-      in
-      f (args // extraArgs)
-    else if isFunction f then
-      applyModuleArgs key f args
-    else
-      f;
+    key: f: args:
+    if builtinIsFunction f then applyModuleArgs key f args else f;
 
   applyModuleArgs =
     key: f:
@@ -796,7 +776,7 @@ let
             config._module.args.${name}
           )
         )
-      ) (functionArgs f);
+      ) (builtinFunctionArgs f);
 
       # Note: we append in the opposite order such that we can add an error
       # context on the explicit arguments of "args" too. This update

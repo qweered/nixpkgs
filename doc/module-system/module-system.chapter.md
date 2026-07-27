@@ -23,6 +23,9 @@ Evaluate a set of modules. This function is typically only used once per applica
 #### `modules` {#module-system-lib-evalModules-param-modules}
 
 A list of modules. These are merged together to form the final configuration.
+A module function must be a native Nix function. Callable attribute sets using
+`__functor` are treated as attribute-set modules instead; wrap one in a native
+function before passing it as a module.
 <!-- TODO link to section about merging, TBD -->
 
 #### `specialArgs` {#module-system-lib-evalModules-param-specialArgs}
