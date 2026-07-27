@@ -137,8 +137,15 @@ let
     let
       modules = lib.filter hasPythonModule drvs;
     in
-    lib.unique (
-      [ python ] ++ modules ++ lib.concatLists (lib.catAttrs "requiredPythonModules" modules)
+    # genericClosure preserves start-set order while deduplicating output paths in the evaluator.
+    lib.map (entry: entry.value) (
+      lib.genericClosure {
+        startSet = lib.map (value: {
+          key = value.outPath;
+          inherit value;
+        }) ([ python ] ++ modules ++ lib.concatLists (lib.catAttrs "requiredPythonModules" modules));
+        operator = _: [ ];
+      }
     );
 
   # Create a PYTHONPATH from a list of derivations. This function recurses into the items to find derivations
