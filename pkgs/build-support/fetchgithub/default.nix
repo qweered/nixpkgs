@@ -24,7 +24,7 @@ let
     sparseCheckout = [ ];
   };
 
-  useFetchGitargsDefaultNonNull = useFetchGitArgsDefault // useFetchGitArgsDefaultNullable;
+  useFetchGitArgNames = lib.attrNames useFetchGitArgsDefault;
 
   # useFetchGitArgsWD to exclude from automatic passing.
   # Other useFetchGitArgsWD will pass down to fetchgit.
@@ -65,14 +65,12 @@ decorate (
   );
 
   let
-    useFetchGit =
-      lib.mapAttrs (
-        name: nonNullDefault:
-        if args ? ${name} && (useFetchGitArgsDefaultNullable ? ${name} -> args.${name} != null) then
-          args.${name}
-        else
-          nonNullDefault
-      ) useFetchGitargsDefaultNonNull != useFetchGitargsDefaultNonNull;
+    useFetchGit = lib.any (
+      name:
+      args ? ${name}
+      && (useFetchGitArgsDefaultNullable ? ${name} -> args.${name} != null)
+      && args.${name} != (useFetchGitArgsDefaultNullable.${name} or useFetchGitArgsDefault.${name})
+    ) useFetchGitArgNames;
 
     useFetchGitArgsWDPassing = lib.overrideExisting (removeAttrs useFetchGitArgsDefault excludeUseFetchGitArgNames) args;
 
@@ -121,7 +119,7 @@ decorate (
         "githubBase"
         "varPrefix"
       ]
-      ++ (if useFetchGit then excludeUseFetchGitArgNames else lib.attrNames faUseFetchGit)
+      ++ (if useFetchGit then excludeUseFetchGitArgNames else useFetchGitArgNames)
     );
     varBase = "NIX${lib.optionalString (varPrefix != null) "_${varPrefix}"}_GITHUB_PRIVATE_";
     # We prefer fetchzip in cases we don't need submodules as the hash
