@@ -59,6 +59,7 @@ let
     functionArgs
     generators
     genList
+    getDev
     getExe
     getExe'
     getLicenseFromSpdxIdOr
@@ -596,6 +597,16 @@ runTests {
   testConcatLinesEmpty = {
     expr = concatLines [ ];
     expected = "";
+  };
+
+  testGetDevOutputSpecifiedMarker = {
+    expr =
+      (getDev {
+        dev.outPath = "/dev";
+        outPath = "/selected";
+        outputSpecified = false;
+      }).outPath;
+    expected = "/selected";
   };
 
   testMakeIncludePathWithPkgs = {

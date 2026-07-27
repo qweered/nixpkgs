@@ -2078,6 +2078,7 @@ rec {
   /**
     Get a package's `dev` output.
     If the output does not exist, fallback to `.out` and then to the default.
+    The presence of `outputSpecified` marks an explicitly selected output, so its value is not inspected.
 
     # Inputs
 
@@ -2102,7 +2103,7 @@ rec {
 
     :::
   */
-  getDev = pkg: if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg;
+  getDev = pkg: if pkg ? outputSpecified then pkg else pkg.dev or pkg.out or pkg;
 
   /**
     Get a package's `include` output.
