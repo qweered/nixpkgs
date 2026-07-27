@@ -2102,7 +2102,7 @@ rec {
 
     :::
   */
-  getDev = getOutput "dev";
+  getDev = pkg: if pkg.outputSpecified or false then pkg else pkg.dev or pkg.out or pkg;
 
   /**
     Get a package's `include` output.
