@@ -506,6 +506,14 @@ runTests {
     };
   };
 
+  # A functor may yield another functor; the annotation of the innermost one wins.
+  testFunctionArgsFunctorNested = {
+    expr = functionArgs { __functor = self: setFunctionArgs (args: args.q) { q = false; }; };
+    expected = {
+      q = false;
+    };
+  };
+
   testFunctionArgsSetFunctionArgs = {
     expr = functionArgs (setFunctionArgs (args: args.x) { x = false; });
     expected = {

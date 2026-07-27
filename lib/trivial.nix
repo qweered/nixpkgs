@@ -1104,9 +1104,10 @@ in
   */
   functionArgs =
     let
-      functionArgs = builtins.functionArgs;
+      builtinFunctionArgs = builtins.functionArgs;
+      go = f: if f ? __functor then f.__functionArgs or (go (f.__functor f)) else builtinFunctionArgs f;
     in
-    f: if f ? __functor then f.__functionArgs or (functionArgs (f.__functor f)) else functionArgs f;
+    go;
 
   /**
     Check whether something is a function or something
