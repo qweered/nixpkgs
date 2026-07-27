@@ -382,6 +382,12 @@ lib.makeScope
           ;
 
         tests = {
+          write-text-file-destination = writeTextFile {
+            name = "minimal-bootstrap-write-text-file-destination-test";
+            text = "hello\n";
+            destination = "/bin/hello";
+          };
+
           bootstrap-chain = kaem.runCommand "minimal-bootstrap-bootstrap-chain-test" { } ''
             echo ${bash.tests.get-version}
             echo ${bash_2_05.tests.get-version}

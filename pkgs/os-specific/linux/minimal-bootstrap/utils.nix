@@ -74,11 +74,13 @@ rec {
         '';
         nonEmptyDestinationExecutable = ''
           target=''${out}''${destination}
+          mkdir -p ''${out}''${destinationDir}
           cp ''${textPath} ''${target}
           chmod 555 ''${target}
         '';
         nonEmptyDestinationNonExecutable = ''
           target=''${out}''${destination}
+          mkdir -p ''${out}''${destinationDir}
           cp ''${textPath} ''${target}
         '';
       };
