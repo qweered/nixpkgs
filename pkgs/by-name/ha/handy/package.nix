@@ -7,14 +7,19 @@
   cmake,
   bun,
   nodejs,
-  cctools,
   cargo-tauri,
   jq,
   writableTmpDirAsHomeHook,
-  makeBinaryWrapper,
-  swift,
-  apple-sdk_26,
   symlinkJoin,
+
+  # Cross-platform
+  onnxruntime,
+  openssl,
+
+  # Darwin-only
+  cctools,
+  apple-sdk_26,
+  swift,
 
   # Linux-only
   webkitgtk_4_1,
@@ -36,10 +41,6 @@
   pipewire,
   alsa-plugins,
   wrapGAppsHook4,
-
-  # Cross-platform
-  onnxruntime,
-  openssl,
 }:
 let
   gstPlugins = lib.optionals stdenv.hostPlatform.isLinux (
@@ -113,7 +114,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
     spirv-headers
   ]
   ++ lib.optionals stdenv.hostPlatform.isDarwin [
-    makeBinaryWrapper
     cctools
     swift
     apple-sdk_26
