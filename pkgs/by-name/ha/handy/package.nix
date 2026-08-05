@@ -1,6 +1,7 @@
 {
   lib,
   stdenv,
+  stdenvNoCC,
   fetchFromGitHub,
   rustPlatform,
   pkg-config,
@@ -11,6 +12,7 @@
   jq,
   writableTmpDirAsHomeHook,
   symlinkJoin,
+  nix-update-script,
 
   # Cross-platform
   onnxruntime,
@@ -56,7 +58,7 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "handy";
-  version = "0.9.1";
+  version = "0.9.4";
 
   __structuredAttrs = true;
 
@@ -64,13 +66,11 @@ rustPlatform.buildRustPackage (finalAttrs: {
     owner = "cjpais";
     repo = "Handy";
     tag = "v${finalAttrs.version}";
-    hash = "sha256-GuHMK98wmqv2ryrMF243CjRGMbjZ0ykX89RJbjwaP6U=";
+    hash = "sha256-S1dJ9HYEoF21WxHAZ0YpJ5NRkI32Y3s1GzEG4KtwUqY=";
   };
 
   cargoRoot = "src-tauri";
-  cargoHash = "sha256-CNHWa70nAYbdgXO62s1iaW6nBacorgEVZIgkMZx/CNs=";
-
-  nativeInstallInputs = [ jq ];
+  cargoHash = "sha256-L6CJcYq1QC3TcimIhqsVg9NZqXBl04JLz1Vc7POSZ+I=";
 
   postPatch = ''
     patch_json() {
@@ -139,8 +139,6 @@ rustPlatform.buildRustPackage (finalAttrs: {
     glib-networking
     libx11
   ];
-
-  ortLibLocation = "${lib.getLib onnxruntime}/lib";
 
   # Handy relies on onnx and gstreamer being available at runtime, picked up by wrapGapps.
   env = {
@@ -215,7 +213,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   passthru = {
     # The hook and deps fetcher in https://github.com/NixOS/nixpkgs/pull/376299 should simplify this dramatically.
-    frontendDeps = stdenv.mkDerivation {
+    frontendDeps = stdenvNoCC.mkDerivation {
       pname = "handy-frontend-deps";
       inherit (finalAttrs) src version;
 
@@ -229,8 +227,15 @@ rustPlatform.buildRustPackage (finalAttrs: {
       buildPhase = ''
         runHook preBuild
         export BUN_INSTALL_CACHE_DIR=$(mktemp -d)
-        bun install --linker=isolated --force --frozen-lockfile \
-          --ignore-scripts --no-progress
+        bun install \
+          --backend=copyfile \
+          --cpu="*" \
+          --force \
+          --frozen-lockfile \
+          --ignore-scripts \
+          --linker=isolated \
+          --no-progress \
+          --os="*"
         bun --bun "$PWD/.nix/scripts/normalize-install.ts"
         runHook postBuild
       '';
@@ -244,15 +249,15 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
       dontFixup = true;
 
-      outputHash =
-        {
-          "x86_64-linux" = "sha256-1jZBFvX9Ch3jNGPgSnOE8yNCXlHru7tcMJZ5uNZtE1g=";
-          "aarch64-linux" = "sha256-MsY2tOdBg11OMyQLRkLoVKxyrcqa0yVddfcYuIVWSxw=";
-          "aarch64-darwin" = "sha256-Fw0va7mq0F36qa15bDFVL01Q5pEprWhza78CzurLoLg=";
-        }
-        .${stdenv.hostPlatform.system};
-
+      outputHash = "sha256-s7hyxVhMQeF3ir1ngyKj3nKhqh/Aoh+1Kc18+ygt6mA=";
       outputHashMode = "recursive";
+    };
+
+    updateScript = nix-update-script {
+      extraArgs = [
+        "--custom-dep"
+        "frontendDeps"
+      ];
     };
 
     alsaPluginDirectory = symlinkJoin {
