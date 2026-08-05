@@ -53,6 +53,7 @@
   systemd,
   udev,
   udevCheckHook,
+  clientOnly ? false,
   withSystemd ? lib.meta.availableOn stdenv.hostPlatform systemd,
   # NBFT (NVMe Boot Firmware Table) support, opt-in due to closure size
   # https://github.com/NixOS/nixpkgs/pull/446121#discussion_r2380598419
@@ -61,9 +62,29 @@
 
 let
   pythonForDocs = python3.pythonOnBuildForHost.withPackages (pkgs: with pkgs; [ pygobject3 ]);
+
+  # Upstream does not provide a client-only build option. Keep the target and
+  # install details with NetworkManager so source updates review them together.
+  clientBuildPhase = ''
+    runHook preBuild
+
+    meson compile --jobs "$NIX_BUILD_CORES" nm nm-libnm-helper
+
+    runHook postBuild
+  '';
+
+  clientInstallPhase = ''
+    runHook preInstall
+
+    mkdir -p "$out/lib" "$out/libexec"
+    cp -a src/libnm-client-impl/libnm.so* "$out/lib/"
+    cp src/nm-helpers/nm-libnm-helper "$out/libexec/"
+
+    runHook postInstall
+  '';
 in
 stdenv.mkDerivation (finalAttrs: {
-  pname = "networkmanager";
+  pname = if clientOnly then "libnm" else "networkmanager";
   version = "1.56.0";
 
   src = fetchurl {
@@ -71,13 +92,17 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-WaMtOFzB564m5DeYxvEtB/9hmKvQQewGILOgjPwCHMw=";
   };
 
-  outputs = [
-    "out"
-    "dev"
-    "devdoc"
-    "man"
-    "doc"
-  ];
+  outputs =
+    if clientOnly then
+      [ "out" ]
+    else
+      [
+        "out"
+        "dev"
+        "devdoc"
+        "man"
+        "doc"
+      ];
 
   # Right now we hardcode quite a few paths at build time. Probably we should
   # patch networkmanager to allow passing these path in config file. This will
@@ -127,6 +152,13 @@ stdenv.mkDerivation (finalAttrs: {
     "-Dtests=no"
     "-Dcrypto=gnutls"
     "-Dmobile_broadband_provider_info_database=${mobile-broadband-provider-info}/share/mobile-broadband-provider-info/serviceproviders.xml"
+  ]
+  ++ lib.optionals clientOnly [
+    "-Ddocs=false"
+    "-Dintrospection=false"
+    "-Dman=false"
+    "-Dtests=no"
+    "-Dvapi=false"
   ];
 
   patches = [
@@ -163,11 +195,15 @@ stdenv.mkDerivation (finalAttrs: {
     jansson
     dbus # used to get directory paths with pkg-config during configuration
   ]
+  ++ lib.optionals clientOnly [
+    gnutls
+    libgcrypt
+  ]
   ++ lib.optionals withNbft [
     libnvme
   ];
 
-  propagatedBuildInputs = [
+  propagatedBuildInputs = lib.optionals (!clientOnly) [
     gnutls
     libgcrypt
   ];
@@ -210,7 +246,7 @@ stdenv.mkDerivation (finalAttrs: {
       --replace-fail /usr/bin/busctl ${systemd}/bin/busctl
   '';
 
-  preBuild = ''
+  preBuild = lib.optionalString (!clientOnly) ''
     # Our gobject-introspection patches make the shared library paths absolute
     # in the GIR files. When building docs, the library is not yet installed,
     # though, so we need to replace the absolute path with a local one during build.
@@ -219,14 +255,18 @@ stdenv.mkDerivation (finalAttrs: {
     ln -s $PWD/src/libnm-client-impl/libnm.so.0 ${placeholder "out"}/lib/libnm.so.0
   '';
 
-  postFixup = lib.optionalString (stdenv.buildPlatform != stdenv.hostPlatform) ''
+  buildPhase = if clientOnly then clientBuildPhase else null;
+
+  installPhase = if clientOnly then clientInstallPhase else null;
+
+  postFixup = lib.optionalString (!clientOnly && stdenv.buildPlatform != stdenv.hostPlatform) ''
     cp -r ${buildPackages.networkmanager.devdoc} $devdoc
     cp -r ${buildPackages.networkmanager.man} $man
   '';
 
-  doInstallCheck = true;
+  doInstallCheck = !clientOnly;
 
-  passthru = {
+  passthru = lib.optionalAttrs (!clientOnly) {
     updateScript = gitUpdater {
       odd-unstable = true;
       url = "https://gitlab.freedesktop.org/NetworkManager/NetworkManager.git";
@@ -238,8 +278,12 @@ stdenv.mkDerivation (finalAttrs: {
 
   meta = {
     homepage = "https://networkmanager.dev";
-    description = "Network configuration and management tool";
-    license = lib.licenses.gpl2Plus;
+    description =
+      if clientOnly then
+        "Client library for NetworkManager"
+      else
+        "Network configuration and management tool";
+    license = if clientOnly then lib.licenses.lgpl21Plus else lib.licenses.gpl2Plus;
     changelog = "https://gitlab.freedesktop.org/NetworkManager/NetworkManager/-/raw/${finalAttrs.version}/NEWS";
     maintainers = with lib.maintainers; [
       obadz
