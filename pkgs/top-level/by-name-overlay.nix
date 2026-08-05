@@ -10,13 +10,14 @@ let
   lib = import ../../lib;
 
   inherit (builtins)
+    head
     readDir
+    zipAttrsWith
     ;
 
   inherit (lib.attrsets)
     mapAttrs
     mapAttrsToList
-    mergeAttrsList
     ;
 
   inherit (lib.trivial)
@@ -43,7 +44,7 @@ let
   # The attribute set mapping names to the package files defining them
   # This is defined up here in order to allow reuse of the value (it's kind of expensive to compute)
   # if the overlay has to be applied multiple times
-  packageFiles = mergeAttrsList (mapAttrsToList namesForShard (readDir baseDirectory));
+  packageFiles = zipAttrsWith (_: head) (mapAttrsToList namesForShard (readDir baseDirectory));
 in
 self: super:
 {

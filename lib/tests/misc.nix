@@ -59,6 +59,7 @@ let
     functionArgs
     generators
     genList
+    getDev
     getExe
     getExe'
     getLicenseFromSpdxIdOr
@@ -506,11 +507,46 @@ runTests {
     };
   };
 
+  # A functor may yield another functor; the annotation of the innermost one wins.
+  testFunctionArgsFunctorNested = {
+    expr = functionArgs { __functor = self: setFunctionArgs (args: args.q) { q = false; }; };
+    expected = {
+      q = false;
+    };
+  };
+
   testFunctionArgsSetFunctionArgs = {
     expr = functionArgs (setFunctionArgs (args: args.x) { x = false; });
     expected = {
       x = false;
     };
+  };
+
+  testIsFunction = {
+    expr = builtins.map lib.isFunction [
+      (x: x)
+      # Functors are applicable, so they count as functions.
+      { __functor = self: x: x; }
+      # A functor may yield another functor; the result is still applicable.
+      {
+        __functor = self: { __functor = self': x: x; };
+      }
+      { a = 1; }
+      null
+      1
+      "foo"
+      [ ]
+    ];
+    expected = [
+      true
+      true
+      true
+      false
+      false
+      false
+      false
+      false
+    ];
   };
 
   # STRINGS
@@ -561,6 +597,16 @@ runTests {
   testConcatLinesEmpty = {
     expr = concatLines [ ];
     expected = "";
+  };
+
+  testGetDevOutputSpecifiedMarker = {
+    expr =
+      (getDev {
+        dev.outPath = "/dev";
+        outPath = "/selected";
+        outputSpecified = false;
+      }).outPath;
+    expected = "/selected";
   };
 
   testMakeIncludePathWithPkgs = {
@@ -2329,6 +2375,40 @@ runTests {
       foo.quz = 2;
       bar = 3; # 'bar' from the first set
       baz = 4; # 'baz' from the second set
+    };
+  };
+
+  testRecursiveUpdate = {
+    expr =
+      attrsets.recursiveUpdate
+        {
+          keep = 1;
+          nested = {
+            keep = 2;
+            replace = 3;
+          };
+          scalarToSet = 4;
+          setToScalar.old = 5;
+        }
+        {
+          add = 6;
+          nested = {
+            add = 7;
+            replace = 8;
+          };
+          scalarToSet.new = 9;
+          setToScalar = 10;
+        };
+    expected = {
+      keep = 1;
+      add = 6;
+      nested = {
+        keep = 2;
+        add = 7;
+        replace = 8;
+      };
+      scalarToSet.new = 9;
+      setToScalar = 10;
     };
   };
 

@@ -43,9 +43,7 @@ let
     hasSuffix
     isBool
     max
-    optional
     optionalAttrs
-    optionals
     optionalString
     removePrefix
     stringLength
@@ -225,10 +223,12 @@ lib.extendMkDerivation {
           ''
         ));
 
+      finalPyproject = getFinalPassthru "pyproject";
+
       format' =
-        assert (getFinalPassthru "pyproject" != null) -> (format == null);
-        if getFinalPassthru "pyproject" != null then
-          if getFinalPassthru "pyproject" then "pyproject" else "other"
+        assert (finalPyproject != null) -> (format == null);
+        if finalPyproject != null then
+          if finalPyproject then "pyproject" else "other"
         else if format != null then
           format
         else
@@ -281,7 +281,7 @@ lib.extendMkDerivation {
             if isPythonModule drv && isMismatchedPython drv then throwMismatch attrName drv else true;
 
         in
-        attrName: inputs: seq (all (checkDrv attrName) inputs) inputs;
+        attrName: inputs: if inputs == [ ] then inputs else seq (all (checkDrv attrName) inputs) inputs;
 
       isBootstrapInstallPackage = isBootstrapInstallPackage' (finalAttrs.pname or null);
 
@@ -305,77 +305,139 @@ lib.extendMkDerivation {
         ensureNewerSourcesForZipFilesHook # move to wheel installer (pip) or builder (setuptools, flit, ...)?
         pythonRemoveTestsDirHook
       ]
-      ++ optionals (finalAttrs.catchConflicts && !isBootstrapPackage && !isSetuptoolsDependency) [
-        #
-        # 1. When building a package that is also part of the bootstrap chain, we
-        #    must ignore conflicts after installation, because there will be one with
-        #    the package in the bootstrap.
-        #
-        # 2. When a package is a dependency of setuptools, we must ignore conflicts
-        #    because the hook that checks for conflicts uses setuptools.
-        #
-        pythonCatchConflictsHook
-      ]
-      ++
-        optionals (finalAttrs.pythonRelaxDeps or [ ] != [ ] || finalAttrs.pythonRemoveDeps or [ ] != [ ])
+      ++ (
+        if finalAttrs.catchConflicts && !isBootstrapPackage && !isSetuptoolsDependency then
+          [
+            #
+            # 1. When building a package that is also part of the bootstrap chain, we
+            #    must ignore conflicts after installation, because there will be one with
+            #    the package in the bootstrap.
+            #
+            # 2. When a package is a dependency of setuptools, we must ignore conflicts
+            #    because the hook that checks for conflicts uses setuptools.
+            #
+            pythonCatchConflictsHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if finalAttrs.pythonRelaxDeps or [ ] != [ ] || finalAttrs.pythonRemoveDeps or [ ] != [ ] then
           [
             pythonRelaxDepsHook
           ]
-      ++ optionals removeBinBytecode [
-        pythonRemoveBinBytecodeHook
-      ]
-      ++ optionals (attrs ? src.name && hasZipSuffix attrs.src.name) [
-        unzip
-      ]
-      ++ optionals (format' == "setuptools") [
-        setuptoolsBuildHook
-      ]
-      ++ optionals (format' == "pyproject") [
-        (if isBootstrapPackage then bootstrappedPypaBuildHook else pypaBuildHook)
-        runtimeDepsCheckHook
-      ]
-      ++ optionals (format' == "wheel") [
-        wheelUnpackHook
-        runtimeDepsCheckHook
-      ]
-      ++ optionals (format' == "egg") [
-        eggUnpackHook
-        eggBuildHook
-        eggInstallHook
-      ]
-      ++ optionals (format' != "other") [
-        (if isBootstrapInstallPackage then bootstrappedPypaInstallHook else pypaInstallHook)
-      ]
-      ++ optionals (stdenv.buildPlatform == stdenv.hostPlatform) [
-        # This is a test, however, it should be ran independent of the checkPhase and checkInputs
-        pythonImportsCheckHook
-      ]
-      ++
-        optionals
-          (
-            finalAttrs ? "pname"
-            && finalAttrs ? "version"
-            # We don't care about the METADATA of Python applications.
-            && isPythonModule finalAttrs.passthru
-            # METADATA is unlikely to be correct if pyproject is false or null.
-            && pyproject == true
-            && !lib.hasInfix "unstable-" finalAttrs.version
-            && !isBootstrapPackage
-          )
+        else
+          [ ]
+      )
+      ++ (
+        if removeBinBytecode then
+          [
+            pythonRemoveBinBytecodeHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if attrs ? src.name && hasZipSuffix attrs.src.name then
+          [
+            unzip
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if format' == "setuptools" then
+          [
+            setuptoolsBuildHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if format' == "pyproject" then
+          [
+            (if isBootstrapPackage then bootstrappedPypaBuildHook else pypaBuildHook)
+            runtimeDepsCheckHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if format' == "wheel" then
+          [
+            wheelUnpackHook
+            runtimeDepsCheckHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if format' == "egg" then
+          [
+            eggUnpackHook
+            eggBuildHook
+            eggInstallHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if format' != "other" then
+          [
+            (if isBootstrapInstallPackage then bootstrappedPypaInstallHook else pypaInstallHook)
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if stdenv.buildPlatform == stdenv.hostPlatform then
+          [
+            # This is a test, however, it should be ran independent of the checkPhase and checkInputs
+            pythonImportsCheckHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if
+          finalAttrs ? "pname"
+          && finalAttrs ? "version"
+          # We don't care about the METADATA of Python applications.
+          && isPythonModule finalAttrs.passthru
+          # METADATA is unlikely to be correct if pyproject is false or null.
+          && pyproject == true
+          && !lib.hasInfix "unstable-" finalAttrs.version
+          && !isBootstrapPackage
+        then
           [
             pythonMetadataCheckHook
           ]
-      ++ optionals (python.pythonAtLeast "3.3") [
-        # Optionally enforce PEP420 for python3
-        pythonNamespacesHook
-      ]
-      ++ optionals withDistOutput [
-        pythonOutputDistHook
-      ]
+        else
+          [ ]
+      )
+      ++ (
+        if python.pythonAtLeast "3.3" then
+          [
+            # Optionally enforce PEP420 for python3
+            pythonNamespacesHook
+          ]
+        else
+          [ ]
+      )
+      ++ (
+        if withDistOutput then
+          [
+            pythonOutputDistHook
+          ]
+        else
+          [ ]
+      )
       ++ nativeBuildInputs
       ++ getFinalPassthru "build-system";
 
-      buildInputs = validatePythonMatches "buildInputs" (buildInputs ++ pythonPath);
+      buildInputs = validatePythonMatches "buildInputs" (
+        if pythonPath == [ ] then buildInputs else buildInputs ++ pythonPath
+      );
 
       propagatedBuildInputs =
         validatePythonMatches "propagatedBuildInputs" (
@@ -404,17 +466,25 @@ lib.extendMkDerivation {
       inherit dontWrapPythonPrograms;
 
       postFixup =
-        optionalString (!finalAttrs.dontWrapPythonPrograms) ''
-          wrapPythonPrograms
-        ''
-        + attrs.postFixup or "";
+        let
+          postFixup = attrs.postFixup or "";
+        in
+        if finalAttrs.dontWrapPythonPrograms then
+          postFixup
+        else
+          ''
+            wrapPythonPrograms
+          ''
+          + postFixup;
 
       # Python packages built through cross-compilation are always for the host platform.
-      disallowedReferences = optionals (python.stdenv.hostPlatform != python.stdenv.buildPlatform) [
-        python.pythonOnBuildForHost
-      ];
+      disallowedReferences =
+        if python.stdenv.hostPlatform != python.stdenv.buildPlatform then
+          [ python.pythonOnBuildForHost ]
+        else
+          [ ];
 
-      outputs = outputs ++ optional withDistOutput "dist";
+      outputs = outputs ++ (if withDistOutput then [ "dist" ] else [ ]);
 
       passthru = {
         inherit

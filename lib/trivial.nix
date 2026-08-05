@@ -1104,13 +1104,19 @@ in
   */
   functionArgs =
     let
-      functionArgs = builtins.functionArgs;
+      builtinFunctionArgs = builtins.functionArgs;
+      go = f: if f ? __functor then f.__functionArgs or (go (f.__functor f)) else builtinFunctionArgs f;
     in
-    f: if f ? __functor then f.__functionArgs or (functionArgs (f.__functor f)) else functionArgs f;
+    go;
 
   /**
     Check whether something is a function or something
     annotated with function args.
+
+    Unlike `builtins.isFunction`, attribute sets carrying a `__functor`
+    attribute are recognised as functions, since they can be applied.
+    The `__functor` attribute is only checked for presence, not applied,
+    so that a value can be classified without evaluating it.
 
     # Inputs
 
@@ -1126,9 +1132,9 @@ in
   */
   isFunction =
     let
-      isFunction = builtins.isFunction;
+      builtinIsFunction = builtins.isFunction;
     in
-    f: isFunction f || (f ? __functor && isFunction (f.__functor f));
+    f: builtinIsFunction f || f ? __functor;
 
   /**
     `mirrorFunctionArgs f g` creates a new function `g'` with the same behavior as `g` (`g' x == g x`)

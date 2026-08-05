@@ -765,14 +765,20 @@ rec {
         }
       )
       (
-        ''
-          mkdir -p $out/nix-support
-          cp ${script} $out/nix-support/setup-hook
-          recordPropagatedDependencies
-        ''
-        + lib.optionalString (substitutions != { }) ''
-          substituteAll ${script} $out/nix-support/setup-hook
-        ''
+        let
+          setupHook = ''
+            mkdir -p $out/nix-support
+            cp ${script} $out/nix-support/setup-hook
+            recordPropagatedDependencies
+          '';
+        in
+        if substitutions == { } then
+          setupHook
+        else
+          setupHook
+          + ''
+            substituteAll ${script} $out/nix-support/setup-hook
+          ''
       );
 
   # Docs in doc/build-helpers/trivial-build-helpers.chapter.md

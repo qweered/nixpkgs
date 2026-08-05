@@ -44,9 +44,9 @@ let
               "iserv-proxy-interpreter" + stdenv.hostPlatform.extensions.executable
             );
           in
-          buildPackages.writeShellScriptBin ("iserv-wrapper" + lib.optionalString enableProfiling "-prof") ''
+          buildPackages.writeShellScriptBin ("iserv-wrapper" + (if enableProfiling then "-prof" else "")) ''
             set -euo pipefail
-            ${lib.optionalString stdenv.hostPlatform.isWindows "export WINEDEBUG=-all WINEPREFIX=$TMP"}
+            ${if stdenv.hostPlatform.isWindows then "export WINEDEBUG=-all WINEPREFIX=$TMP" else ""}
             ${buildProxy} $@ --pipe ${emulator} ${hostProxy} tmp --stdio
           '';
 
@@ -272,12 +272,8 @@ assert stdenv.hostPlatform.isWasm -> enableStaticLibraries == false;
 let
 
   inherit (lib)
-    optional
-    optionals
-    optionalString
     versionAtLeast
     concatStringsSep
-    enableFeature
     optionalAttrs
     ;
 
@@ -342,31 +338,54 @@ let
     "--with-ghc-pkg=${ghc.targetPrefix}ghc-pkg"
     "--with-gcc=${cc}"
   ]
-  ++ optionals stdenv.hasCC [
-    "--with-ld=${stdenv.cc.bintools.targetPrefix}ld"
-    "--with-ar=${stdenv.cc.bintools.targetPrefix}ar"
-    # use the one that comes with the cross compiler.
-    "--with-hsc2hs=${ghc.targetPrefix}hsc2hs"
-    "--with-strip=${stdenv.cc.bintools.targetPrefix}strip"
-  ]
-  ++ optionals (!isHaLVM) [
-    "--hsc2hs-option=--cross-compile"
-    (optionalString enableHsc2hsViaAsm "--hsc2hs-option=--via-asm")
-  ]
-  ++ optional (allPkgconfigDepends != [ ]) "--with-pkg-config=${pkg-config.targetPrefix}pkg-config"
-
-  ++ optionals enableExternalInterpreter (
-    map (opt: "--ghc-option=${opt}") (
+  ++ (
+    if stdenv.hasCC then
       [
-        "-fexternal-interpreter"
-        "-pgmi"
-        crossSupport.iservWrapper
+        "--with-ld=${stdenv.cc.bintools.targetPrefix}ld"
+        "--with-ar=${stdenv.cc.bintools.targetPrefix}ar"
+        # use the one that comes with the cross compiler.
+        "--with-hsc2hs=${ghc.targetPrefix}hsc2hs"
+        "--with-strip=${stdenv.cc.bintools.targetPrefix}strip"
       ]
-      ++ lib.optionals stdenv.hostPlatform.isWindows [
-        "-L${windows.pthreads}/bin"
-        "-L${windows.pthreads}/lib"
+    else
+      [ ]
+  )
+  ++ (
+    if !isHaLVM then
+      [
+        "--hsc2hs-option=--cross-compile"
+        (if enableHsc2hsViaAsm then "--hsc2hs-option=--via-asm" else "")
       ]
-    )
+    else
+      [ ]
+  )
+  ++ (
+    if allPkgconfigDepends != [ ] then
+      [ "--with-pkg-config=${pkg-config.targetPrefix}pkg-config" ]
+    else
+      [ ]
+  )
+
+  ++ (
+    if enableExternalInterpreter then
+      map (opt: "--ghc-option=${opt}") (
+        [
+          "-fexternal-interpreter"
+          "-pgmi"
+          crossSupport.iservWrapper
+        ]
+        ++ (
+          if stdenv.hostPlatform.isWindows then
+            [
+              "-L${windows.pthreads}/bin"
+              "-L${windows.pthreads}/lib"
+            ]
+          else
+            [ ]
+        )
+      )
+    else
+      [ ]
   );
 
   makeGhcOptions = opts: lib.concatStringsSep " " (map (opt: "--ghc-option=${opt}") opts);
@@ -375,73 +394,113 @@ let
     "--verbose"
     "--prefix=$out"
     # Note: This must be kept in sync manually with mkGhcLibdir
-    ("--libdir=\\$prefix/lib/\\$compiler" + lib.optionalString (ghc ? hadrian) "/lib")
+    ("--libdir=\\$prefix/lib/\\$compiler" + (if ghc ? hadrian then "/lib" else ""))
     "--libsubdir=\\$abi/\\$libname"
-    (optionalString enableSeparateDataOutput "--datadir=$data/share/${ghcNameWithPrefix}")
-    (optionalString enableSeparateDocOutput "--docdir=${docdir "$doc"}")
+    (if enableSeparateDataOutput then "--datadir=$data/share/${ghcNameWithPrefix}" else "")
+    (if enableSeparateDocOutput then "--docdir=${docdir "$doc"}" else "")
   ]
-  ++ optionals stdenv.hasCC [
-    "--with-gcc=$CC" # Clang won't work without that extra information.
-  ]
+  ++ (
+    if stdenv.hasCC then
+      [
+        "--with-gcc=$CC" # Clang won't work without that extra information.
+      ]
+    else
+      [ ]
+  )
   ++ [
     "--package-db=$packageConfDir"
-    (optionalString (
-      enableSharedExecutables && stdenv.hostPlatform.isLinux
-    ) "--ghc-option=-optl=-Wl,-rpath=$out/${ghcLibdir}/${pname}-${version}")
-    (optionalString (
-      enableSharedExecutables && stdenv.hostPlatform.isDarwin
-    ) "--ghc-option=-optl=-Wl,-headerpad_max_install_names")
-    (optionalString enableParallelBuilding (makeGhcOptions [
-      "-j$NIX_BUILD_CORES"
-      "+RTS"
-      "-A64M"
-      "-RTS"
-    ]))
-    (optionalString useCpphs (
-      "--with-cpphs=${cpphs}/bin/cpphs "
-      + (makeGhcOptions [
-        "-cpp"
-        "-pgmP${cpphs}/bin/cpphs"
-        "-optP--cpp"
-      ])
-    ))
-    (enableFeature enableLibraryProfiling "library-profiling")
-    (optionalString (
-      enableExecutableProfiling || enableLibraryProfiling
-    ) "--profiling-detail=${profilingDetail}")
-    (enableFeature enableExecutableProfiling "profiling")
-    (enableFeature enableSharedLibraries "shared")
-    (enableFeature doCoverage "coverage")
-    (enableFeature enableStaticLibraries "static")
-    (enableFeature enableSharedExecutables "executable-dynamic")
-    (enableFeature doCheck "tests")
-    (enableFeature doBenchmark "benchmarks")
+    (
+      if enableSharedExecutables && stdenv.hostPlatform.isLinux then
+        "--ghc-option=-optl=-Wl,-rpath=$out/${ghcLibdir}/${pname}-${version}"
+      else
+        ""
+    )
+    (
+      if enableSharedExecutables && stdenv.hostPlatform.isDarwin then
+        "--ghc-option=-optl=-Wl,-headerpad_max_install_names"
+      else
+        ""
+    )
+    (
+      if enableParallelBuilding then
+        makeGhcOptions [
+          "-j$NIX_BUILD_CORES"
+          "+RTS"
+          "-A64M"
+          "-RTS"
+        ]
+      else
+        ""
+    )
+    (
+      if useCpphs then
+        "--with-cpphs=${cpphs}/bin/cpphs "
+        + (makeGhcOptions [
+          "-cpp"
+          "-pgmP${cpphs}/bin/cpphs"
+          "-optP--cpp"
+        ])
+      else
+        ""
+    )
+    (if enableLibraryProfiling then "--enable-library-profiling" else "--disable-library-profiling")
+    (
+      if enableExecutableProfiling || enableLibraryProfiling then
+        "--profiling-detail=${profilingDetail}"
+      else
+        ""
+    )
+    (if enableExecutableProfiling then "--enable-profiling" else "--disable-profiling")
+    (if enableSharedLibraries then "--enable-shared" else "--disable-shared")
+    (if doCoverage then "--enable-coverage" else "--disable-coverage")
+    (if enableStaticLibraries then "--enable-static" else "--disable-static")
+    (if enableSharedExecutables then "--enable-executable-dynamic" else "--disable-executable-dynamic")
+    (if doCheck then "--enable-tests" else "--disable-tests")
+    (if doBenchmark then "--enable-benchmarks" else "--disable-benchmarks")
     "--enable-library-vanilla" # TODO: Should this be configurable?
-    (enableFeature enableLibraryForGhci "library-for-ghci")
-    (enableFeature enableDeadCodeElimination "split-sections")
-    (enableFeature (!dontStrip) "library-stripping")
-    (enableFeature (!dontStrip) "executable-stripping")
+    (if enableLibraryForGhci then "--enable-library-for-ghci" else "--disable-library-for-ghci")
+    (if enableDeadCodeElimination then "--enable-split-sections" else "--disable-split-sections")
+    (if !dontStrip then "--enable-library-stripping" else "--disable-library-stripping")
+    (if !dontStrip then "--enable-executable-stripping" else "--disable-executable-stripping")
   ]
-  ++ optionals enableObjectDeterminism [
-    "--ghc-option=-fobject-determinism"
-  ]
-  ++ optionals isCross (
-    [
-      "--configure-option=--host=${stdenv.hostPlatform.config}"
-    ]
-    ++ crossCabalFlags
+  ++ (
+    if enableObjectDeterminism then
+      [
+        "--ghc-option=-fobject-determinism"
+      ]
+    else
+      [ ]
   )
-  ++ optionals enableSeparateBinOutput [
-    "--bindir=${binDir}"
-  ]
-  ++ optionals (doHaddockInterfaces && isLibrary) [
-    "--ghc-option=-haddock"
-  ];
+  ++ (
+    if isCross then
+      [
+        "--configure-option=--host=${stdenv.hostPlatform.config}"
+      ]
+      ++ crossCabalFlags
+    else
+      [ ]
+  )
+  ++ (
+    if enableSeparateBinOutput then
+      [
+        "--bindir=${binDir}"
+      ]
+    else
+      [ ]
+  )
+  ++ (
+    if doHaddockInterfaces && isLibrary then
+      [
+        "--ghc-option=-haddock"
+      ]
+    else
+      [ ]
+  );
 
-  postPhases = optional doInstallIntermediates "installIntermediatesPhase";
+  postPhases = if doInstallIntermediates then [ "installIntermediatesPhase" ] else [ ];
 
   setupCompileFlags = [
-    (optionalString (!coreSetup) "-package-db=$setupPackageConfDir")
+    (if !coreSetup then "-package-db=$setupPackageConfDir" else "")
     "-threaded" # https://github.com/haskell/cabal/issues/2398
   ];
 
@@ -499,45 +558,52 @@ let
     pkg-configDepends
     ++ libraryPkgconfigDepends
     ++ executablePkgconfigDepends
-    ++ optionals doCheck testPkgconfigDepends
-    ++ optionals doBenchmark benchmarkPkgconfigDepends;
+    ++ (if doCheck then testPkgconfigDepends else [ ])
+    ++ (if doBenchmark then benchmarkPkgconfigDepends else [ ]);
 
   depsBuildBuild = [
     nativeGhc
   ]
   # CC_FOR_BUILD may be necessary if we have no C preprocessor for the host
   # platform. See crossCabalFlags above for more details.
-  ++ lib.optionals (!stdenv.hasCC) [ buildPackages.stdenv.cc ];
+  ++ (if !stdenv.hasCC then [ buildPackages.stdenv.cc ] else [ ]);
   collectedToolDepends =
     buildTools
     ++ libraryToolDepends
     ++ executableToolDepends
-    ++ optionals doCheck testToolDepends
-    ++ optionals doBenchmark benchmarkToolDepends;
+    ++ (if doCheck then testToolDepends else [ ])
+    ++ (if doBenchmark then benchmarkToolDepends else [ ]);
   nativeBuildInputs = [
     ghc
     removeReferencesTo
   ]
-  ++ optional (allPkgconfigDepends != [ ]) (
-    assert pkg-config != null;
-    pkg-config
+  ++ (
+    if allPkgconfigDepends != [ ] then
+      [
+        (
+          assert pkg-config != null;
+          pkg-config
+        )
+      ]
+    else
+      [ ]
   )
   ++ setupHaskellDepends
   ++ collectedToolDepends
-  ++ optional stdenv.hostPlatform.isGhcjs nodejs;
+  ++ (if stdenv.hostPlatform.isGhcjs then [ nodejs ] else [ ]);
   propagatedBuildInputs =
     buildDepends ++ libraryHaskellDepends ++ executableHaskellDepends ++ libraryFrameworkDepends;
   otherBuildInputsHaskell =
-    optionals doCheck (testDepends ++ testHaskellDepends)
-    ++ optionals doBenchmark (benchmarkDepends ++ benchmarkHaskellDepends);
+    (if doCheck then testDepends ++ testHaskellDepends else [ ])
+    ++ (if doBenchmark then benchmarkDepends ++ benchmarkHaskellDepends else [ ]);
   otherBuildInputsSystem =
     extraLibraries
     ++ librarySystemDepends
     ++ executableSystemDepends
     ++ executableFrameworkDepends
     ++ allPkgconfigDepends
-    ++ optionals doCheck (testSystemDepends ++ testFrameworkDepends)
-    ++ optionals doBenchmark (benchmarkSystemDepends ++ benchmarkFrameworkDepends);
+    ++ (if doCheck then testSystemDepends ++ testFrameworkDepends else [ ])
+    ++ (if doBenchmark then benchmarkSystemDepends ++ benchmarkFrameworkDepends else [ ]);
   # TODO next rebuild just define as `otherBuildInputsHaskell ++ otherBuildInputsSystem`
   otherBuildInputs =
     extraLibraries
@@ -545,11 +611,17 @@ let
     ++ executableSystemDepends
     ++ executableFrameworkDepends
     ++ allPkgconfigDepends
-    ++ optionals doCheck (
-      testDepends ++ testHaskellDepends ++ testSystemDepends ++ testFrameworkDepends
+    ++ (
+      if doCheck then
+        testDepends ++ testHaskellDepends ++ testSystemDepends ++ testFrameworkDepends
+      else
+        [ ]
     )
-    ++ optionals doBenchmark (
-      benchmarkDepends ++ benchmarkHaskellDepends ++ benchmarkSystemDepends ++ benchmarkFrameworkDepends
+    ++ (
+      if doBenchmark then
+        benchmarkDepends ++ benchmarkHaskellDepends ++ benchmarkSystemDepends ++ benchmarkFrameworkDepends
+      else
+        [ ]
     );
 
   setupCommand = "./Setup";
@@ -559,8 +631,7 @@ let
 
   ghcNameWithPrefix = "${ghc.targetPrefix}${ghc.haskellCompilerName}";
   mkGhcLibdir =
-    ghc:
-    "lib/${ghc.targetPrefix}${ghc.haskellCompilerName}" + lib.optionalString (ghc ? hadrian) "/lib";
+    ghc: "lib/${ghc.targetPrefix}${ghc.haskellCompilerName}" + (if ghc ? hadrian then "/lib" else "");
   ghcLibdir = mkGhcLibdir ghc;
 
   nativeGhcCommand = "${nativeGhc.targetPrefix}ghc";
@@ -630,7 +701,7 @@ let
   // optionalAttrs (lib.versionOlder ghc.version "9.6.5" && stdenv.hasCC && stdenv.cc.isClang) {
     NIX_CFLAGS_COMPILE =
       "-Wno-error=int-conversion"
-      + lib.optionalString (env ? NIX_CFLAGS_COMPILE) (" " + env.NIX_CFLAGS_COMPILE);
+      + (if env ? NIX_CFLAGS_COMPILE then " " + env.NIX_CFLAGS_COMPILE else "");
   };
 
 in
@@ -644,10 +715,10 @@ lib.fix (
       outputs = [
         "out"
       ]
-      ++ (optional enableSeparateDataOutput "data")
-      ++ (optional enableSeparateDocOutput "doc")
-      ++ (optional enableSeparateBinOutput "bin")
-      ++ (optional enableSeparateIntermediatesOutput "intermediates");
+      ++ (if enableSeparateDataOutput then [ "data" ] else [ ])
+      ++ (if enableSeparateDocOutput then [ "doc" ] else [ ])
+      ++ (if enableSeparateBinOutput then [ "bin" ] else [ ])
+      ++ (if enableSeparateIntermediatesOutput then [ "intermediates" ] else [ ]);
 
       setOutputFlags = false;
 
@@ -662,10 +733,10 @@ lib.fix (
       inherit depsBuildBuild nativeBuildInputs;
       buildInputs =
         otherBuildInputs
-        ++ optionals (!isLibrary) propagatedBuildInputs
+        ++ (if !isLibrary then propagatedBuildInputs else [ ])
         # For patchShebangsAuto in fixupPhase
-        ++ optionals stdenv.hostPlatform.isGhcjs [ nodejs ];
-      propagatedBuildInputs = optionals isLibrary propagatedBuildInputs;
+        ++ (if stdenv.hostPlatform.isGhcjs then [ nodejs ] else [ ]);
+      propagatedBuildInputs = if isLibrary then propagatedBuildInputs else [ ];
 
       env =
         optionalAttrs (stdenv.buildPlatform.libc == "glibc") {
@@ -675,23 +746,38 @@ lib.fix (
         // env';
 
       prePatch =
-        optionalString (editedCabalFile != null) ''
-          echo "Replace Cabal file with edited version from ${newCabalFileUrl}."
-          cp ${newCabalFile} ${pname}.cabal
-        ''
+        (
+          if editedCabalFile != null then
+            ''
+              echo "Replace Cabal file with edited version from ${newCabalFileUrl}."
+              cp ${newCabalFile} ${pname}.cabal
+            ''
+          else
+            ""
+        )
         + prePatch
         + "\n"
         # cabal2nix-generated expressions run hpack not until prePatch to create
         # the .cabal file (if necessary)
-        + lib.optionalString (!dontConvertCabalFileToUnix) ''
-          sed -i -e 's/\r$//' *.cabal
-        '';
+        + (
+          if !dontConvertCabalFileToUnix then
+            ''
+              sed -i -e 's/\r$//' *.cabal
+            ''
+          else
+            ""
+        );
 
       postPatch =
-        optionalString jailbreak ''
-          echo "Run jailbreak-cabal to lift version restrictions on build inputs."
-          ${jailbreak-cabal}/bin/jailbreak-cabal *.cabal
-        ''
+        (
+          if jailbreak then
+            ''
+              echo "Run jailbreak-cabal to lift version restrictions on build inputs."
+              ${jailbreak-cabal}/bin/jailbreak-cabal *.cabal
+            ''
+          else
+            ""
+        )
         + postPatch;
 
       setupCompilerEnvironmentPhase = ''
@@ -699,7 +785,7 @@ lib.fix (
         runHook preSetupCompilerEnvironment
 
         echo "Build with ${ghc}."
-        ${optionalString (isLibrary && hyperlinkSource) "export PATH=${hscolour}/bin:$PATH"}
+        ${if isLibrary && hyperlinkSource then "export PATH=${hscolour}/bin:$PATH" else ""}
 
         builddir="$(mktemp -d)"
         setupPackageConfDir="$builddir/setup-package.conf.d"
@@ -737,11 +823,16 @@ lib.fix (
       + ''
         done
       ''
-      + (optionalString stdenv.hostPlatform.isGhcjs ''
-        export EM_CACHE="$(realpath "$(mktemp -d emcache.XXXXXXXXXX)")"
-        cp -Lr ${emscripten}/share/emscripten/cache/* "$EM_CACHE/"
-        chmod u+rwX -R "$EM_CACHE"
-      '')
+      + (
+        if stdenv.hostPlatform.isGhcjs then
+          ''
+            export EM_CACHE="$(realpath "$(mktemp -d emcache.XXXXXXXXXX)")"
+            cp -Lr ${emscripten}/share/emscripten/cache/* "$EM_CACHE/"
+            chmod u+rwX -R "$EM_CACHE"
+          ''
+        else
+          ""
+      )
       # only use the links hack if we're actually building dylibs. otherwise, the
       # "dynamic-library-dirs" point to nonexistent paths, and the ln command becomes
       # "ln -s $out/lib/links", which tries to recreate the links dir and fails
@@ -751,39 +842,41 @@ lib.fix (
       # the `$out/lib/links` directory to read-only when the build is done after the
       # dist directory has already been exported, which triggers an unnecessary
       # rebuild of modules included in the exported dist directory.
-      + (optionalString
-        (
+      + (
+        if
           stdenv.hostPlatform.isDarwin
           && (enableSharedLibraries || enableSharedExecutables)
           && !enableSeparateIntermediatesOutput
-        )
-        ''
-          # Work around a limit in the macOS Sierra linker on the number of paths
-          # referenced by any one dynamic library:
-          #
-          # Create a local directory with symlinks of the *.dylib (macOS shared
-          # libraries) from all the dependencies.
-          local dynamicLinksDir="$out/lib/links"
-          mkdir -p $dynamicLinksDir
+        then
+          ''
+            # Work around a limit in the macOS Sierra linker on the number of paths
+            # referenced by any one dynamic library:
+            #
+            # Create a local directory with symlinks of the *.dylib (macOS shared
+            # libraries) from all the dependencies.
+            local dynamicLinksDir="$out/lib/links"
+            mkdir -p $dynamicLinksDir
 
-          # Unprettify all package conf files before reading/writing them
-          for d in "$packageConfDir/"*; do
-            # gawk -i inplace seems to strip the last newline
-            gawk -f ${unprettyConf} "$d" > tmp
-            mv tmp "$d"
-          done
-
-          for d in $(grep '^dynamic-library-dirs:' "$packageConfDir"/* | cut -d' ' -f2- | tr ' ' '\n' | sort -u); do
-            for lib in "$d/"*.{dylib,so}; do
-              # Allow overwriting because C libs can be pulled in multiple times.
-              ln -sf "$lib" "$dynamicLinksDir"
+            # Unprettify all package conf files before reading/writing them
+            for d in "$packageConfDir/"*; do
+              # gawk -i inplace seems to strip the last newline
+              gawk -f ${unprettyConf} "$d" > tmp
+              mv tmp "$d"
             done
-          done
-          # Edit the local package DB to reference the links directory.
-          for f in "$packageConfDir/"*.conf; do
-            sed -i "s,dynamic-library-dirs: .*,dynamic-library-dirs: $dynamicLinksDir," "$f"
-          done
-        ''
+
+            for d in $(grep '^dynamic-library-dirs:' "$packageConfDir"/* | cut -d' ' -f2- | tr ' ' '\n' | sort -u); do
+              for lib in "$d/"*.{dylib,so}; do
+                # Allow overwriting because C libs can be pulled in multiple times.
+                ln -sf "$lib" "$dynamicLinksDir"
+              done
+            done
+            # Edit the local package DB to reference the links directory.
+            for f in "$packageConfDir/"*.conf; do
+              sed -i "s,dynamic-library-dirs: .*,dynamic-library-dirs: $dynamicLinksDir," "$f"
+            done
+          ''
+        else
+          ""
       )
       + ''
         ${ghcCommand}-pkg --package-db="$packageConfDir" recache
@@ -811,20 +904,25 @@ lib.fix (
       # Note: the options here must be always added, regardless of whether the
       # package specifies `hardeningDisable`.
       hardeningDisable =
-        lib.optionals (args ? hardeningDisable) hardeningDisable
-        ++ lib.optional (ghc.isHaLVM or false) "all";
+        (if args ? hardeningDisable then hardeningDisable else [ ])
+        ++ (if ghc.isHaLVM or false then [ "all" ] else [ ]);
 
       configurePhase = ''
         runHook preConfigure
 
         echo configureFlags: $configureFlags
         ${setupCommand} configure $configureFlags 2>&1 | ${coreutils}/bin/tee "$NIX_BUILD_TOP/cabal-configure.log"
-        ${lib.optionalString (!allowInconsistentDependencies) ''
-          if grep -E -q -z 'Warning:.*depends on multiple versions' "$NIX_BUILD_TOP/cabal-configure.log"; then
-            echo >&2 "*** abort because of serious configure-time warning from Cabal"
-            exit 1
-          fi
-        ''}
+        ${
+          if !allowInconsistentDependencies then
+            ''
+              if grep -E -q -z 'Warning:.*depends on multiple versions' "$NIX_BUILD_TOP/cabal-configure.log"; then
+                echo >&2 "*** abort because of serious configure-time warning from Cabal"
+                exit 1
+              fi
+            ''
+          else
+            ""
+        }
 
         runHook postConfigure
       '';
@@ -832,13 +930,18 @@ lib.fix (
       buildPhase = ''
         runHook preBuild
       ''
-      + lib.optionalString (previousIntermediates != null) ''
-        mkdir -p dist;
-        rm -r dist/build
-        cp -r ${previousIntermediates}/${intermediatesDir}/build dist/build
-        find dist/build -exec chmod u+w {} +
-        find dist/build -exec touch -d '1970-01-01T00:00:00Z' {} +
-      ''
+      + (
+        if previousIntermediates != null then
+          ''
+            mkdir -p dist;
+            rm -r dist/build
+            cp -r ${previousIntermediates}/${intermediatesDir}/build dist/build
+            find dist/build -exec chmod u+w {} +
+            find dist/build -exec touch -d '1970-01-01T00:00:00Z' {} +
+          ''
+        else
+          ""
+      )
       + ''
         ${setupCommand} build ${buildTarget} $buildFlags
         runHook postBuild
@@ -871,15 +974,20 @@ lib.fix (
 
       haddockPhase = ''
         runHook preHaddock
-        ${optionalString (doHaddock && isLibrary) ''
-          ${setupCommand} haddock --html \
-            ${optionalString doHoogle "--hoogle"} \
-            ${optionalString doHaddockQuickjump "--quickjump"} \
-            ${optionalString (isLibrary && hyperlinkSource) "--hyperlink-source"} \
-            ${optionalString enableParallelBuilding "--haddock-option=-j$NIX_BUILD_CORES"} \
-            --haddock-option=--no-tmp-comp-dir \
-            ${lib.concatStringsSep " " haddockFlags}
-        ''}
+        ${
+          if doHaddock && isLibrary then
+            ''
+              ${setupCommand} haddock --html \
+                ${if doHoogle then "--hoogle" else ""} \
+                ${if doHaddockQuickjump then "--quickjump" else ""} \
+                ${if isLibrary && hyperlinkSource then "--hyperlink-source" else ""} \
+                ${if enableParallelBuilding then "--haddock-option=-j$NIX_BUILD_CORES" else ""} \
+                --haddock-option=--no-tmp-comp-dir \
+                ${lib.concatStringsSep " " haddockFlags}
+            ''
+          else
+            ""
+        }
         runHook postHaddock
       '';
 
@@ -917,23 +1025,33 @@ lib.fix (
         }
 
 
-        ${optionalString doCoverage "mkdir -p $out/share && cp -r dist/hpc $out/share"}
+        ${if doCoverage then "mkdir -p $out/share && cp -r dist/hpc $out/share" else ""}
 
-        ${optionalString jsexe.shouldCopy ''
-          for jsexeDir in dist/build/*/*.jsexe; do
-            bn=$(basename $jsexeDir)
-            exe="''${bn%.jsexe}"
-            cp -r dist/build/$exe/$exe.jsexe ${binDir}
-          done
-        ''}
+        ${
+          if jsexe.shouldCopy then
+            ''
+              for jsexeDir in dist/build/*/*.jsexe; do
+                bn=$(basename $jsexeDir)
+                exe="''${bn%.jsexe}"
+                cp -r dist/build/$exe/$exe.jsexe ${binDir}
+              done
+            ''
+          else
+            ""
+        }
 
-        ${optionalString enableSeparateDocOutput ''
-          for x in ${docdir "$doc"}"/html/src/"*.html; do
-            remove-references-to -t $out $x
-          done
-          mkdir -p $doc
-        ''}
-        ${optionalString enableSeparateDataOutput "mkdir -p $data"}
+        ${
+          if enableSeparateDocOutput then
+            ''
+              for x in ${docdir "$doc"}"/html/src/"*.html; do
+                remove-references-to -t $out $x
+              done
+              mkdir -p $doc
+            ''
+          else
+            ""
+        }
+        ${if enableSeparateDataOutput then "mkdir -p $data" else ""}
 
         runHook postInstall
       '';
@@ -946,13 +1064,18 @@ lib.fix (
         cp -r dist/build "$installIntermediatesDir"
         runHook postInstallIntermediates
 
-        ${optionalString jsexe.shouldSymlink ''
-          for jsexeDir in $installIntermediatesDir/build/*/*.jsexe; do
-            bn=$(basename $jsexeDir)
-            exe="''${bn%.jsexe}"
-            (cd ${binDir} && ln -s $installIntermediatesDir/build/$exe/$exe.jsexe)
-          done
-        ''}
+        ${
+          if jsexe.shouldSymlink then
+            ''
+              for jsexeDir in $installIntermediatesDir/build/*/*.jsexe; do
+                bn=$(basename $jsexeDir)
+                exe="''${bn%.jsexe}"
+                (cd ${binDir} && ln -s $installIntermediatesDir/build/$exe/$exe.jsexe)
+              done
+            ''
+          else
+            ""
+        }
       '';
 
       passthru = passthru // rec {
@@ -1057,7 +1180,8 @@ lib.fix (
               buildHaskellPackages.ghcWithPackages (_: setupHaskellDepends);
 
             ghcEnv = withPackages (
-              _: otherBuildInputsHaskell ++ propagatedBuildInputs ++ lib.optionals (!isCross) setupHaskellDepends
+              _:
+              otherBuildInputsHaskell ++ propagatedBuildInputs ++ (if !isCross then setupHaskellDepends else [ ])
             );
 
             ghcCommandCaps = lib.toUpper ghcCommand';
@@ -1065,11 +1189,11 @@ lib.fix (
           runCommandCC name {
             inherit shellHook;
 
-            depsBuildBuild = lib.optional isCross ghcEnvForBuild;
+            depsBuildBuild = if isCross then [ ghcEnvForBuild ] else [ ];
             nativeBuildInputs = [
               ghcEnv
             ]
-            ++ optional (allPkgconfigDepends != [ ]) pkg-config
+            ++ (if allPkgconfigDepends != [ ] then [ pkg-config ] else [ ])
             ++ collectedToolDepends;
             buildInputs = otherBuildInputsSystem;
 

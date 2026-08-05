@@ -201,6 +201,7 @@ checkConfigOutput '^true$' config.result ./module-argument-default.nix
 checkConfigOutput '^true$' config.assertion ./gvariant.nix
 
 checkConfigOutput '"ok"' config.result ./specialArgs-lib.nix
+checkConfigError "unsupported attribute .*__functor" config ./functor-module.nix
 
 # https://github.com/NixOS/nixpkgs/pull/131205
 # We currently throw this error already in `config`, but throwing in `config.wrong1` would be acceptable.

@@ -19,12 +19,7 @@ let
     rootDir = "";
     sparseCheckout = null;
   };
-  useFetchGitArgsDefaultNullable = {
-    leaveDotGit = false;
-    sparseCheckout = [ ];
-  };
-
-  useFetchGitargsDefaultNonNull = useFetchGitArgsDefault // useFetchGitArgsDefaultNullable;
+  useFetchGitArgNames = lib.attrNames useFetchGitArgsDefault;
 
   # useFetchGitArgsWD to exclude from automatic passing.
   # Other useFetchGitArgsWD will pass down to fetchgit.
@@ -32,17 +27,11 @@ let
     "forceFetchGit"
   ];
 
-  faUseFetchGit = lib.mapAttrs (_: _: true) useFetchGitArgsDefault;
-
-  adjustFunctionArgs = f: lib.setFunctionArgs f (faUseFetchGit // lib.functionArgs f);
-
-  decorate = f: lib.makeOverridable (adjustFunctionArgs f);
-
   # fetchzip may not be overridable when using external tools, for example nix-prefetch
   fetchzip =
     if args.fetchzip ? override then args.fetchzip.override { withUnzip = false; } else args.fetchzip;
 in
-decorate (
+lib.makeOverridable (
   {
     owner,
     repo,
@@ -56,6 +45,14 @@ decorate (
     varPrefix ? null,
     passthru ? { },
     meta ? { },
+    deepClone ? false,
+    fetchLFS ? false,
+    fetchSubmodules ? false,
+    forceFetchGit ? false,
+    leaveDotGit ? null,
+    postCheckout ? "",
+    rootDir ? "",
+    sparseCheckout ? null,
     ... # For hash agility and additional fetchgit arguments
   }@args:
 
@@ -66,13 +63,14 @@ decorate (
 
   let
     useFetchGit =
-      lib.mapAttrs (
-        name: nonNullDefault:
-        if args ? ${name} && (useFetchGitArgsDefaultNullable ? ${name} -> args.${name} != null) then
-          args.${name}
-        else
-          nonNullDefault
-      ) useFetchGitargsDefaultNonNull != useFetchGitargsDefaultNonNull;
+      deepClone != false
+      || fetchLFS != false
+      || fetchSubmodules != false
+      || forceFetchGit != false
+      || (leaveDotGit != null && leaveDotGit != false)
+      || postCheckout != ""
+      || rootDir != ""
+      || (sparseCheckout != null && sparseCheckout != [ ]);
 
     useFetchGitArgsWDPassing = lib.overrideExisting (removeAttrs useFetchGitArgsDefault excludeUseFetchGitArgNames) args;
 
@@ -85,31 +83,28 @@ decorate (
         builtins.unsafeGetAttrPos "rev" args
     );
     baseUrl = "https://${githubBase}/${owner}/${repo}";
-    newMeta =
-      meta
-      // {
-        homepage = meta.homepage or baseUrl;
-        identifiers = {
-          purlParts =
-            if githubBase == "github.com" then
-              {
-                type = "github";
-                # https://github.com/package-url/purl-spec/blob/18fd3e395dda53c00bc8b11fe481666dc7b3807a/types-doc/github-definition.md
-                spec = "${owner}/${repo}@${(lib.revOrTag rev tag)}";
-              }
-            else
-              {
-                type = "generic";
-                # https://github.com/package-url/purl-spec/blob/18fd3e395dda53c00bc8b11fe481666dc7b3807a/types-doc/generic-definition.md
-                spec = "${repo}?vcs_url=https://${githubBase}/${owner}/${repo}@${(lib.revOrTag rev tag)}";
-              };
-        }
-        // meta.identifiers or { };
+    newMeta = meta // {
+      homepage = meta.homepage or baseUrl;
+      identifiers = {
+        purlParts =
+          if githubBase == "github.com" then
+            {
+              type = "github";
+              # https://github.com/package-url/purl-spec/blob/18fd3e395dda53c00bc8b11fe481666dc7b3807a/types-doc/github-definition.md
+              spec = "${owner}/${repo}@${(lib.revOrTag rev tag)}";
+            }
+          else
+            {
+              type = "generic";
+              # https://github.com/package-url/purl-spec/blob/18fd3e395dda53c00bc8b11fe481666dc7b3807a/types-doc/generic-definition.md
+              spec = "${repo}?vcs_url=https://${githubBase}/${owner}/${repo}@${(lib.revOrTag rev tag)}";
+            };
       }
-      // lib.optionalAttrs (position != null) {
-        # to indicate where derivation originates, similar to make-derivation.nix's mkDerivation
-        position = "${position.file}:${toString position.line}";
-      };
+      // meta.identifiers or { };
+
+      # to indicate where derivation originates, similar to make-derivation.nix's mkDerivation
+      ${if position != null then "position" else null} = "${position.file}:${toString position.line}";
+    };
     passthruAttrs = removeAttrs args (
       [
         "owner"
@@ -121,7 +116,7 @@ decorate (
         "githubBase"
         "varPrefix"
       ]
-      ++ (if useFetchGit then excludeUseFetchGitArgNames else lib.attrNames faUseFetchGit)
+      ++ (if useFetchGit then excludeUseFetchGitArgNames else useFetchGitArgNames)
     );
     varBase = "NIX${lib.optionalString (varPrefix != null) "_${varPrefix}"}_GITHUB_PRIVATE_";
     # We prefer fetchzip in cases we don't need submodules as the hash

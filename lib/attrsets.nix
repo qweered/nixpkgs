@@ -664,7 +664,9 @@ rec {
 
     :::
   */
-  filterAttrs = pred: set: removeAttrs set (filter (name: !pred name set.${name}) (attrNames set));
+  filterAttrs =
+    builtins.filterAttrs
+      or (pred: set: removeAttrs set (filter (name: !pred name set.${name}) (attrNames set)));
 
   /**
     Filter an attribute set recursively by removing all attributes for
@@ -1767,10 +1769,17 @@ rec {
   */
   recursiveUpdate =
     lhs: rhs:
-    recursiveUpdateUntil (
-      path: lhs: rhs:
-      !(isAttrs lhs && isAttrs rhs)
-    ) lhs rhs;
+    lhs
+    // (
+      rhs
+      // mapAttrs (
+        name: value:
+        let
+          lhsValue = lhs.${name};
+        in
+        if isAttrs lhsValue && isAttrs value then recursiveUpdate lhsValue value else value
+      ) (intersectAttrs lhs rhs)
+    );
 
   /**
     Recurse into every attribute set of the first argument and check that:
@@ -1933,8 +1942,7 @@ rec {
     :::
   */
   getOutput =
-    output: pkg:
-    if !pkg ? outputSpecified || !pkg.outputSpecified then pkg.${output} or pkg.out or pkg else pkg;
+    output: pkg: if pkg.outputSpecified or false then pkg else pkg.${output} or pkg.out or pkg;
 
   /**
     Get the first of the `outputs` provided by the package, or the default.
@@ -2070,6 +2078,7 @@ rec {
   /**
     Get a package's `dev` output.
     If the output does not exist, fallback to `.out` and then to the default.
+    The presence of `outputSpecified` marks an explicitly selected output, so its value is not inspected.
 
     # Inputs
 
@@ -2094,7 +2103,7 @@ rec {
 
     :::
   */
-  getDev = getOutput "dev";
+  getDev = pkg: if pkg ? outputSpecified then pkg else pkg.dev or pkg.out or pkg;
 
   /**
     Get a package's `include` output.

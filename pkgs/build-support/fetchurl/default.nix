@@ -25,6 +25,7 @@ let
     isString
     length
     match
+    substring
     warn
     ;
   nixpkgsVersion = lib.trivial.release;
@@ -232,13 +233,20 @@ lib.extendMkDerivation {
         else
           throw "fetchurl requires either `url` or `urls` to be set: ${lib.generators.toPretty { } args}";
 
-      urls_ = rewriteAllUrls preRewriteUrls;
+      urls_ = if rewriteURL == null then preRewriteUrls else rewriteAllUrls preRewriteUrls;
 
       hash_ =
-        if
+        if hash != "" then
+          if outputHash == "" && sha1 == "" && sha256 == "" && sha512 == "" then
+            {
+              outputHashAlgo = null;
+              outputHash = hash;
+            }
+          else
+            throw "multiple hashes passed to fetchurl: ${lib.generators.toPretty { } urls_}"
+        else if
           length (
             filter (s: s != "") [
-              hash
               outputHash
               sha1
               sha256
@@ -247,13 +255,6 @@ lib.extendMkDerivation {
           ) > 1
         then
           throw "multiple hashes passed to fetchurl: ${lib.generators.toPretty { } urls_}"
-        else
-
-        if hash != "" then
-          {
-            outputHashAlgo = null;
-            outputHash = hash;
-          }
         else if outputHash != "" then
           if outputHashAlgo != "" then
             { inherit outputHashAlgo outputHash; }
@@ -282,8 +283,12 @@ lib.extendMkDerivation {
         else
           throw "fetchurl requires a hash for fixed-output derivation: ${lib.generators.toPretty { } urls_}";
 
-      finalHashHasColon = match ".*:.*" finalAttrs.hash != null;
-      finalHashColonMatch = match "([^:]+)[:](.*)" finalAttrs.hash;
+      finalHash = finalAttrs.hash;
+      finalHashPrefix = substring 0 7 finalHash;
+      # The common SRI form returns before forcing this legacy colon parser.
+      finalHashColonMatch = match "([^:]+)[:](.*)" finalHash;
+      normalizedHash = hash_.outputHash;
+      normalizedHashAlgo = hash_.outputHashAlgo;
     in
 
     derivationArgs
@@ -313,31 +318,43 @@ lib.extendMkDerivation {
       # New-style output content requirements.
       hash =
         if
-          hash_.outputHashAlgo == null
-          || hash_.outputHash == ""
-          || hasAlgoPrefix.${hash_.outputHashAlgo} hash_.outputHash
+          normalizedHashAlgo == null
+          || normalizedHash == ""
+          || hasAlgoPrefix.${normalizedHashAlgo} normalizedHash
         then
-          hash_.outputHash
+          normalizedHash
         else
-          "${hash_.outputHashAlgo}:${hash_.outputHash}";
-      outputHashAlgo = if finalHashHasColon then head finalHashColonMatch else null;
+          "${normalizedHashAlgo}:${normalizedHash}";
+      outputHashAlgo =
+        if finalHashPrefix == "sha256-" then
+          null
+        else if finalHashPrefix == "sha256:" then
+          "sha256"
+        else if finalHashColonMatch != null then
+          head finalHashColonMatch
+        else
+          null;
       outputHash =
-        if finalAttrs.hash == "" then
+        if finalHashPrefix == "sha256-" then
+          finalHash
+        else if finalHash == "" then
           fakeHash
-        else if finalHashHasColon then
+        else if finalHashPrefix == "sha256:" then
+          substring 7 (-1) finalHash
+        else if finalHashColonMatch != null then
           elemAt finalHashColonMatch 1
         else
-          finalAttrs.hash;
+          finalHash;
 
       # Disable TLS verification only when we know the hash and no credentials are
       # needed to access the resource
       env.SSL_CERT_FILE =
         if
           (
-            hash_.outputHash == ""
-            || hash_.outputHash == fakeSha256
-            || hash_.outputHash == fakeSha512
-            || hash_.outputHash == fakeHash
+            normalizedHash == ""
+            || normalizedHash == fakeSha256
+            || normalizedHash == fakeSha512
+            || normalizedHash == fakeHash
             || netrcPhase != null
           )
         then
@@ -348,7 +365,9 @@ lib.extendMkDerivation {
       outputHashMode = if (recursiveHash || executable) then "recursive" else "flat";
 
       curlOpts =
-        if isList curlOpts then
+        if curlOpts == "" then
+          ""
+        else if isList curlOpts then
           warn (
             let
               url = toString (builtins.head urls_);
