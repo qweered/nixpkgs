@@ -80,6 +80,23 @@ impl<T: Clone + Eq + Hash> NonRepeatingQueue<T> {
     }
 }
 
+fn find_library(
+    sonames: &[String],
+    rpaths: &[Box<Path>],
+    is_available: impl Fn(&Path) -> bool,
+) -> Option<PathBuf> {
+    for soname in sonames {
+        for rpath in rpaths {
+            let library = rpath.join(soname);
+            if is_available(&library) {
+                return Some(library);
+            }
+        }
+    }
+
+    None
+}
+
 fn add_dependencies<P: AsRef<Path> + AsRef<OsStr> + std::fmt::Debug>(
     source: P,
     elf: Elf,
@@ -109,7 +126,7 @@ fn add_dependencies<P: AsRef<Path> + AsRef<OsStr> + std::fmt::Debug>(
                 .position(|x| *x == 0)
                 .unwrap_or(note.desc.len())];
             let parsed = serde_json::from_slice::<Vec<DLOpenNote>>(payload)?;
-            for mut parsed_note in parsed {
+            for parsed_note in parsed {
                 if dlopen.use_priority
                     >= parsed_note.priority.unwrap_or(DLOpenPriority::Recommended)
                     || parsed_note
@@ -117,7 +134,9 @@ fn add_dependencies<P: AsRef<Path> + AsRef<OsStr> + std::fmt::Debug>(
                         .map(|f| dlopen.features.contains(&f))
                         .unwrap_or(false)
                 {
-                    dlopen_libraries.append(&mut parsed_note.soname);
+                    // SONAMEs in one note are ordered alternatives, not
+                    // independent dependencies.
+                    dlopen_libraries.push(parsed_note.soname);
                 }
             }
         }
@@ -137,39 +156,35 @@ fn add_dependencies<P: AsRef<Path> + AsRef<OsStr> + std::fmt::Debug>(
         .map(|p| Box::<Path>::from(Path::new(p)))
         .collect::<Vec<_>>();
 
-    for line in elf
+    for sonames in elf
         .libraries
         .into_iter()
-        .map(|s| s.to_string())
+        .map(|s| vec![s.to_string()])
         .chain(dlopen_libraries)
     {
-        let mut found = false;
-        for path in &rpaths_as_path {
-            let lib = path.join(&line);
-            if lib.exists() {
-                // No need to recurse. The queue will bring it back round.
-                queue.push_back(StorePath {
-                    path: Box::from(lib.as_path()),
-                    dlopen: dlopen.clone(),
-                });
-                found = true;
-                break;
-            }
-        }
-        if !found {
+        if let Some(library) = find_library(&sonames, &rpaths_as_path, Path::exists) {
+            // No need to recurse. The queue will bring it back round.
+            queue.push_back(StorePath {
+                path: library.into_boxed_path(),
+                dlopen: dlopen.clone(),
+            });
+        } else {
             // In Nix, glibc's own libraries lack rpath entries pointing to
             // themselves, so the dynamic linker (ld-linux-*.so.*) and libc.so.*
             // can never be resolved through rpath alone. They are always present
             // in the initrd: the linker via elf.interpreter above, and libc via
             // at least one binary's rpath. Suppress these known-benign cases.
             // See also: the ld*.so.? skip in stage-1.nix findLibs.
-            let is_glibc_runtime = (line.starts_with("ld-") && line.contains(".so"))
-                || line.starts_with("libc.so");
+            let is_glibc_runtime = sonames.len() == 1 && {
+                let soname = &sonames[0];
+                (soname.starts_with("ld-") && soname.contains(".so"))
+                    || soname.starts_with("libc.so")
+            };
 
             if !is_glibc_runtime {
                 eprintln!(
                     "Warning: Couldn't satisfy dependency {} for {:?}",
-                    line,
+                    sonames.join(" or "),
                     OsStr::new(&source)
                 );
             }
@@ -354,4 +369,47 @@ fn main() -> eyre::Result<()> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rpaths() -> Vec<Box<Path>> {
+        vec![
+            PathBuf::from("/first").into_boxed_path(),
+            PathBuf::from("/second").into_boxed_path(),
+        ]
+    }
+
+    fn sonames() -> Vec<String> {
+        vec!["libfoo.so.2".to_string(), "libfoo.so.1".to_string()]
+    }
+
+    #[test]
+    fn prefers_first_available_soname() {
+        let available = HashSet::from([
+            PathBuf::from("/first/libfoo.so.1"),
+            PathBuf::from("/second/libfoo.so.2"),
+        ]);
+
+        assert_eq!(
+            find_library(&sonames(), &rpaths(), |path| available.contains(path)),
+            Some(PathBuf::from("/second/libfoo.so.2"))
+        );
+    }
+
+    #[test]
+    fn falls_back_to_next_soname() {
+        assert_eq!(
+            find_library(&sonames(), &rpaths(), |path| path
+                == Path::new("/first/libfoo.so.1")),
+            Some(PathBuf::from("/first/libfoo.so.1"))
+        );
+    }
+
+    #[test]
+    fn returns_none_when_no_soname_is_available() {
+        assert_eq!(find_library(&sonames(), &rpaths(), |_| false), None);
+    }
 }
