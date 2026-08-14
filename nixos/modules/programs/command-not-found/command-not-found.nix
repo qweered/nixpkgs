@@ -12,13 +12,25 @@
 
 let
   cfg = config.programs.command-not-found;
+
+  # Substitutions reach the script through `toString`, which yields no string
+  # context for a path, so a database inside the store would only be mentioned
+  # by the script and never referenced by it -- leaving it free to be garbage
+  # collected out from under command-not-found. Interpolating imports the file
+  # and gives the derivation a real reference. The stateful channel database
+  # lives outside the store, where importing it would freeze a mutable file at
+  # evaluation time (and is refused outright under pure evaluation), so that
+  # case has to stay a bare path.
+  dbPath =
+    if lib.hasPrefix builtins.storeDir (toString cfg.dbPath) then "${cfg.dbPath}" else cfg.dbPath;
+
   commandNotFound = pkgs.replaceVarsWith {
     name = "command-not-found";
     dir = "bin";
     src = ./command-not-found.pl;
     isExecutable = true;
     replacements = {
-      inherit (cfg) dbPath;
+      inherit dbPath;
       perl = pkgs.perl.withPackages (p: [
         p.DBDSQLite
         p.StringShellQuote
