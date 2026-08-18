@@ -116,6 +116,10 @@ in
   };
 
   config = mkIf cfg.enable {
+    # Swapfiles are created and removed on demand, so none of them can be declared
+    # in `swapDevices`.
+    system.swap.providers = [ "services.swapspace" ];
+
     environment.systemPackages = [ (if cfg.installWrapper then userWrapper else cfg.package) ];
     systemd.packages = [ cfg.package ];
     systemd.services.swapspace = {

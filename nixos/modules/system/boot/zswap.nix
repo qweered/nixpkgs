@@ -154,9 +154,10 @@ in
         '';
       }
       {
-        assertion = config.swapDevices != [ ];
+        assertion = config.system.swap.providers != [ ];
         message = ''
-          Zswap requires at least one physical swap device to function as a backing store.
+          Zswap requires swap space to use as a backing store, but this configuration
+          provides none.
 
           Try adding the following to your configuration (example):
 
@@ -164,6 +165,9 @@ in
             device = "/var/lib/swapfile";
             size = 16 * 1024; # 16GB
           } ];
+
+          Modules that set swap up at runtime, such as 'services.swapspace', count as
+          well.
         '';
       }
       {

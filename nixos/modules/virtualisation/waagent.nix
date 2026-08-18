@@ -270,6 +270,10 @@ in
       }
     ];
 
+    # The agent creates /swapfile on the resource disk once it is up, so this swap
+    # is never visible in `swapDevices`.
+    system.swap.providers = lib.optional cfg.settings.ResourceDisk.EnableSwap "services.waagent";
+
     boot.initrd.kernelModules = [ "ata_piix" ];
     networking.firewall.allowedUDPPorts = [ 68 ];
 

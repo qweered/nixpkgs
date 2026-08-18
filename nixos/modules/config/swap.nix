@@ -241,9 +241,31 @@ in
       type = types.listOf (types.submodule swapCfg);
     };
 
+    system.swap.providers = mkOption {
+      type = types.listOf types.str;
+      internal = true;
+      default = [ ];
+      example = [
+        "swapDevices"
+        "services.swapspace"
+      ];
+      description = ''
+        Names of the mechanisms that provide swap space on this system.
+
+        {option}`swapDevices` only covers swap that is known at evaluation time.
+        Several modules instead set swap up while the system is running, where
+        the module system cannot observe it, and they register themselves here
+        so that consumers such as {option}`boot.zswap.enable` can tell whether
+        any swap will exist.
+      '';
+    };
+
   };
 
   config = mkIf ((lib.length config.swapDevices) != 0) {
+
+    system.swap.providers = [ "swapDevices" ];
+
     assertions = lib.map (sw: {
       assertion =
         sw.randomEncryption.enable -> builtins.match "/dev/disk/by-(uuid|label)/.*" sw.device == null;

@@ -31,6 +31,8 @@ in
   };
 
   config = lib.mkIf cfg.enable {
+    system.swap.providers = [ "services.zram-generator" ];
+
     system.requiredKernelConfig = with config.lib.kernelConfig; [
       (isEnabled "ZRAM")
     ];
