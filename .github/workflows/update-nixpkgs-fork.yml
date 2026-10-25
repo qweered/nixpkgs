@@ -20,7 +20,7 @@ jobs:
             "NixOS/nixpkgs#535346",
             "NixOS/nixpkgs#578391",
             "NixOS/nixpkgs#578415",
-            "NixOS/nixpkgs/578841",
-            "qweered/nixpkgs/8"
+            "NixOS/nixpkgs/#578841",
+            "qweered/nixpkgs/#8"
           ]
         }
