@@ -72,7 +72,7 @@ let
   # messages and make problems easier to spot.
   inHydra = config.inHydra or false;
 
-  allowUnfree = config.allowUnfree || getEnv "NIXPKGS_ALLOW_UNFREE" == "1";
+  allowUnfree = config.allowUnfree;
 
   allowNonSource =
     let

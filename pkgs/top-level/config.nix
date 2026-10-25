@@ -251,9 +251,7 @@ let
 
     allowUnfree = mkOption {
       type = types.bool;
-      default = false;
-      # getEnv part is in check-meta.nix
-      defaultText = literalExpression ''false || builtins.getEnv "NIXPKGS_ALLOW_UNFREE" == "1"'';
+      default = true;
       description = ''
         Whether to allow unfree packages.
 
@@ -471,9 +469,7 @@ let
 
     microsoftVisualStudioLicenseAccepted = mkOption {
       type = types.bool;
-      default = false;
-      # getEnv part is in check-meta.nix
-      defaultText = literalExpression ''false || builtins.getEnv "NIXPKGS_ALLOW_UNFREE" == "1"'';
+      default = true;
       description = ''
         If the Microsoft Visual Studio license has been accepted.
 
