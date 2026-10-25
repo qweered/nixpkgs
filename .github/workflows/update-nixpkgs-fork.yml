@@ -1,0 +1,20 @@
+name: Update nixpkgs fork
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  update:
+    uses: YOURNAME/nix-update-fork/.github/workflows/sync.yml@main
+    secrets:
+      token: ${{ secrets.NIXPKGS_SYNC_TOKEN }}
+    with:
+      branches: |
+        {
+          "nixos-unstable": []
+        }
