@@ -16,5 +16,11 @@ jobs:
     with:
       branches: |
         {
-          "nixos-unstable": []
+          "nixos-unstable": [
+            "NixOS/nixpkgs#535346",
+            "NixOS/nixpkgs#578391",
+            "NixOS/nixpkgs#578415",
+            "qweered/nixpkgs/7441b95afb6da774204d96a68969c4014af0fbc4",
+            "qweered/nixpkgs/56f2db517358602108781ad1f5eb1fe1dd435b28"
+          ]
         }
